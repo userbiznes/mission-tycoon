@@ -56,16 +56,41 @@ export const FOCUS_WIDTH: Record<BuildingId, number> = {
  * coordinates (v = along the island, u = across it, positive towards the camera).
  */
 export const START_SPOTS: Record<string, [number, number]> = {
-  missionControl: [-7, -8],
-  partsMarket: [-6, -21],
-  integrationBay: [6, -15],
-  commsCenter: [7, -2],
-  launchPad: [-3, 9],
+  commsCenter: [-3, -37],
+  missionControl: [-5, -25.5],
+  launchPad: [-6, -12],
+  integrationBay: [9, -16.5],
 }
 
-/** Where the pier meets the island: deliveries arrive here. */
-export const GATE_SPOT: [number, number] = [1, -36.5]
+/** Which way each starting building faces: 0 = door down-left, 1 = door down-right. */
+export const START_FACING: Partial<Record<BuildingId, number>> = {
+  commsCenter: 1,
+  missionControl: 1,
+  integrationBay: 0,
+  launchPad: 0,
+  partsMarket: 1,
+}
+
+/** Centre of the dock on the south shore. The Parts Market stands on it and deliveries arrive by boat. */
+export const DOCK_SPOT: [number, number] = [24.5, -27.5]
+
+/**
+ * The island opens up from west to east. Land beyond a boundary is fenced off
+ * and wild until the agency is big enough to take it on.
+ */
+export interface ZoneDef {
+  name: string
+  /** land with island-frame v at or beyond this belongs to the zone */
+  fromV: number
+  needsLevel: number
+  cost: number
+}
+export const ZONES: ZoneDef[] = [
+  { name: 'Old Spaceport', fromV: -100, needsLevel: 1, cost: 0 },
+  { name: 'East Meadow', fromV: -3.5, needsLevel: 2, cost: 600 },
+  { name: 'Far Point', fromV: 20, needsLevel: 3, cost: 1500 },
+]
 
 /** Where the camera rests by default, and how far it may roam (island frame). */
-export const CAMERA_HOME = { u: 0.5, v: -6, width: 58 }
-export const CAMERA_BOUNDS = { uMin: -17, uMax: 17, vMin: -38, vMax: 40, widthMin: 14, widthMax: 92 }
+export const CAMERA_HOME = { u: 9.5, v: -24, width: 60 }
+export const CAMERA_BOUNDS = { uMin: -17, uMax: 24, vMin: -40, vMax: 40, widthMin: 14, widthMax: 96 }

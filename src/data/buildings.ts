@@ -48,7 +48,7 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
     id: 'partsMarket',
     name: 'Parts Market',
     role: 'Buy now or order for less',
-    blurb: 'Stalls for power, comms, instruments, computers, pointing and propulsion.',
+    blurb: 'Stalls on the dock for power, comms, instruments, computers, pointing and propulsion. Orders come in by boat.',
     action: 'Go shopping',
     buildCost: 0,
     buildSeconds: 0,

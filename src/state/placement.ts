@@ -18,7 +18,10 @@ interface PlacementState {
   id: BuildingId | null
   at: CellPos
   isNew: boolean
+  /** 0 = door down-left, 1 = door down-right */
+  facing: number
   problem: string | null
+  rotate: () => void
   begin: (id: BuildingId, isNew: boolean) => void
   moveTo: (at: CellPos) => void
   cancel: () => void
@@ -28,25 +31,35 @@ interface PlacementState {
 
 function check(id: BuildingId, at: CellPos): string | null {
   const g = useGame.getState()
-  return placementProblem(id, at, occupancy(g.placed, g.cleared, id))
+  return placementProblem(id, at, occupancy(g.placed, g.cleared, id), g.zones)
 }
 
 export const usePlacement = create<PlacementState>((set, get) => ({
   id: null,
   at: { i: 0, j: 0 },
   isNew: false,
+  facing: 0,
   problem: null,
+  rotate: () => {
+    sfx('snap')
+    set({ facing: get().facing ? 0 : 1 })
+  },
   begin: (id, isNew) => {
     const g = useGame.getState()
+    if (id === 'partsMarket') {
+      sfx('error')
+      useUi.getState().toast('The market stays on the dock, where the boats come in')
+      return
+    }
     let at = g.placed[id]
     if (!at || isNew) {
       // start where the player is looking, on the nearest free ground
       const t = rig.targetWorld()
-      at = nearestFree(id, cellForCenter(t.x, t.z, FOOTPRINT[id]), occupancy(g.placed, g.cleared, id))
+      at = nearestFree(id, cellForCenter(t.x, t.z, FOOTPRINT[id]), occupancy(g.placed, g.cleared, id), g.zones)
     }
     useUi.getState().close()
     sfx('pop')
-    set({ id, isNew, at, problem: check(id, at) })
+    set({ id, isNew, at, facing: isNew ? 0 : (g.facing[id] ?? 0), problem: check(id, at) })
   },
   moveTo: (at) => {
     const { id, at: old } = get()
@@ -58,7 +71,7 @@ export const usePlacement = create<PlacementState>((set, get) => ({
     set({ id: null })
   },
   confirm: () => {
-    const { id, at, isNew } = get()
+    const { id, at, isNew, facing } = get()
     if (!id) return null
     const problem = check(id, at)
     if (problem) return problem
@@ -70,11 +83,12 @@ export const usePlacement = create<PlacementState>((set, get) => ({
       const now = Date.now()
       useGame.setState({
         placed: { ...useGame.getState().placed, [id]: at },
+        facing: { ...useGame.getState().facing, [id]: facing },
         buildings: { ...useGame.getState().buildings, [id]: { level: 0, buildStart: now, buildEnd: now + toMs(def.buildSeconds), buildTo: 1 } },
       })
       sfx('build')
     } else {
-      useGame.setState({ placed: { ...g.placed, [id]: at } })
+      useGame.setState({ placed: { ...g.placed, [id]: at }, facing: { ...g.facing, [id]: facing } })
       sfx('snap')
     }
     set({ id: null })

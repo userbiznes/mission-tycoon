@@ -50,6 +50,9 @@ interface UiState {
   /** overgrowth the player tapped and may clear */
   clearTarget: string | null
   setClearTarget: (id: string | null) => void
+  /** the fenced-off zone whose sign was tapped */
+  zonePopup: boolean
+  setZonePopup: (open: boolean) => void
   /** a Rocco tip waiting to be read */
   tip: string | null
   /** show a contextual tip once per save */
@@ -89,6 +92,8 @@ export const useUi = create<UiState>((set, get) => ({
   bumpHud: (which) => set({ bump: { ...get().bump, [which]: get().bump[which] + 1 } }),
   clearTarget: null,
   setClearTarget: (clearTarget) => set({ clearTarget }),
+  zonePopup: false,
+  setZonePopup: (zonePopup) => set({ zonePopup }),
   tip: null,
   showTip: (id) => {
     if (tipGate?.(id)) set({ tip: id })

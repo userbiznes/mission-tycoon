@@ -27,3 +27,5 @@ registerModel('crewQuarters', createCrewQuarters)
 registerModel('construction', createConstruction)
 registerModel('truck', createTruck)
 registerModel('crew', createCrew)
+import { createBoat } from './boat'
+registerModel('boat', createBoat)

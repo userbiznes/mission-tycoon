@@ -4,14 +4,12 @@ import * as THREE from 'three'
 import { Kit, seeded } from '../art/kit'
 import { palette } from '../art/palette'
 import { materials } from '../art/materials'
-import { GATE_SPOT } from '../data/layout'
-import { FOOTPRINT, type BuildingId } from '../data/layout'
 import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { usePlacement } from '../state/placement'
 import { sfx } from '../ui/sound'
-import { CELL, allObstacles, cellKey, isLand, occupancy, roadNetwork, worldToCell, type Obstacle, type ObstacleKind } from './grid'
-import { BEACH_W, ISLAND_V, PLATEAU_D, coastUv, groundHeightUv, uvToWorld, vnoise } from './world'
+import { CELL, DOCK, DOCK_SIZE, allObstacles, cellKey, isLand, occupancy, worldToCell, type Obstacle, type ObstacleKind } from './grid'
+import { BEACH_W, PLATEAU_D, coastUv, groundHeightUv, uvToWorld, vnoise } from './world'
 
 // ------------------------------------------------------------------ prop geometry
 function treeRound(): THREE.BufferGeometry {
@@ -188,6 +186,10 @@ function deadTree(): THREE.BufferGeometry {
   return k.geometry()
 }
 
+const DOCK_X = (DOCK.i + DOCK_SIZE / 2) * CELL
+const DOCK_Z = (DOCK.j + DOCK_SIZE / 2) * CELL
+const DOCK_R = (DOCK_SIZE / 2) * CELL + 2.2
+
 // ------------------------------------------------------------------ scatter
 interface Spot {
   x: number
@@ -208,6 +210,8 @@ function scatter(seed: number, count: number, accept: (u: number, v: number, d: 
     const d = coastUv(u, v)
     if (!accept(u, v, d, rnd)) continue
     const [x, z] = uvToWorld(u, v)
+    // nothing grows through the dock
+    if (Math.abs(x - DOCK_X) < DOCK_R && Math.abs(z - DOCK_Z) < DOCK_R) continue
     out.push({ x, z, y: groundHeightUv(u, v), s: scale[0] + rnd() * (scale[1] - scale[0]), rot: rnd() * Math.PI * 2 })
   }
   return out
@@ -274,7 +278,7 @@ export function GroundCover({ blocked }: { blocked: Set<number> }) {
   const geo = useMemo(() => ({ tuft: tuft(), flowers: [palette.flowerPink, palette.flowerWhite, palette.flowerOrange, palette.flowerBlue].map(flower) }), [])
   const all = useMemo(() => {
     const onMeadow = (d: number) => d < PLATEAU_D - 0.2
-    const tufts = scatter(5, 1500, (u, v, d) => onMeadow(d) && vnoise(u * 0.4, v * 0.4) > 0.28, [0.6, 1.3], 40)
+    const tufts = scatter(5, 620, (u, v, d) => onMeadow(d) && vnoise(u * 0.3, v * 0.3) > 0.58, [0.6, 1.3], 60)
     const rnd = seeded(6)
     const flowers: Spot[][] = [[], [], [], []]
     for (let p = 0; p < 110; p++) {
@@ -351,7 +355,8 @@ function ObstacleKindMesh({ kind, list, cleared }: { kind: ObstacleKind; list: O
     if (e.delta > 8 || e.instanceId === undefined) return
     const ob = list[e.instanceId]
     if (!ob || cleared.has(ob.id)) return
-    if (usePlacement.getState().id || useGame.getState().phase !== 'play' || useGame.getState().tourStep >= 0) return
+    const g = useGame.getState()
+    if (usePlacement.getState().id || g.phase !== 'play' || g.tourStep >= 0 || ob.zone >= g.zones) return
     e.stopPropagation()
     sfx('pop')
     useUi.getState().setClearTarget(ob.id)
@@ -377,95 +382,12 @@ export function Overgrowth() {
   )
 }
 
-/** Cells that ground cover must leave bare: buildings, overgrowth and roads. */
+/** Cells that ground cover must leave bare: buildings, overgrowth and the dock. */
 export function useBlockedCells(): Set<number> {
   const placed = useGame((s) => s.placed)
   const cleared = useGame((s) => s.cleared)
-  return useMemo(() => {
-    const occ = occupancy(placed, cleared)
-    for (const c of roadNetwork(placed, cleared).cells) occ.add(cellKey(c.i, c.j))
-    return occ
-  }, [placed, cleared])
+  return useMemo(() => occupancy(placed, cleared), [placed, cleared])
 }
 
-/** Dirt roads that grow from the pier to every front door, plus a worn yard under each building. */
-export function Roads() {
-  const placed = useGame((s) => s.placed)
-  const cleared = useGame((s) => s.cleared)
-  const object = useMemo(() => {
-    const kit = new Kit()
-    const net = roadNetwork(placed, cleared)
-    for (const layer of [0, 1]) {
-      const size = CELL * (layer === 0 ? 1.32 : 1.08)
-      for (const c of net.cells) {
-        kit.slab(size, size, layer === 0 ? 0.03 : 0.055, size * 0.42, {
-          color: layer === 0 ? palette.pathEdge : palette.path,
-          top: layer === 0 ? palette.pathEdge : palette.sandLight,
-          at: [(c.i + 0.5) * CELL, 0, (c.j + 0.5) * CELL],
-          bevel: 0.014,
-          shade: 0.03,
-        })
-      }
-    }
-    for (const id of Object.keys(placed) as BuildingId[]) {
-      const at = placed[id]!
-      const n = FOOTPRINT[id] * CELL
-      kit.slab(n + 0.9, n + 0.9, 0.028, 1.3, {
-        color: palette.dirt,
-        top: palette.pathEdge,
-        at: [at.i * CELL + n / 2, 0, at.j * CELL + n / 2],
-        bevel: 0.012,
-        shade: 0.03,
-      })
-    }
-    const g = kit.build('roads')
-    g.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) o.castShadow = false
-    })
-    return g
-  }, [placed, cleared])
-  useLayoutEffect(
-    () => () => {
-      object.traverse((o) => {
-        const m = o as THREE.Mesh
-        if (m.isMesh) m.geometry.dispose()
-      })
-    },
-    [object],
-  )
-  return <primitive object={object} />
-}
-
-/** The old wooden pier where deliveries come ashore. */
-export function Pier() {
-  const object = useMemo(() => {
-    const kit = new Kit()
-    const [gx, gz] = uvToWorld(GATE_SPOT[0], GATE_SPOT[1])
-    const dir = new THREE.Vector2(-ISLAND_V.x, -ISLAND_V.y)
-    const angle = Math.atan2(-dir.y, dir.x)
-    const len = 34
-    kit.at([gx, 0, gz], [0, angle, 0], () => {
-      // deck, with a ramp up to the plateau
-      kit.box(len, 0.16, 2.6, { color: palette.woodDark, top: palette.wood, at: [len / 2 + 1.5, -0.18, 0], r: 0.05 })
-      for (let x = 2; x < len + 1; x += 0.62) {
-        kit.box(0.5, 0.07, 2.8, { color: palette.wood, top: palette.woodLight, at: [x, -0.07, 0], r: 0.025, shade: 0.05 })
-      }
-      for (let x = 3; x < len + 1; x += 3.4) {
-        for (const z of [-1.35, 1.35]) {
-          kit.cyl(0.17, 0.2, 2.6, { color: palette.trunkDark, top: palette.wood, at: [x, -1.0, z], bevel: 0.04, seg: 8 })
-          kit.sphere(0.2, { color: palette.woodLight, at: [x, 0.34, z], seg: 8 })
-        }
-        kit.beam([x, 0.22, -1.35], [x + 3.4, 0.22, -1.35], 0.06, { color: palette.rubber, round: true })
-      }
-      // a lamp and a few crates at the landing
-      kit.cyl(0.06, 0.08, 2.4, { color: palette.metalDark, top: palette.metalLight, at: [4.5, 1.1, 1.35], bevel: 0.02, seg: 8 })
-      kit.sphere(0.2, { color: palette.lampWarm, top: palette.lampHot, at: [4.5, 2.4, 1.35], seg: 10, mat: 'glow', shade: 0 })
-      kit.box(0.7, 0.7, 0.7, { color: palette.woodDark, top: palette.wood, at: [7.2, 0.3, -0.8], rot: [0, 0.3, 0], r: 0.06 })
-      kit.box(0.5, 0.5, 0.5, { color: palette.woodDark, top: palette.woodLight, at: [8.0, 0.2, -0.4], rot: [0, -0.4, 0], r: 0.05 })
-    })
-    return kit.build('pier')
-  }, [])
-  return <primitive object={object} />
-}
-
-export { isLand }
+export { isLand, treeRound, treePine, scatter, Instances }
+export type { Spot }

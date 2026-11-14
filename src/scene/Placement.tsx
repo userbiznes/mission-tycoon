@@ -42,6 +42,7 @@ export function Placement() {
   const at = usePlacement((s) => s.at)
   const problem = usePlacement((s) => s.problem)
   const moveTo = usePlacement((s) => s.moveTo)
+  const facing = usePlacement((s) => s.facing)
   const ghost = useRef<THREE.Group>(null)
   const drag = useRef<{ di: number; dj: number } | null>(null)
 
@@ -94,7 +95,7 @@ export function Placement() {
         <planeGeometry args={[size + 0.5, size + 0.5]} />
         <meshBasicMaterial color={problem ? palette.bad : palette.good} transparent opacity={0.5} depthWrite={false} toneMapped={false} />
       </mesh>
-      <group ref={ghost} position={[cx, 0.35, cz]}>
+      <group ref={ghost} position={[cx, 0.35, cz]} rotation-y={facing * (Math.PI / 2)}>
         {hasModel(id) && <Model model={id} options={{ level: 1, building: id }} />}
       </group>
     </group>

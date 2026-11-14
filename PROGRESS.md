@@ -60,6 +60,17 @@ The game was first built portrait (per the original brief) and then turned to **
 - **Decision cards** are now two plain buttons (the swipe gesture was removed).
 - **Character portraits:** the game loads `public/characters/<id>.png` when present (falls back to the built-in drawings) and labels them "AI-generated". Prompts are in `docs/character-prompts.md`.
 
+## Layout rework from reference study (Sat Nov 14, by request)
+
+Studied the eight official store screenshots of a leading farm-builder for genre conventions (not copied: all art here is original). What changed:
+
+- **Symmetric three-quarter camera** (45°) and **mixed building facing**; a Rotate button in placement turns a building's door down-left or down-right.
+- **No roads.** The auto-routed dirt tracks are gone; buildings stand on a clean, brighter lawn.
+- **The Parts Market stands on a dock**: a plank deck on posts over the shallows with rope posts, crates and a jetty. Orders arrive by **cargo boat** (the truck is retired). The market is a fixed landmark and cannot be moved.
+- **The island opens from west to east.** Only the Old Spaceport zone is open at the start; East Meadow (level 2, 600 coins) and Far Point (level 3, 1,500 coins) sit behind fences with a padlock sign and wild woods until opened.
+- **Shop tray**: the Build button is bottom-left and opens a tray of blueprints along the bottom.
+- The starting buildings are grouped near the dock so the whole spaceport and the dock fit the opening view.
+
 **Decisions and cuts**
 - Tone mapping: Khronos Neutral (see M0).
 - The mission globe is procedural (no Blue Marble texture), so the game ships with no external imagery at all.

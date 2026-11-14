@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { DEFAULT_LOGO, setAgencyLogo, type LogoSpec } from '../art/logo'
 import { LEVELS, STARTING_BANK } from '../data/economy'
-import { BUILDING_IDS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import { BUILDING_IDS, START_FACING, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
 import { startLayout, type CellPos } from '../scene/grid'
 import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/types'
 
@@ -11,7 +11,7 @@ import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/
  */
 
 const SAVE_KEY = 'mission-tycoon:save'
-const SAVE_VERSION = 3
+const SAVE_VERSION = 4
 
 export type Phase = 'title' | 'onboarding' | 'arrival' | 'play'
 
@@ -86,6 +86,10 @@ export interface SaveData {
   buildings: Record<BuildingId, BuildingState>
   /** where each building stands on the build grid (corner cell of its footprint) */
   placed: Partial<Record<BuildingId, CellPos>>
+  /** which way each building faces: 0 = door down-left, 1 = door down-right */
+  facing: Partial<Record<BuildingId, number>>
+  /** how many zones of the island are open (1 = just the old spaceport) */
+  zones: number
   /** ids of overgrowth the player has cleared */
   cleared: string[]
   inventory: Record<string, number>
@@ -129,6 +133,8 @@ export function freshSave(): SaveData {
     level: 1,
     buildings: freshBuildings(),
     placed: startLayout(),
+    facing: { ...START_FACING },
+    zones: 1,
     cleared: [],
     inventory: {},
     deliveries: [],
@@ -283,6 +289,8 @@ function snapshot(s: GameState): SaveData {
     level: s.level,
     buildings: s.buildings,
     placed: s.placed,
+    facing: s.facing,
+    zones: s.zones,
     cleared: s.cleared,
     inventory: s.inventory,
     deliveries: s.deliveries,

@@ -1,5 +1,5 @@
 import { BUILDINGS } from '../data/buildings'
-import { FOCUS_WIDTH, type BuildingId } from '../data/layout'
+import { FOCUS_WIDTH, ZONES, type BuildingId } from '../data/layout'
 import { OBSTACLE_INFO, allObstacles, buildingCenter } from '../scene/grid'
 import { rig, screenToIsland } from '../scene/cameraRig'
 import { juice } from '../scene/juice'
@@ -45,11 +45,26 @@ export function clearObstacle(obstacleId: string): string | null {
   const g = useGame.getState()
   const o = allObstacles().find((x) => x.id === obstacleId)
   if (!o || g.cleared.includes(obstacleId)) return null
+  if (o.zone >= g.zones) return 'That land is still fenced off'
   const info = OBSTACLE_INFO[o.kind]
   if (!g.spend(info.cost)) return 'Not enough coins'
   useGame.setState({ cleared: [...useGame.getState().cleared, obstacleId] })
   if (info.xp) useGame.getState().addXp(info.xp)
   sfx('build')
+  return null
+}
+
+/** Open the next zone of the island. Returns an error line or null. */
+export function unlockZone(): string | null {
+  const g = useGame.getState()
+  const def = ZONES[g.zones]
+  if (!def) return null
+  if (g.level < def.needsLevel) return `Reach agency level ${def.needsLevel} first`
+  if (!g.spend(def.cost)) return 'Not enough coins'
+  useGame.setState({ zones: g.zones + 1 })
+  useGame.getState().addXp(3)
+  sfx('success')
+  useUi.getState().toast(`${def.name} is open! Clear it and build.`, 'good')
   return null
 }
 

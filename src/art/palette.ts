@@ -27,9 +27,9 @@ export const palette = {
   foam: '#f6fffb',
 
   // --- land ---
-  grass: '#7cc44c',
-  grassLight: '#9bd65a',
-  grassDeep: '#60b148',
+  grass: '#84cd41',
+  grassLight: '#9fdb4e',
+  grassDeep: '#72c03f',
   grassShade: '#4f9d3e',
   grassDry: '#c2d86a',
   sand: '#f6dfa6',

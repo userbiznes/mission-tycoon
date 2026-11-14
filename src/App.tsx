@@ -5,8 +5,8 @@ import { processTimers } from './state/actions'
 import { onLevelUp, useGame } from './state/game'
 import { sfx } from './ui/sound'
 import { useUi } from './state/ui'
-import { BuildMenu, BuildingSheet } from './ui/BuildingSheet'
-import { BuildButton, ClearPopup, PlacementBar } from './ui/PlacementUi'
+import { BuildingSheet } from './ui/BuildingSheet'
+import { BuildButton, ClearPopup, PlacementBar, ZonePopup } from './ui/PlacementUi'
 import { usePlacement } from './state/placement'
 import { Hud } from './ui/Hud'
 import { MarketSheet } from './ui/MarketSheet'
@@ -98,7 +98,7 @@ function Sheets() {
     case 'contracts':
       return <ContractBoard />
     case 'buildmenu':
-      return <BuildMenu />
+      return null
     case 'market':
       return <MarketSheet />
     default:
@@ -165,6 +165,7 @@ export function App() {
           {phase === 'play' && !screen && <BuildButton />}
           {phase === 'play' && !screen && <PlacementBar />}
           {phase === 'play' && !screen && !placing && <ClearPopup />}
+          {phase === 'play' && !screen && !placing && <ZonePopup />}
           {screen === 'builder' && <Builder />}
           {screen === 'launchPrep' && <LaunchPrep />}
           {screen === 'launch' && launching && <LaunchScreen />}

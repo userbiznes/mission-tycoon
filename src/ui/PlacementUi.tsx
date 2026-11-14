@@ -1,5 +1,8 @@
 import { BUILDINGS } from '../data/buildings'
-import { clearObstacle } from '../state/actions'
+import { BUILDING_IDS, ZONES } from '../data/layout'
+import { zoneSignWorld } from '../scene/Island'
+import { BUILDING_ICON } from './BuildingSheet'
+import { clearObstacle, unlockZone } from '../state/actions'
 import { useGame } from '../state/game'
 import { usePlacement } from '../state/placement'
 import { useUi } from '../state/ui'
@@ -17,6 +20,7 @@ export function PlacementBar() {
   const problem = usePlacement((s) => s.problem)
   const confirm = usePlacement((s) => s.confirm)
   const cancel = usePlacement((s) => s.cancel)
+  const rotate = usePlacement((s) => s.rotate)
   const toast = useUi((s) => s.toast)
   if (!id) return null
   const def = BUILDINGS[id]
@@ -25,8 +29,11 @@ export function PlacementBar() {
       <div className="panel">
         <div className="grow">
           <b>{isNew ? `Place the ${def.name}` : `Move the ${def.name}`}</b>
-          <small className={problem ? 'bad' : ''}>{problem ?? 'Drag it, or tap the ground. Green means it fits.'}</small>
+          <small className={problem ? 'bad' : ''}>{problem ?? 'Drag it, or tap the ground. Turn it with the blue button.'}</small>
         </div>
+        <Btn tone="blue" round sound={null} onClick={rotate} aria-label="Turn it round">
+          <Icon.turn />
+        </Btn>
         <Btn tone="red" round onClick={cancel} aria-label="Cancel">
           <Icon.close />
         </Btn>
@@ -87,17 +94,112 @@ export function ClearPopup() {
   )
 }
 
-/** The hammer button that opens the build menu. */
+/** Popup over the fence sign: open the next part of the island. */
+export function ZonePopup() {
+  const open = useUi((s) => s.zonePopup)
+  const setOpen = useUi((s) => s.setZonePopup)
+  const toast = useUi((s) => s.toast)
+  const zones = useGame((s) => s.zones)
+  const level = useGame((s) => s.level)
+  const coins = useGame((s) => s.coins)
+  const def = ZONES[zones]
+  if (!open || !def) return null
+  const [x, z] = zoneSignWorld(zones)
+  const locked = level < def.needsLevel
+  return (
+    <Pin at={[x, 3.6, z]}>
+      <div className="clear-pop panel">
+        <b>{def.name}</b>
+        <small>Wild land beyond the fence. Open it to clear and build there.</small>
+        <div>
+          {locked ? (
+            <span className="chip warn">
+              <Icon.lock /> Needs agency level {def.needsLevel}
+            </span>
+          ) : (
+            <Btn
+              tone="yellow"
+              size="sm"
+              sound={null}
+              disabled={coins < def.cost}
+              onClick={() => {
+                const err = unlockZone()
+                if (err) toast(err, 'bad')
+                setOpen(false)
+              }}
+            >
+              Open it up <Price amount={def.cost} />
+            </Btn>
+          )}
+          <Btn tone="cream" size="sm" round onClick={() => setOpen(false)} aria-label="Not now">
+            <Icon.close style={{ filter: 'invert(0.75)' }} />
+          </Btn>
+        </div>
+      </div>
+    </Pin>
+  )
+}
+
+/** The shop button, bottom-left, and the tray of blueprints it opens. */
 export function BuildButton() {
+  const sheet = useUi((s) => s.sheet)
   const open = useUi((s) => s.open)
+  const close = useUi((s) => s.close)
   const placing = usePlacement((s) => s.id)
   const tour = useGame((s) => s.tourStep)
+  const level = useGame((s) => s.level)
+  const coins = useGame((s) => s.coins)
+  const placed = useGame((s) => s.placed)
+  const toast = useUi((s) => s.toast)
   if (placing || tour >= 0) return null
+  const isOpen = sheet?.kind === 'buildmenu'
+  const todo = BUILDING_IDS.filter((id) => !placed[id])
   return (
-    <div className="build-btn">
-      <Btn tone="yellow" onClick={() => open({ kind: 'buildmenu' })}>
-        <Icon.hammer /> Build
-      </Btn>
-    </div>
+    <>
+      <div className="build-btn">
+        <Btn tone="yellow" onClick={() => (isOpen ? close() : open({ kind: 'buildmenu' }))}>
+          <Icon.hammer /> Build
+        </Btn>
+      </div>
+      {isOpen && (
+        <div className="shop-tray">
+          {todo.length === 0 && <p className="empty-note">Everything is built. Press and hold a building to move it.</p>}
+          {todo.map((id) => {
+            const def = BUILDINGS[id]
+            const I = Icon[BUILDING_ICON[id]]
+            const locked = level < def.needsLevel
+            return (
+              <button
+                key={id}
+                type="button"
+                className={`shop-card${locked ? ' locked' : ''}`}
+                onClick={() => {
+                  if (locked) {
+                    sfx('error')
+                    toast(`${def.name} unlocks at agency level ${def.needsLevel}`)
+                  } else if (coins < def.buildCost) {
+                    sfx('error')
+                    toast('Not enough coins', 'bad')
+                  } else usePlacement.getState().begin(id, true)
+                }}
+              >
+                <span className="part-icon">
+                  <I />
+                </span>
+                <b>{def.name}</b>
+                <small>{def.role}</small>
+                {locked ? (
+                  <span className="chip warn">
+                    <Icon.lock /> Level {def.needsLevel}
+                  </span>
+                ) : (
+                  <Price amount={def.buildCost} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </>
   )
 }

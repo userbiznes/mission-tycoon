@@ -38,7 +38,7 @@ export const TOUR: TourStep[] = [
     focus: 'partsMarket',
     text: "Parts come from the market. Some are in stock, some we have to order. Ordering's cheaper, but you wait. Grab a camera now, and order a battery.",
     do: 'shop',
-    hint: 'Tap the market',
+    hint: 'Tap the market on the dock',
   },
   {
     id: 'bay',

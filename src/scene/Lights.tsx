@@ -40,7 +40,7 @@ export function Lights({ shadowSize = 2048 }: { shadowSize?: number }) {
 
   return (
     <>
-      <hemisphereLight args={[palette.hemiSky, palette.hemiGround, 1.15]} />
+      <hemisphereLight args={[palette.hemiSky, palette.hemiGround, 1.25]} />
       <ambientLight color={palette.sunGlow} intensity={0.18} />
       <directionalLight
         ref={sun}
@@ -59,7 +59,7 @@ export function Lights({ shadowSize = 2048 }: { shadowSize?: number }) {
         shadow-camera-bottom={-30}
       />
       {/* cool fill from the camera side so shaded faces keep their colour */}
-      <directionalLight color={palette.hemiSky} intensity={0.35} position={[40, 30, -10]} />
+      <directionalLight color={palette.sun} intensity={0.95} position={[40, 26, -6]} />
     </>
   )
 }

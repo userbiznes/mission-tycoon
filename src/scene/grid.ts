@@ -1,6 +1,6 @@
-import { FOOTPRINT, GATE_SPOT, START_SPOTS, type BuildingId } from '../data/layout'
+import { DOCK_SPOT, FOOTPRINT, START_SPOTS, ZONES, type BuildingId } from '../data/layout'
 import { seeded } from '../art/kit'
-import { PLATEAU_D, coastWorld, uvToWorld } from './world'
+import { PLATEAU_D, coastWorld, uvToWorld, worldToUv } from './world'
 
 /**
  * The build grid. Cells are squares aligned with the world axes, so on screen
@@ -45,11 +45,31 @@ export function isLand(i: number, j: number): boolean {
   return v
 }
 
-// ------------------------------------------------------------------ start layout
-export const GATE: CellPos = worldToCell(...uvToWorld(GATE_SPOT[0], GATE_SPOT[1]))
+// ------------------------------------------------------------------ zones
+/** Which zone a cell belongs to (0 = the starting land in the west). */
+export function zoneOfCell(i: number, j: number): number {
+  const v = worldToUv((i + 0.5) * CELL, (j + 0.5) * CELL)[1]
+  let z = 0
+  for (let n = 1; n < ZONES.length; n++) if (v >= ZONES[n].fromV) z = n
+  return z
+}
+
+// ------------------------------------------------------------------ the dock and the start layout
+/** The dock: a square deck of cells on the south shore with a jetty running out to sea. */
+export const DOCK_SIZE = 8
+export const DOCK: CellPos = cellForCenter(...uvToWorld(DOCK_SPOT[0], DOCK_SPOT[1]), DOCK_SIZE)
+export const JETTY = { i: DOCK.i + DOCK_SIZE, j: DOCK.j + 4, len: 6, wide: 2 }
+/** The market's fixed spot in the middle of the deck. */
+export const MARKET_AT: CellPos = { i: DOCK.i + 2, j: DOCK.j + 1 }
+
+const dockCells = new Set<number>()
+for (let a = 0; a < DOCK_SIZE; a++) for (let b = 0; b < DOCK_SIZE; b++) dockCells.add(key(DOCK.i + a, DOCK.j + b))
+export function isDock(i: number, j: number): boolean {
+  return dockCells.has(key(i, j))
+}
 
 export function startLayout(): Partial<Record<BuildingId, CellPos>> {
-  const out: Partial<Record<BuildingId, CellPos>> = {}
+  const out: Partial<Record<BuildingId, CellPos>> = { partsMarket: MARKET_AT }
   for (const id of Object.keys(START_SPOTS) as BuildingId[]) {
     const [x, z] = uvToWorld(START_SPOTS[id][0], START_SPOTS[id][1])
     out[id] = cellForCenter(x, z, FOOTPRINT[id])
@@ -69,6 +89,8 @@ export interface Obstacle {
   size: number
   rot: number
   scale: number
+  /** which part of the island it stands in */
+  zone: number
 }
 
 export const OBSTACLE_INFO: Record<ObstacleKind, { name: string; size: number; cost: number; xp: number }> = {
@@ -87,33 +109,17 @@ export function allObstacles(): Obstacle[] {
   const rnd = seeded(2026)
   const taken = new Set<number>()
   const start = startLayout()
-  // keep the old buildings, their front yards and the gate clear
+  // keep the old buildings, a little yard around each, and the dock clear
   for (const id of Object.keys(start) as BuildingId[]) {
     const at = start[id]!
     const n = FOOTPRINT[id]
-    for (let i = at.i - 1; i < at.i + n + 1; i++) for (let j = at.j - 1; j < at.j + n + 2; j++) taken.add(key(i, j))
+    for (let i = at.i - 2; i < at.i + n + 2; i++) for (let j = at.j - 2; j < at.j + n + 2; j++) taken.add(key(i, j))
   }
-  for (let i = GATE.i - 2; i <= GATE.i + 2; i++) for (let j = GATE.j - 2; j <= GATE.j + 2; j++) taken.add(key(i, j))
-  // and keep the first dirt tracks (and their verges) open
-  {
-    const occ = new Set<number>()
-    for (const id of Object.keys(start) as BuildingId[]) {
-      const at = start[id]!
-      const n = FOOTPRINT[id]
-      for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) occ.add(key(at.i + a, at.j + b))
-    }
-    const roads = new Set<number>()
-    for (const id of Object.keys(start) as BuildingId[]) {
-      for (const c of findRoute(GATE, doorCell(id, start[id]!, occ), occ, roads)) {
-        roads.add(key(c.i, c.j))
-        for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) taken.add(key(c.i + a, c.j + b))
-      }
-    }
-  }
+  for (let i = DOCK.i - 2; i < DOCK.i + DOCK_SIZE + 2; i++) for (let j = DOCK.j - 2; j < DOCK.j + DOCK_SIZE + 2; j++) taken.add(key(i, j))
   const kinds: ObstacleKind[] = ['thicket', 'thicket', 'thicket', 'boulder', 'rock', 'rock', 'stump', 'scrap', 'deadTree', 'deadTree']
   const out: Obstacle[] = []
   let tries = 0
-  while (out.length < 120 && tries < 6000) {
+  while (out.length < 150 && tries < 9000) {
     tries++
     const kind = kinds[Math.floor(rnd() * kinds.length)]
     const size = OBSTACLE_INFO[kind].size
@@ -122,8 +128,10 @@ export function allObstacles(): Obstacle[] {
     let ok = true
     for (let a = 0; a < size && ok; a++) for (let b = 0; b < size && ok; b++) if (!isLand(i + a, j + b) || taken.has(key(i + a, j + b))) ok = false
     if (!ok) continue
+    // the starting land is only lightly overgrown; the fenced-off east is wild
+    if (zoneOfCell(i, j) === 0 && rnd() < 0.55) continue
     for (let a = 0; a < size; a++) for (let b = 0; b < size; b++) taken.add(key(i + a, j + b))
-    out.push({ id: `${kind}${out.length}`, kind, i, j, size, rot: rnd() * Math.PI * 2, scale: 0.85 + rnd() * 0.35 })
+    out.push({ id: `${kind}${out.length}`, kind, i, j, size, rot: rnd() * Math.PI * 2, scale: 0.85 + rnd() * 0.35, zone: zoneOfCell(i, j) })
   }
   obstacleCache = out
   return out
@@ -141,6 +149,7 @@ export function occupancy(placed: Placed, cleared: string[], ignore?: BuildingId
     const n = FOOTPRINT[id]
     for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) occ.add(key(at.i + a, at.j + b))
   }
+  for (const k of dockCells) occ.add(k)
   const gone = new Set(cleared)
   for (const o of allObstacles()) {
     if (gone.has(o.id)) continue
@@ -150,115 +159,25 @@ export function occupancy(placed: Placed, cleared: string[], ignore?: BuildingId
 }
 
 /** Why a building can't go here, or null when the spot is free. */
-export function placementProblem(id: BuildingId, at: CellPos, occ: Set<number>): string | null {
+export function placementProblem(id: BuildingId, at: CellPos, occ: Set<number>, zones = ZONES.length): string | null {
   const n = FOOTPRINT[id]
   for (let a = 0; a < n; a++)
     for (let b = 0; b < n; b++) {
       if (!isLand(at.i + a, at.j + b)) return 'Too close to the shore'
+      if (zoneOfCell(at.i + a, at.j + b) >= zones) return 'That land is still fenced off'
       if (occ.has(key(at.i + a, at.j + b))) return 'Something is in the way'
     }
   return null
 }
 
 /** A free spot for a footprint near a starting cell (spiral search). */
-export function nearestFree(id: BuildingId, from: CellPos, occ: Set<number>): CellPos {
+export function nearestFree(id: BuildingId, from: CellPos, occ: Set<number>, zones = ZONES.length): CellPos {
   for (let r = 0; r < 30; r++)
     for (let di = -r; di <= r; di++)
       for (let dj = -r; dj <= r; dj++) {
         if (Math.max(Math.abs(di), Math.abs(dj)) !== r) continue
         const at = { i: from.i + di, j: from.j + dj }
-        if (!placementProblem(id, at, occ)) return at
+        if (!placementProblem(id, at, occ, zones)) return at
       }
   return from
-}
-
-// ------------------------------------------------------------------ roads
-/** The cell in front of a building's door (its +Z side), or the nearest free cell around it. */
-export function doorCell(id: BuildingId, at: CellPos, occ: Set<number>): CellPos {
-  const n = FOOTPRINT[id]
-  const free = (i: number, j: number) => isLand(i, j) && !occ.has(key(i, j))
-  const front = { i: at.i + Math.floor(n / 2), j: at.j + n }
-  if (free(front.i, front.j)) return front
-  for (let k = 0; k < n; k++) {
-    const options: CellPos[] = [
-      { i: at.i + k, j: at.j + n },
-      { i: at.i + n, j: at.j + k },
-      { i: at.i - 1, j: at.j + k },
-      { i: at.i + k, j: at.j - 1 },
-    ]
-    for (const o of options) if (free(o.i, o.j)) return o
-  }
-  return front
-}
-
-/** A* over the grid. Cells already carrying a road are cheaper, so routes share one network. */
-export function findRoute(from: CellPos, to: CellPos, occ: Set<number>, roads: Set<number>): CellPos[] {
-  const start = key(from.i, from.j)
-  const goal = key(to.i, to.j)
-  const open: { k: number; i: number; j: number; f: number }[] = [{ k: start, i: from.i, j: from.j, f: 0 }]
-  const g = new Map<number, number>([[start, 0]])
-  const prev = new Map<number, number>()
-  const pos = new Map<number, CellPos>([[start, from]])
-  let guard = 0
-  while (open.length && guard++ < 20000) {
-    let bi = 0
-    for (let n = 1; n < open.length; n++) if (open[n].f < open[bi].f) bi = n
-    const cur = open.splice(bi, 1)[0]
-    if (cur.k === goal) {
-      const path: CellPos[] = []
-      let k: number | undefined = goal
-      while (k !== undefined) {
-        path.push(pos.get(k)!)
-        k = prev.get(k)
-      }
-      return path.reverse()
-    }
-    for (const [di, dj] of [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-    ]) {
-      const i = cur.i + di
-      const j = cur.j + dj
-      const k = key(i, j)
-      if (k !== goal && (!isLand(i, j) || occ.has(k))) continue
-      const cost = (g.get(cur.k) ?? 0) + (roads.has(k) ? 0.3 : 1)
-      if (cost < (g.get(k) ?? Infinity)) {
-        g.set(k, cost)
-        prev.set(k, cur.k)
-        pos.set(k, { i, j })
-        open.push({ k, i, j, f: cost + (Math.abs(i - to.i) + Math.abs(j - to.j)) * 0.3 })
-      }
-    }
-  }
-  return [from, to]
-}
-
-export interface RoadNetwork {
-  /** every cell that carries a dirt road */
-  cells: CellPos[]
-  /** the route from the gate to each building's door */
-  routes: Partial<Record<BuildingId, CellPos[]>>
-}
-
-/** Dirt roads grow on their own: one track from the pier to every building's front door. */
-export function roadNetwork(placed: Placed, cleared: string[]): RoadNetwork {
-  const occ = occupancy(placed, cleared)
-  const roads = new Set<number>()
-  const cells: CellPos[] = []
-  const routes: Partial<Record<BuildingId, CellPos[]>> = {}
-  const ids = (Object.keys(placed) as BuildingId[]).sort((a, b) => (a === 'partsMarket' ? -1 : b === 'partsMarket' ? 1 : 0))
-  for (const id of ids) {
-    const route = findRoute(GATE, doorCell(id, placed[id]!, occ), occ, roads)
-    routes[id] = route
-    for (const c of route) {
-      const k = key(c.i, c.j)
-      if (!roads.has(k)) {
-        roads.add(k)
-        cells.push(c)
-      }
-    }
-  }
-  return { cells, routes }
 }

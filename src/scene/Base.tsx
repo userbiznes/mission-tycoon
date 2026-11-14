@@ -12,6 +12,8 @@ import { Model } from './Model'
 export interface BaseBuilding {
   id: BuildingId
   at: CellPos
+  /** 0 = door down-left, 1 = door down-right */
+  facing?: number
   /** 0 while the first build is under way, then 1+ */
   level: number
   constructing?: boolean
@@ -83,7 +85,8 @@ export function Base({
         return (
           <group
             key={b.id}
-            position={[x, 0, z]}
+            position={[x, b.id === 'partsMarket' ? 0.1 : 0, z]}
+            rotation-y={(b.facing ?? 0) * (Math.PI / 2)}
             onPointerDown={(e: ThreeEvent<PointerEvent>) => {
               cancel()
               const id = b.id

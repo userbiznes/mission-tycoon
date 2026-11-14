@@ -5,7 +5,8 @@ import { CameraControls } from './CameraControls'
 import { Effects } from './Effects'
 import { Lights } from './Lights'
 import { Model } from './Model'
-import { GroundCover, Overgrowth, Pier, Props, Roads, useBlockedCells } from './Props'
+import { GroundCover, Overgrowth, Props, useBlockedCells } from './Props'
+import { DeliveryBoat, Dock, LockedLand } from './Island'
 import { Clouds, SkyDome } from './Sky'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
@@ -22,7 +23,6 @@ import { tapBuilding } from '../state/actions'
 import { tourHooks } from '../ui/Tour'
 import { PinProjector } from './pins'
 import { PadRocket } from './Launch'
-import { DeliveryTruck } from './Truck'
 
 const query = new URLSearchParams(window.location.search)
 /** `?model=<id>&level=2` shows one model alone on the grass: the art preview bench. */
@@ -44,18 +44,19 @@ function PreviewBench() {
 function GameBase() {
   const buildings = useGame((s) => s.buildings)
   const placed = useGame((s) => s.placed)
+  const facing = useGame((s) => s.facing)
   const phase = useGame((s) => s.phase)
   const inHand = usePlacement((s) => (s.isNew ? null : s.id))
   const list = useMemo(() => {
-    const out: { id: BuildingId; at: CellPos; level: number; constructing?: boolean }[] = []
+    const out: { id: BuildingId; at: CellPos; facing: number; level: number; constructing?: boolean }[] = []
     for (const id of BUILDING_IDS) {
       const at = placed[id]
       if (!at) continue
       const b = buildings[id]
-      out.push({ id, at, level: SHOW_ALL ? Number(query.get('level') ?? 1) : b.level, constructing: b.level === 0 && !!b.buildEnd })
+      out.push({ id, at, facing: facing[id] ?? 0, level: SHOW_ALL ? Number(query.get('level') ?? 1) : b.level, constructing: b.level === 0 && !!b.buildEnd })
     }
     return out
-  }, [buildings, placed])
+  }, [buildings, placed, facing])
   const busy = () => phase !== 'play' || !!usePlacement.getState().id
   return (
     <Base
@@ -103,8 +104,8 @@ export function Scene() {
       <Suspense fallback={null}>
         <Terrain />
         <Water />
-        <Roads />
-        <Pier />
+        <Dock />
+        <LockedLand />
         <Props />
         <Meadow />
         <Overgrowth />
@@ -116,7 +117,7 @@ export function Scene() {
           <>
             <GameBase />
             <PadRocket />
-            <DeliveryTruck />
+            <DeliveryBoat />
           </>
         )}
       </Suspense>

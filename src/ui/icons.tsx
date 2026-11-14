@@ -300,6 +300,19 @@ export const Icon = {
       <path d="M12 5v14M5 12h14" stroke="#fff" />
     </Svg>
   ),
+  turn: (p: P) => (
+    <Svg {...p} strokeWidth={2.600}>
+      <path d="M19 12a7 7 0 1 1-2.300-5.200" stroke="#fff" />
+      <path d="M19.500 3.500v4.500h-4.500" stroke="#fff" />
+    </Svg>
+  ),
+  boat: (p: P) => (
+    <Svg {...p}>
+      <path d="M3 14h18l-2.500 5.500h-13z" fill="#e9523b" />
+      <path d="M8 14V8.500h6.500L17 14" fill="#fff1d6" />
+      <path d="M11 8.500V4.500h3" />
+    </Svg>
+  ),
   up: (p: P) => (
     <Svg {...p}>
       <path d="M12 3.500l7.500 8h-4.500v9h-6v-9H4.500z" fill="#8be05f" />

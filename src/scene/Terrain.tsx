@@ -144,13 +144,14 @@ function makeTerrainMaterial(): THREE.MeshStandardMaterial {
         {
           vec2 p = vWorldPos.xz;
           float isGrass = smoothstep(0.02, 0.14, vColor.g - vColor.r);
-          float n1 = tNoise(p * 0.8);
+          float n1 = tNoise(p * 0.32);
           float n2 = tNoise(p * 3.1 + 17.0);
           float n3 = tNoise(p * 11.0 + 3.0);
-          float m = (n1 - 0.5) * 0.2 + (n2 - 0.5) * 0.12;
+          // broad soft brush strokes rather than busy mottling
+          float m = (n1 - 0.5) * 0.13 + (n2 - 0.5) * 0.045;
           diffuseColor.rgb *= 1.0 + m * mix(0.45, 1.0, isGrass);
           // lighter flecks: clover in the grass, grains in the sand
-          diffuseColor.rgb += smoothstep(0.8, 0.9, n3) * mix(0.03, 0.05, isGrass);
+          diffuseColor.rgb += smoothstep(0.86, 0.94, n3) * mix(0.03, 0.02, isGrass);
         }`,
       )
   }

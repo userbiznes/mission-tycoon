@@ -10,7 +10,8 @@ import * as THREE from 'three'
  * to the camera.
  */
 
-export const CAMERA_YAW = THREE.MathUtils.degToRad(38)
+/** 45°: a symmetric three-quarter view, so both visible walls of a building read equally. */
+export const CAMERA_YAW = THREE.MathUtils.degToRad(45)
 export const CAMERA_TILT = THREE.MathUtils.degToRad(44)
 export const CAMERA_FOV = 30
 

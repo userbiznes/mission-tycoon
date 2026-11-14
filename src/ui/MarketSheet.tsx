@@ -46,7 +46,7 @@ function PartCard({ part, guided }: { part: PartDef; guided: 'buy' | 'order' | n
               Buy now <Price amount={stockPrice(part.id)} />
             </Btn>
             <Btn tone="blue" size="sm" sound={null} className={guided === 'order' ? 'nudge' : ''} disabled={coins < part.cost} onClick={() => orderPart(part.id, guided === 'order' ? 14 : undefined)}>
-              <Icon.truck /> Order <Price amount={part.cost} />
+              <Icon.boat /> Order <Price amount={part.cost} />
               <i className="wait">{part.deliverySec}s</i>
             </Btn>
           </div>
@@ -107,13 +107,13 @@ export function MarketSheet() {
     >
       {guidedTour && (
         <p className="guide-note">
-          {!hasCamera ? 'Buy the Wide camera now. It costs a bit more, but it is yours right away.' : !hasBattery ? 'Now order a Small battery. Cheaper, and the truck brings it.' : 'Nice shopping!'}
+          {!hasCamera ? 'Buy the Wide camera now. It costs a bit more, but it is yours right away.' : !hasBattery ? 'Now order a Small battery. Cheaper, and the boat brings it.' : 'Nice shopping!'}
         </p>
       )}
       {deliveries.length > 0 && (
         <div className="deliveries">
           {deliveries.map((d) => (
-            <TimerRow key={d.id} label={`On the way: ${PART_BY_ID[d.partId].name}`} start={d.start} end={d.end} icon={<Icon.truck className="ic" />} />
+            <TimerRow key={d.id} label={`On the way: ${PART_BY_ID[d.partId].name}`} start={d.start} end={d.end} icon={<Icon.boat className="ic" />} />
           ))}
         </div>
       )}
