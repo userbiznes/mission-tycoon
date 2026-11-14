@@ -9,9 +9,10 @@ export default defineConfig({
     target: 'es2022',
     chunkSizeWarningLimit: 1600,
   },
-  server: { host: true, port: 5173 },
+  server: { host: true, port: 5173, watch: { ignored: ['**/.worktrees/**', '**/shots/**'] } },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    exclude: ['**/node_modules/**', '**/.worktrees/**'],
   },
 })
