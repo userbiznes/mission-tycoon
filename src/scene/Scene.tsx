@@ -10,17 +10,24 @@ import { Clouds, SkyDome } from './Sky'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
 import { CAMERA_FOV, uvToWorld } from './world'
-import { PLOTS } from '../data/layout'
-import { PAD_TABLE_Y } from '../art/models/launchPad'
+import { PLOTS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import { Base } from './Base'
 import { useSettings } from '../state/settings'
 
-function LaunchSite() {
-  const plot = PLOTS.launchPad
-  const [x, z] = uvToWorld(plot.u, plot.v)
+const query = new URLSearchParams(window.location.search)
+/** `?model=<id>&level=2` shows one model alone on the grass: the art preview bench. */
+const PREVIEW_MODEL = query.get('model')
+const PREVIEW_LEVEL = Number(query.get('level') ?? 1)
+/** `?all=1` shows every building, built, for art review. */
+const SHOW_ALL = query.has('all')
+
+const ALL_IDS = Object.keys(PLOTS) as BuildingId[]
+
+function PreviewBench() {
+  const [x, z] = uvToWorld(-4.4, 6.8)
   return (
     <group position={[x, 0, z]}>
-      <Model model="launchPad" options={{ level: 1 }} />
-      <Model model="rocket" options={{ kind: 'small' }} position={[0, PAD_TABLE_Y + 0.06, 0]} />
+      <Model model={PREVIEW_MODEL!} options={{ level: PREVIEW_LEVEL, kind: query.get('kind') ?? undefined }} />
     </group>
   )
 }
@@ -48,7 +55,16 @@ export function Scene() {
         <Paths />
         <Props />
         <Clouds />
-        <LaunchSite />
+        {PREVIEW_MODEL ? (
+          <PreviewBench />
+        ) : (
+          <Base
+            buildings={ALL_IDS.map((id) => ({
+              id,
+              level: SHOW_ALL || STARTING_BUILDINGS.includes(id) ? Number(query.get('level') ?? 1) : 0,
+            }))}
+          />
+        )}
       </Suspense>
       <CameraControls />
       {!low && <Effects />}
