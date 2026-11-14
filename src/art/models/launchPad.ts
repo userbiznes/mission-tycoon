@@ -221,12 +221,12 @@ export function createLaunchPad(opts: ModelOptions = {}): THREE.Object3D {
       // mismatched roof patch
       kit.box(0.6, 0.05, 0.5, { color: palette.metal, top: palette.metalLight, at: [0.32, tTop + 0.83, 0.38], rot: [0, 0.2, 0], r: 0.02 })
     }
-    // crane jib over the rocket
-    kit.beam([0.3, tTop + 0.95, 0], [1.95, tTop + 0.95, 0.3], 0.12, { color: palette.yellowDark, top: palette.yellow })
+    // crane jib, stopping short of the rocket so nothing is in the way at liftoff
+    kit.beam([0.3, tTop + 0.95, 0], [1.02, tTop + 0.95, 0.12], 0.12, { color: palette.yellowDark, top: palette.yellow })
     kit.beam([0.3, tTop + 0.95, 0], [0.3, tTop + 1.5, 0], 0.1, { color: palette.yellowDark, top: palette.yellow })
-    kit.beam([0.3, tTop + 1.5, 0], [1.9, tTop + 1.0, 0.29], 0.04, { color: palette.steel, round: true })
-    kit.beam([1.82, tTop + 0.9, 0.28], [1.82, tTop + 0.52, 0.28], 0.03, { color: palette.steel, round: true })
-    kit.sphere(0.07, { color: palette.steel, at: [1.82, tTop + 0.48, 0.28], seg: 8, mat: 'metal' })
+    kit.beam([0.3, tTop + 1.5, 0], [0.98, tTop + 1.0, 0.11], 0.04, { color: palette.steel, round: true })
+    kit.beam([0.92, tTop + 0.9, 0.1], [0.92, tTop + 0.56, 0.1], 0.03, { color: palette.steel, round: true })
+    kit.sphere(0.07, { color: palette.steel, at: [0.92, tTop + 0.52, 0.1], seg: 8, mat: 'metal' })
     // lightning mast
     kit.beam([-0.3, tTop + 0.8, -0.3], [-0.3, tTop + 2.0, -0.3], 0.06, { color: palette.metalLight, round: true })
   })

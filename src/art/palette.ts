@@ -15,6 +15,9 @@ export const palette = {
   hemiGround: '#f2c58a',
   cloud: '#ffffff',
   cloudShade: '#e3f0fa',
+  spaceTop: '#070b1f',
+  spaceHorizon: '#2f62b8',
+  spaceMid: '#131a3d',
 
   // --- ocean ---
   oceanDeep: '#0c6c88',

@@ -4,7 +4,6 @@ import * as THREE from 'three'
 import { hasModel } from '../art/registry'
 import '../art/models'
 import { palette } from '../art/palette'
-import { PAD_TABLE_Y } from '../art/models/launchPad'
 import { PLOTS, type BuildingId } from '../data/layout'
 import { sampleJuice } from './juice'
 import { Model } from './Model'
@@ -56,16 +55,12 @@ export function Juicy({ id, children }: { id: string; children: ReactNode }) {
  */
 export function Base({
   buildings,
-  rocketKind = 'small',
-  showRocket = true,
   modelOptions,
   onTap,
 }: {
   /** extra options passed to every building model (agency colours…) */
   modelOptions?: Record<string, unknown>
   buildings: BaseBuilding[]
-  rocketKind?: string
-  showRocket?: boolean
   onTap?: (id: BuildingId) => void
 }) {
   return (
@@ -95,9 +90,6 @@ export function Base({
               ) : built ? (
                 <Placeholder id={b.id} />
               ) : null}
-              {b.id === 'launchPad' && built && showRocket && (
-                <Model model="rocket" options={{ kind: rocketKind }} position={[0, PAD_TABLE_Y + 0.06, 0]} />
-              )}
             </Juicy>
           </group>
         )

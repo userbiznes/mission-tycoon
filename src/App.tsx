@@ -6,6 +6,8 @@ import { useGame } from './state/game'
 import { useUi } from './state/ui'
 import { BuildSheet, BuildingSheet } from './ui/BuildingSheet'
 import { Hud } from './ui/Hud'
+import { LaunchScreen } from './ui/LaunchScreen'
+import { useLaunch } from './state/launch'
 import { Onboarding } from './ui/Onboarding'
 import { Flyers, Toasts } from './ui/Overlays'
 import { SettingsSheet } from './ui/SettingsSheet'
@@ -31,6 +33,7 @@ export function App() {
   const phase = useGame((s) => s.phase)
   const setPhase = useGame((s) => s.setPhase)
   const begin = useGame((s) => s.begin)
+  const launching = useLaunch((s) => s.active)
 
   // title and onboarding play over a slow beauty shot of the spaceport
   useEffect(() => {
@@ -67,9 +70,10 @@ export function App() {
               }}
             />
           )}
-          {(phase === 'arrival' || phase === 'play') && <Hud />}
-          {phase === 'play' && <Tour />}
-          {phase === 'play' && <Sheets />}
+          {(phase === 'arrival' || phase === 'play') && !launching && <Hud />}
+          {phase === 'play' && !launching && <Tour />}
+          {phase === 'play' && !launching && <Sheets />}
+          {launching && <LaunchScreen />}
           <Toasts />
           <Flyers />
         </div>

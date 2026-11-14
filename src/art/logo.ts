@@ -225,3 +225,17 @@ export function logoPlate(size: number): THREE.Mesh {
   mesh.receiveShadow = false
   return mesh
 }
+
+/**
+ * The logo wrapped onto a cylinder of the given radius (for rocket hulls and tanks),
+ * centred on +Z. `size` is the logo's width and height on the surface.
+ */
+export function logoDecal(radius: number, size: number): THREE.Mesh {
+  const arc = size / radius
+  const geo = new THREE.CylinderGeometry(radius, radius, size, 10, 1, true, -arc / 2, arc)
+  const mesh = new THREE.Mesh(geo, ensure())
+  mesh.name = 'logo'
+  mesh.castShadow = false
+  mesh.receiveShadow = false
+  return mesh
+}

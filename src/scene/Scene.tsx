@@ -17,6 +17,7 @@ import { useGame } from '../state/game'
 import { tapBuilding } from '../state/actions'
 import { tourHooks } from '../ui/Tour'
 import { PinProjector } from './pins'
+import { PadRocket } from './Launch'
 
 const query = new URLSearchParams(window.location.search)
 /** `?model=<id>&level=2` shows one model alone on the grass: the art preview bench. */
@@ -87,7 +88,10 @@ export function Scene() {
         {PREVIEW_MODEL ? (
           <PreviewBench />
         ) : (
-          <GameBase />
+          <>
+            <GameBase />
+            <PadRocket />
+          </>
         )}
       </Suspense>
       <CameraControls />

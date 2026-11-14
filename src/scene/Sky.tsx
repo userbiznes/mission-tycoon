@@ -9,6 +9,9 @@ import { FWD, RIGHT } from './world'
  * buildings are lit, right faces sit in soft shade and shadows fall up-right. */
 export const SUN_DIR = new THREE.Vector3(-0.26, 1.1, 0.96).normalize()
 
+/** Shared sky state: `space` (0–1) fades the day sky into the dark of orbit during a launch. */
+export const skyState = { space: 0 }
+
 const skyVert = /* glsl */ `
   varying vec3 vDir;
   void main() {
@@ -23,6 +26,9 @@ const skyFrag = /* glsl */ `
   uniform vec3 uHorizon;
   uniform vec3 uSunDir;
   uniform vec3 uSunGlow;
+  uniform vec3 uSpaceTop;
+  uniform vec3 uSpaceHorizon;
+  uniform float uSpace;
   varying vec3 vDir;
   void main() {
     vec3 dir = normalize(vDir);
@@ -32,6 +38,9 @@ const skyFrag = /* glsl */ `
     col = mix(col, uHorizon, 1.0 - smoothstep(-0.25, 0.02, h));
     float s = max(dot(dir, normalize(uSunDir)), 0.0);
     col += uSunGlow * (pow(s, 24.0) * 0.35 + pow(s, 400.0) * 1.2);
+    // above the atmosphere: near-black overhead, a thin blue glow at the horizon
+    vec3 space = mix(uSpaceHorizon, uSpaceTop, smoothstep(-0.05, 0.42, h));
+    col = mix(col, space, uSpace);
     gl_FragColor = vec4(col, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -46,9 +55,15 @@ export function SkyDome() {
       uHorizon: { value: new THREE.Color(palette.skyHorizon) },
       uSunDir: { value: SUN_DIR.clone() },
       uSunGlow: { value: new THREE.Color(palette.sunGlow) },
+      uSpaceTop: { value: new THREE.Color(palette.spaceTop) },
+      uSpaceHorizon: { value: new THREE.Color(palette.spaceHorizon) },
+      uSpace: { value: 0 },
     }),
     [],
   )
+  useFrame(() => {
+    uniforms.uSpace.value = skyState.space
+  })
   return (
     <mesh renderOrder={-10} frustumCulled={false} name="sky">
       <sphereGeometry args={[1, 24, 16]} />
@@ -64,7 +79,7 @@ export function SkyDome() {
   )
 }
 
-function makeCloud(seed: number): THREE.Group {
+export function makeCloud(seed: number): THREE.Group {
   const rnd = seeded(seed)
   const kit = new Kit()
   const n = 4 + Math.floor(rnd() * 3)
