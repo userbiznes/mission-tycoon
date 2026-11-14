@@ -1,11 +1,14 @@
 import { registerModel } from '../registry'
 import { createCommsCenter } from './commsCenter'
+import { createCrewQuarters } from './crewQuarters'
+import { createEngineeringLab } from './engineeringLab'
 import { createIntegrationBay } from './integrationBay'
 import { createLaunchPad } from './launchPad'
 import { createMissionControl } from './missionControl'
 import { createPartsMarket } from './partsMarket'
 import { createPlot } from './plot'
 import { createRocket } from './rocket'
+import { createScienceLab } from './scienceLab'
 
 /** Every model the game can show. Swap a factory here to replace a model. */
 registerModel('launchPad', createLaunchPad)
@@ -15,3 +18,6 @@ registerModel('commsCenter', createCommsCenter)
 registerModel('integrationBay', createIntegrationBay)
 registerModel('partsMarket', createPartsMarket)
 registerModel('plot', createPlot)
+registerModel('scienceLab', createScienceLab)
+registerModel('engineeringLab', createEngineeringLab)
+registerModel('crewQuarters', createCrewQuarters)
