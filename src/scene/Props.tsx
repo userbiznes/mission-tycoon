@@ -1,10 +1,17 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
+import type { ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Kit, seeded } from '../art/kit'
 import { palette } from '../art/palette'
 import { materials } from '../art/materials'
-import { PATH_SEGS, pathDistance, plotDistance } from './paths'
-import { BEACH_W, PLATEAU_D, coastUv, groundHeightUv, uvToWorld, vnoise } from './world'
+import { GATE_SPOT } from '../data/layout'
+import { FOOTPRINT, type BuildingId } from '../data/layout'
+import { useGame } from '../state/game'
+import { useUi } from '../state/ui'
+import { usePlacement } from '../state/placement'
+import { sfx } from '../ui/sound'
+import { CELL, allObstacles, cellKey, isLand, occupancy, roadNetwork, worldToCell, type Obstacle, type ObstacleKind } from './grid'
+import { BEACH_W, ISLAND_V, PLATEAU_D, coastUv, groundHeightUv, uvToWorld, vnoise } from './world'
 
 // ------------------------------------------------------------------ prop geometry
 function treeRound(): THREE.BufferGeometry {
@@ -108,78 +115,127 @@ function flower(color: string): THREE.BufferGeometry {
   return k.geometry()
 }
 
+// ------------------------------------------------------------------ overgrowth geometry
+function thicket(): THREE.BufferGeometry {
+  const k = new Kit()
+  const blobs: [number, number, number, number][] = [
+    [0, 0.55, 0, 0.95],
+    [0.75, 0.4, 0.35, 0.62],
+    [-0.7, 0.42, -0.3, 0.66],
+    [0.2, 0.36, -0.8, 0.55],
+    [-0.35, 0.34, 0.8, 0.56],
+    [0.1, 1.1, 0.1, 0.5],
+  ]
+  for (const [x, y, z, r] of blobs) k.blob(r, { color: palette.leafDark, top: palette.leaf, at: [x, y, z], scale: [1.1, 0.85, 1], shade: 0.24 })
+  // brambles poking out
+  for (const [x, z, a] of [
+    [0.9, -0.5, 0.5],
+    [-1.0, 0.4, -0.6],
+    [0.3, 1.0, 0.3],
+  ] as const)
+    k.beam([x, 0, z], [x * 1.25, 1.0, z * 1.25 + a * 0.3], 0.07, { color: palette.trunkDark, top: palette.trunk, round: true })
+  for (const [x, y, z] of [
+    [0.5, 1.0, 0.6],
+    [-0.6, 0.85, 0.1],
+    [0.1, 1.45, -0.2],
+  ] as const)
+    k.sphere(0.09, { color: palette.flowerPink, at: [x, y, z], seg: 6, shade: 0 })
+  return k.geometry()
+}
+function boulder(): THREE.BufferGeometry {
+  const k = new Kit()
+  k.blob(1.05, { color: palette.rockDark, top: palette.rock, at: [0, 0.55, 0], scale: [1.15, 0.72, 1], detail: 1, shade: 0.22 })
+  k.blob(0.6, { color: palette.rockDark, top: palette.rock, at: [0.95, 0.3, 0.45], scale: [1, 0.7, 1], detail: 1, shade: 0.22 })
+  k.blob(0.45, { color: palette.rockDark, top: palette.rock, at: [-0.9, 0.24, -0.5], scale: [1, 0.7, 1], detail: 1, shade: 0.2 })
+  k.blob(0.3, { color: palette.leafDark, top: palette.leafLight, at: [0.2, 1.1, 0.1], scale: [1.4, 0.4, 1.2], shade: 0.1 })
+  return k.geometry()
+}
+function smallRock(): THREE.BufferGeometry {
+  const k = new Kit()
+  k.blob(0.5, { color: palette.rockDark, top: palette.rock, at: [0, 0.26, 0], scale: [1.15, 0.7, 1], detail: 1, shade: 0.2 })
+  k.blob(0.26, { color: palette.rockDark, top: palette.rock, at: [0.42, 0.13, 0.2], scale: [1, 0.7, 1], detail: 1, shade: 0.2 })
+  return k.geometry()
+}
+function stump(): THREE.BufferGeometry {
+  const k = new Kit()
+  k.cyl(0.36, 0.46, 0.5, { color: palette.trunkDark, top: palette.trunk, at: [0, 0.25, 0], bevel: 0.06, seg: 12 })
+  k.cyl(0.3, 0.3, 0.03, { color: palette.woodLight, at: [0, 0.51, 0], bevel: 0.01, seg: 12, shade: 0 })
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4
+    k.beam([Math.cos(a) * 0.3, 0.14, Math.sin(a) * 0.3], [Math.cos(a) * 0.68, 0.02, Math.sin(a) * 0.68], 0.16, { color: palette.trunkDark, top: palette.trunk, round: true })
+  }
+  k.blob(0.16, { color: palette.leaf, top: palette.leafLight, at: [0.2, 0.6, -0.1], shade: 0.1 })
+  return k.geometry()
+}
+function scrap(): THREE.BufferGeometry {
+  const k = new Kit()
+  // a tipped rusty drum, a tyre, a crate and a bent panel
+  k.cyl(0.36, 0.36, 0.9, { color: palette.rustDark, top: palette.rust, at: [-0.5, 0.36, 0.2], rot: [0, 0.4, Math.PI / 2], bevel: 0.06, seg: 14 })
+  k.torus(0.36, 0.14, { color: palette.rubber, top: palette.steel, at: [0.65, 0.16, 0.6], tube: 8, seg: 16 })
+  k.box(0.7, 0.6, 0.7, { color: palette.woodDark, top: palette.wood, at: [0.55, 0.3, -0.5], rot: [0, 0.5, 0], r: 0.06 })
+  k.box(1.1, 0.06, 0.8, { color: palette.rust, top: palette.rustLight, at: [-0.3, 0.5, -0.6], rot: [0.5, 0.3, 0.2], r: 0.03, mat: 'metal' })
+  k.cyl(0.3, 0.32, 0.7, { color: palette.tealDark, top: palette.rust, at: [-0.9, 0.35, -0.3], bevel: 0.05, seg: 12 })
+  k.blob(0.3, { color: palette.leafDark, top: palette.leaf, at: [0.1, 0.2, 0.1], shade: 0.2 })
+  return k.geometry()
+}
+function deadTree(): THREE.BufferGeometry {
+  const k = new Kit()
+  k.cyl(0.14, 0.24, 1.9, { color: palette.trunkDark, top: palette.woodLight, at: [0, 0.95, 0], bevel: 0.04, seg: 8 })
+  k.beam([0, 1.3, 0], [0.6, 2.0, 0.1], 0.1, { color: palette.trunkDark, top: palette.woodLight, round: true })
+  k.beam([0, 1.55, 0], [-0.5, 2.2, -0.15], 0.09, { color: palette.trunkDark, top: palette.woodLight, round: true })
+  k.beam([0, 1.8, 0], [0.1, 2.5, 0.35], 0.07, { color: palette.trunkDark, top: palette.woodLight, round: true })
+  k.blob(0.2, { color: palette.leafDark, top: palette.leaf, at: [0.25, 0.14, 0.1], shade: 0.2 })
+  return k.geometry()
+}
+
 // ------------------------------------------------------------------ scatter
 interface Spot {
-  u: number
-  v: number
+  x: number
+  z: number
   y: number
   s: number
   rot: number
 }
 
-function scatter(
-  seed: number,
-  count: number,
-  accept: (u: number, v: number, d: number, rnd: () => number) => boolean,
-  scale: [number, number],
-  maxTries = 60,
-): Spot[] {
+function scatter(seed: number, count: number, accept: (u: number, v: number, d: number, rnd: () => number) => boolean, scale: [number, number], maxTries = 80): Spot[] {
   const rnd = seeded(seed)
   const out: Spot[] = []
   let tries = 0
   while (out.length < count && tries < count * maxTries) {
     tries++
-    const u = -22 + rnd() * 44
-    const v = -40 + rnd() * 74
+    const u = -36 + rnd() * 72
+    const v = -58 + rnd() * 116
     const d = coastUv(u, v)
     if (!accept(u, v, d, rnd)) continue
-    out.push({ u, v, y: groundHeightUv(u, v), s: scale[0] + rnd() * (scale[1] - scale[0]), rot: rnd() * Math.PI * 2 })
+    const [x, z] = uvToWorld(u, v)
+    out.push({ x, z, y: groundHeightUv(u, v), s: scale[0] + rnd() * (scale[1] - scale[0]), rot: rnd() * Math.PI * 2 })
   }
   return out
 }
 
-function Instances({
-  geometry,
-  spots,
-  castShadow = true,
-  sink = 0,
-}: {
-  geometry: THREE.BufferGeometry
-  spots: Spot[]
-  castShadow?: boolean
-  sink?: number
-}) {
+function Instances({ geometry, spots, castShadow = true, sink = 0 }: { geometry: THREE.BufferGeometry; spots: Spot[]; castShadow?: boolean; sink?: number }) {
   const ref = useRef<THREE.InstancedMesh>(null)
   useLayoutEffect(() => {
     const mesh = ref.current
     if (!mesh) return
     const o = new THREE.Object3D()
     spots.forEach((s, i) => {
-      const [x, z] = uvToWorld(s.u, s.v)
-      o.position.set(x, s.y - sink, z)
+      o.position.set(s.x, s.y - sink, s.z)
       o.rotation.set(0, s.rot, 0)
       o.scale.setScalar(s.s)
       o.updateMatrix()
       mesh.setMatrixAt(i, o.matrix)
     })
+    mesh.count = spots.length
     mesh.instanceMatrix.needsUpdate = true
     mesh.computeBoundingSphere()
   }, [spots])
-  if (!spots.length) return null
-  return (
-    <instancedMesh
-      ref={ref}
-      args={[geometry, materials.matte, spots.length]}
-      castShadow={castShadow}
-      receiveShadow
-    />
-  )
+  // sized for the largest it will ever be, so filtering never reallocates
+  const capacity = useRef(Math.max(1, spots.length)).current
+  return <instancedMesh ref={ref} args={[geometry, materials.matte, capacity]} castShadow={castShadow} receiveShadow frustumCulled={false} />
 }
 
-const onPlateau = (d: number) => d < PLATEAU_D - 0.3
-const clear = (u: number, v: number, pad: number) => plotDistance(u, v) > pad && pathDistance(u, v) > pad
-
-/** Trees, bushes, rocks, palms, grass tufts and flowers, all instanced. */
+/** The wooded rim: trees, palms, bushes and rocks on the bank and the beach, never on buildable ground. */
 export function Props() {
   const geo = useMemo(
     () => ({
@@ -188,55 +244,20 @@ export function Props() {
       palm: palm(),
       bush: bush(),
       rock: rock(),
-      tuft: tuft(),
-      flowers: [palette.flowerPink, palette.flowerWhite, palette.flowerOrange, palette.flowerBlue].map(flower),
     }),
     [],
   )
-
   const spots = useMemo(() => {
-    // trees hug the rim of the plateau and fill the gaps between plots
-    const trees = scatter(
-      1,
-      58,
-      (u, v, d, rnd) => onPlateau(d) && clear(u, v, 0.9) && (d > PLATEAU_D - 3.2 || rnd() < 0.22) && v < 27,
-      [0.8, 1.25],
-    )
-    const round = trees.filter((_, i) => i % 3 !== 0)
-    const pines = trees.filter((_, i) => i % 3 === 0)
-    const palms = scatter(2, 16, (_u, _v, d) => d > -BEACH_W - 0.5 && d < -0.9, [0.85, 1.2])
-    const bushes = scatter(3, 46, (u, v, d) => d < PLATEAU_D + 0.9 && clear(u, v, 0.35), [0.6, 1.15])
-    const rocks = scatter(
-      4,
-      34,
-      (u, v, d, rnd) => (d > -BEACH_W - 0.2 && d < 1.6) || (onPlateau(d) && clear(u, v, 0.5) && rnd() < 0.05),
-      [0.5, 1.3],
-    )
-    const tufts = scatter(
-      5,
-      520,
-      (u, v, d) => d < PLATEAU_D + 1.0 && clear(u, v, 0.15) && vnoise(u * 0.4, v * 0.4) > 0.3,
-      [0.6, 1.25],
-    )
-    // flowers bloom in patches
-    const patchRnd = seeded(6)
-    const flowers: Spot[][] = [[], [], [], []]
-    for (let p = 0; p < 34; p++) {
-      const cu = -12 + patchRnd() * 24
-      const cv = -30 + patchRnd() * 56
-      const kind = Math.floor(patchRnd() * 4)
-      const n = 4 + Math.floor(patchRnd() * 6)
-      for (let i = 0; i < n; i++) {
-        const u = cu + (patchRnd() - 0.5) * 1.7
-        const v = cv + (patchRnd() - 0.5) * 1.7
-        const d = coastUv(u, v)
-        if (!onPlateau(d) || !clear(u, v, 0.2)) continue
-        flowers[kind].push({ u, v, y: 0, s: 0.8 + patchRnd() * 0.6, rot: patchRnd() * 6 })
-      }
+    const bank = (d: number) => d > PLATEAU_D - 0.2 && d < -BEACH_W - 0.2
+    const trees = scatter(1, 190, (_u, _v, d) => bank(d), [0.85, 1.4])
+    return {
+      round: trees.filter((_, i) => i % 3 !== 0),
+      pines: trees.filter((_, i) => i % 3 === 0),
+      palms: scatter(2, 44, (_u, _v, d) => d > -BEACH_W - 0.4 && d < -0.9, [0.85, 1.25]),
+      bushes: scatter(3, 120, (_u, _v, d) => d > PLATEAU_D - 0.6 && d < -BEACH_W + 0.4, [0.6, 1.2]),
+      rocks: scatter(4, 70, (_u, _v, d) => d > -BEACH_W - 0.2 && d < 1.6, [0.5, 1.3]),
     }
-    return { round, pines, palms, bushes, rocks, tufts, flowers }
   }, [])
-
   return (
     <group name="props">
       <Instances geometry={geo.treeRound} spots={spots.round} />
@@ -244,40 +265,207 @@ export function Props() {
       <Instances geometry={geo.palm} spots={spots.palms} sink={0.05} />
       <Instances geometry={geo.bush} spots={spots.bushes} />
       <Instances geometry={geo.rock} spots={spots.rocks} sink={0.06} />
-      <Instances geometry={geo.tuft} spots={spots.tufts} castShadow={false} />
+    </group>
+  )
+}
+
+/** Tufts and flowers across the meadow; they step aside for buildings, overgrowth and roads. */
+export function GroundCover({ blocked }: { blocked: Set<number> }) {
+  const geo = useMemo(() => ({ tuft: tuft(), flowers: [palette.flowerPink, palette.flowerWhite, palette.flowerOrange, palette.flowerBlue].map(flower) }), [])
+  const all = useMemo(() => {
+    const onMeadow = (d: number) => d < PLATEAU_D - 0.2
+    const tufts = scatter(5, 1500, (u, v, d) => onMeadow(d) && vnoise(u * 0.4, v * 0.4) > 0.28, [0.6, 1.3], 40)
+    const rnd = seeded(6)
+    const flowers: Spot[][] = [[], [], [], []]
+    for (let p = 0; p < 110; p++) {
+      const cu = -22 + rnd() * 44
+      const cv = -44 + rnd() * 88
+      const kind = Math.floor(rnd() * 4)
+      const n = 4 + Math.floor(rnd() * 7)
+      for (let i = 0; i < n; i++) {
+        const u = cu + (rnd() - 0.5) * 2
+        const v = cv + (rnd() - 0.5) * 2
+        if (!onMeadow(coastUv(u, v))) continue
+        const [x, z] = uvToWorld(u, v)
+        flowers[kind].push({ x, z, y: 0, s: 0.8 + rnd() * 0.6, rot: rnd() * 6 })
+      }
+    }
+    return { tufts, flowers }
+  }, [])
+  const free = (s: Spot) => {
+    const c = worldToCell(s.x, s.z)
+    return !blocked.has(cellKey(c.i, c.j))
+  }
+  const tufts = useMemo(() => all.tufts.filter(free), [all, blocked]) // eslint-disable-line react-hooks/exhaustive-deps
+  const flowers = useMemo(() => all.flowers.map((f) => f.filter(free)), [all, blocked]) // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <group name="ground-cover">
+      <FilteredInstances geometry={geo.tuft} spots={tufts} capacity={all.tufts.length} />
       {geo.flowers.map((g, i) => (
-        <Instances key={i} geometry={g} spots={spots.flowers[i]} castShadow={false} />
+        <FilteredInstances key={i} geometry={g} spots={flowers[i]} capacity={Math.max(1, all.flowers[i].length)} />
       ))}
     </group>
   )
 }
 
-/** Sandy paths: a road spine with a branch to every plot, laid as low rounded slabs. */
-export function Paths() {
+function FilteredInstances({ geometry, spots, capacity }: { geometry: THREE.BufferGeometry; spots: Spot[]; capacity: number }) {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  useLayoutEffect(() => {
+    const mesh = ref.current
+    if (!mesh) return
+    const o = new THREE.Object3D()
+    spots.forEach((s, i) => {
+      o.position.set(s.x, s.y, s.z)
+      o.rotation.set(0, s.rot, 0)
+      o.scale.setScalar(s.s)
+      o.updateMatrix()
+      mesh.setMatrixAt(i, o.matrix)
+    })
+    mesh.count = spots.length
+    mesh.instanceMatrix.needsUpdate = true
+  }, [spots])
+  return <instancedMesh ref={ref} args={[geometry, materials.matte, capacity]} receiveShadow frustumCulled={false} />
+}
+
+// ------------------------------------------------------------------ overgrowth
+const OBSTACLE_GEO: Record<ObstacleKind, () => THREE.BufferGeometry> = { thicket, boulder, rock: smallRock, stump, scrap, deadTree }
+
+function ObstacleKindMesh({ kind, list, cleared }: { kind: ObstacleKind; list: Obstacle[]; cleared: Set<string> }) {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const geometry = useMemo(() => OBSTACLE_GEO[kind](), [kind])
+  useLayoutEffect(() => {
+    const mesh = ref.current
+    if (!mesh) return
+    const o = new THREE.Object3D()
+    list.forEach((ob, i) => {
+      o.position.set((ob.i + ob.size / 2) * CELL, 0, (ob.j + ob.size / 2) * CELL)
+      o.rotation.set(0, ob.rot, 0)
+      o.scale.setScalar(cleared.has(ob.id) ? 0.0001 : ob.scale)
+      o.updateMatrix()
+      mesh.setMatrixAt(i, o.matrix)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.computeBoundingSphere()
+  }, [list, cleared])
+  const onClick = (e: ThreeEvent<MouseEvent>) => {
+    if (e.delta > 8 || e.instanceId === undefined) return
+    const ob = list[e.instanceId]
+    if (!ob || cleared.has(ob.id)) return
+    if (usePlacement.getState().id || useGame.getState().phase !== 'play' || useGame.getState().tourStep >= 0) return
+    e.stopPropagation()
+    sfx('pop')
+    useUi.getState().setClearTarget(ob.id)
+  }
+  return <instancedMesh ref={ref} args={[geometry, materials.matte, list.length]} castShadow receiveShadow onClick={onClick} />
+}
+
+/** The overgrowth of an abandoned spaceport: tap a piece to clear it and win back the land. */
+export function Overgrowth() {
+  const clearedList = useGame((s) => s.cleared)
+  const cleared = useMemo(() => new Set(clearedList), [clearedList])
+  const byKind = useMemo(() => {
+    const m = {} as Record<ObstacleKind, Obstacle[]>
+    for (const o of allObstacles()) (m[o.kind] ??= []).push(o)
+    return m
+  }, [])
+  return (
+    <group name="overgrowth">
+      {(Object.keys(byKind) as ObstacleKind[]).map((k) => (
+        <ObstacleKindMesh key={k} kind={k} list={byKind[k]} cleared={cleared} />
+      ))}
+    </group>
+  )
+}
+
+/** Cells that ground cover must leave bare: buildings, overgrowth and roads. */
+export function useBlockedCells(): Set<number> {
+  const placed = useGame((s) => s.placed)
+  const cleared = useGame((s) => s.cleared)
+  return useMemo(() => {
+    const occ = occupancy(placed, cleared)
+    for (const c of roadNetwork(placed, cleared).cells) occ.add(cellKey(c.i, c.j))
+    return occ
+  }, [placed, cleared])
+}
+
+/** Dirt roads that grow from the pier to every front door, plus a worn yard under each building. */
+export function Roads() {
+  const placed = useGame((s) => s.placed)
+  const cleared = useGame((s) => s.cleared)
   const object = useMemo(() => {
     const kit = new Kit()
+    const net = roadNetwork(placed, cleared)
     for (const layer of [0, 1]) {
-      for (const s of PATH_SEGS) {
-        const [ax, az] = uvToWorld(s.a[0], s.a[1])
-        const [bx, bz] = uvToWorld(s.b[0], s.b[1])
-        const len = Math.hypot(bx - ax, bz - az)
-        const w = s.w + (layer === 0 ? 0.36 : 0)
-        const angle = Math.atan2(-(bz - az), bx - ax)
-        kit.slab(len + w, w, layer === 0 ? 0.035 : 0.06, w / 2, {
+      const size = CELL * (layer === 0 ? 1.32 : 1.08)
+      for (const c of net.cells) {
+        kit.slab(size, size, layer === 0 ? 0.03 : 0.055, size * 0.42, {
           color: layer === 0 ? palette.pathEdge : palette.path,
           top: layer === 0 ? palette.pathEdge : palette.sandLight,
-          at: [(ax + bx) / 2, 0, (az + bz) / 2],
-          rot: [0, angle, 0],
-          bevel: layer === 0 ? 0.015 : 0.025,
+          at: [(c.i + 0.5) * CELL, 0, (c.j + 0.5) * CELL],
+          bevel: 0.014,
           shade: 0.03,
         })
       }
     }
-    const g = kit.build('paths')
+    for (const id of Object.keys(placed) as BuildingId[]) {
+      const at = placed[id]!
+      const n = FOOTPRINT[id] * CELL
+      kit.slab(n + 0.9, n + 0.9, 0.028, 1.3, {
+        color: palette.dirt,
+        top: palette.pathEdge,
+        at: [at.i * CELL + n / 2, 0, at.j * CELL + n / 2],
+        bevel: 0.012,
+        shade: 0.03,
+      })
+    }
+    const g = kit.build('roads')
     g.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) o.castShadow = false
     })
     return g
+  }, [placed, cleared])
+  useLayoutEffect(
+    () => () => {
+      object.traverse((o) => {
+        const m = o as THREE.Mesh
+        if (m.isMesh) m.geometry.dispose()
+      })
+    },
+    [object],
+  )
+  return <primitive object={object} />
+}
+
+/** The old wooden pier where deliveries come ashore. */
+export function Pier() {
+  const object = useMemo(() => {
+    const kit = new Kit()
+    const [gx, gz] = uvToWorld(GATE_SPOT[0], GATE_SPOT[1])
+    const dir = new THREE.Vector2(-ISLAND_V.x, -ISLAND_V.y)
+    const angle = Math.atan2(-dir.y, dir.x)
+    const len = 34
+    kit.at([gx, 0, gz], [0, angle, 0], () => {
+      // deck, with a ramp up to the plateau
+      kit.box(len, 0.16, 2.6, { color: palette.woodDark, top: palette.wood, at: [len / 2 + 1.5, -0.18, 0], r: 0.05 })
+      for (let x = 2; x < len + 1; x += 0.62) {
+        kit.box(0.5, 0.07, 2.8, { color: palette.wood, top: palette.woodLight, at: [x, -0.07, 0], r: 0.025, shade: 0.05 })
+      }
+      for (let x = 3; x < len + 1; x += 3.4) {
+        for (const z of [-1.35, 1.35]) {
+          kit.cyl(0.17, 0.2, 2.6, { color: palette.trunkDark, top: palette.wood, at: [x, -1.0, z], bevel: 0.04, seg: 8 })
+          kit.sphere(0.2, { color: palette.woodLight, at: [x, 0.34, z], seg: 8 })
+        }
+        kit.beam([x, 0.22, -1.35], [x + 3.4, 0.22, -1.35], 0.06, { color: palette.rubber, round: true })
+      }
+      // a lamp and a few crates at the landing
+      kit.cyl(0.06, 0.08, 2.4, { color: palette.metalDark, top: palette.metalLight, at: [4.5, 1.1, 1.35], bevel: 0.02, seg: 8 })
+      kit.sphere(0.2, { color: palette.lampWarm, top: palette.lampHot, at: [4.5, 2.4, 1.35], seg: 10, mat: 'glow', shade: 0 })
+      kit.box(0.7, 0.7, 0.7, { color: palette.woodDark, top: palette.wood, at: [7.2, 0.3, -0.8], rot: [0, 0.3, 0], r: 0.06 })
+      kit.box(0.5, 0.5, 0.5, { color: palette.woodDark, top: palette.woodLight, at: [8.0, 0.2, -0.4], rot: [0, -0.4, 0], r: 0.05 })
+    })
+    return kit.build('pier')
   }, [])
   return <primitive object={object} />
 }
+
+export { isLand }

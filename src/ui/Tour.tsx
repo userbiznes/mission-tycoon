@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
-import { PLOTS, type BuildingId } from '../data/layout'
+import type { BuildingId } from '../data/layout'
 import { TOUR } from '../data/tutorial'
-import { focusPlot, rushDeliveries } from '../state/actions'
+import { buildingWorld, focusBuilding, rushDeliveries } from '../state/actions'
 import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { rig } from '../scene/cameraRig'
 import { juice } from '../scene/juice'
 import { Pin } from '../scene/pins'
-import { uvToWorld } from '../scene/world'
 import { RoccoSays } from './Rocco'
 import { sfx } from './sound'
 
@@ -63,7 +62,7 @@ export function Tour() {
     if (!def) return
     rig.locked = true
     if (!def.focus || def.focus === 'home') rig.home()
-    else focusPlot(def.focus, 0, 26, 0.16)
+    else focusBuilding(def.focus, 0, 30, 0.16)
     return () => {
       rig.locked = false
     }
@@ -95,15 +94,15 @@ export function Tour() {
   // "Battery's here!" waits for the truck; hurry it along so nobody stands around
   const waitingForTruck = def?.id === 'truck' && deliveries.length > 0
   useEffect(() => {
-    if (def?.id === 'truck') rushDeliveries(5200)
+    if (def?.id === 'truck') rushDeliveries(7200)
   }, [def])
 
   if (!def || sheet || screen || waitingForTruck) return null
 
   const text = def.text.replace('{name}', player.name || 'Chief').replace('{agency}', player.agency || 'the agency')
   const focusId = def.focus && def.focus !== 'home' ? def.focus : null
-  const plot = focusId ? PLOTS[focusId] : null
-  const [px, pz] = plot ? uvToWorld(plot.u, plot.v) : [0, 0]
+  const plot = focusId ? buildingWorld(focusId) : null
+  const [px, pz] = plot ?? [0, 0]
 
   const onNext = () => {
     if (def.do === 'tapBuilding' || def.do === 'shop') {

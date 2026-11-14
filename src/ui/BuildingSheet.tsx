@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { BUILDINGS } from '../data/buildings'
-import type { BuildingId } from '../data/layout'
+import { BUILDING_IDS, type BuildingId } from '../data/layout'
+import { usePlacement } from '../state/placement'
 import { startConstruction } from '../state/actions'
 import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
@@ -139,10 +140,17 @@ export function BuildingSheet({
         />
       }
       foot={
-        tab === 'status' && onAction ? (
-          <Btn block size="lg" onClick={onAction} disabled={actionDisabled}>
-            {def.action}
-          </Btn>
+        tab === 'status' ? (
+          <>
+            <Btn tone="cream" style={{ flex: '0 0 auto' }} onClick={() => usePlacement.getState().begin(id, false)}>
+              Move
+            </Btn>
+            {onAction && (
+              <Btn size="lg" onClick={onAction} disabled={actionDisabled}>
+                {def.action}
+              </Btn>
+            )}
+          </>
         ) : undefined
       }
     >
@@ -159,57 +167,53 @@ export function BuildingSheet({
   )
 }
 
-/** Sheet for an empty plot: pick the blueprint and build. */
-export function BuildSheet({ id }: { id: BuildingId }) {
+/** The build menu: pick a blueprint, then put it anywhere on the island. */
+export function BuildMenu() {
   const close = useUi((s) => s.close)
   const showTip = useUi((s) => s.showTip)
-  useEffect(() => showTip('construction'), [showTip])
-  const toast = useUi((s) => s.toast)
   const level = useGame((s) => s.level)
   const coins = useGame((s) => s.coins)
-  const b = useGame((s) => s.buildings[id])
-  const def = BUILDINGS[id]
-  const I = Icon[BUILDING_ICON[id]]
-  const locked = level < def.needsLevel
-  const building = !!b.buildEnd
+  const placed = useGame((s) => s.placed)
+  useEffect(() => showTip('construction'), [showTip])
+  const todo = BUILDING_IDS.filter((id) => !placed[id])
   return (
-    <Sheet title={building ? `Building: ${def.name}` : 'Build here'} subtitle={building ? 'The crew is on it' : 'An empty plot, ready for a blueprint'} icon={<Icon.hammer />} onClose={close} clearScrim>
-      {building && b.buildStart && b.buildEnd ? (
-        <TimerRow label="Construction" start={b.buildStart} end={b.buildEnd} icon={<Icon.hammer className="ic" />} />
-      ) : (
-        <div className="b-status">
-          <div className="b-row card">
-            <I className="ic" />
-            <div className="grow">
-              <b>{def.name}</b>
-              <small>{def.blurb}</small>
-            </div>
-          </div>
-          <div className="b-row">
-            <span className="chip">
-              <Icon.clock /> {def.buildSeconds}s
-            </span>
-            <span className="grow" />
-            {locked ? (
-              <span className="chip warn">
-                <Icon.lock /> Needs agency level {def.needsLevel}
+    <Sheet title="Build" subtitle="Pick a blueprint, then place it wherever you like" icon={<Icon.hammer />} onClose={close} clearScrim>
+      {todo.length === 0 && <p className="empty-note">Everything is built. Hold a building to move it, or tap overgrowth to clear more land.</p>}
+      <div className="part-list">
+        {todo.map((id) => {
+          const def = BUILDINGS[id]
+          const I = Icon[BUILDING_ICON[id]]
+          const locked = level < def.needsLevel
+          return (
+            <div key={id} className={`part-card card${locked ? ' locked' : ''}`}>
+              <span className="part-icon" style={{ background: '#ffe69a' }}>
+                <I />
               </span>
-            ) : (
-              <Btn
-                tone="yellow"
-                disabled={coins < def.buildCost}
-                onClick={() => {
-                  const err = startConstruction(id)
-                  if (err) toast(err, 'bad')
-                  else close()
-                }}
-              >
-                Build <Price amount={def.buildCost} />
-              </Btn>
-            )}
-          </div>
-        </div>
-      )}
+              <div className="grow">
+                <b>{def.name}</b>
+                <small>{def.blurb}</small>
+                <div className="buy-row">
+                  {locked ? (
+                    <span className="chip warn">
+                      <Icon.lock /> Needs agency level {def.needsLevel}
+                    </span>
+                  ) : (
+                    <Btn tone="yellow" size="sm" disabled={coins < def.buildCost} onClick={() => usePlacement.getState().begin(id, true)}>
+                      Place <Price amount={def.buildCost} />
+                    </Btn>
+                  )}
+                  <span className="chip">
+                    <Icon.clock /> {def.buildSeconds}s
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <p className="muted" style={{ fontSize: '0.82em', padding: '0.5em 0.2em' }}>
+        Tip: press and hold any building to pick it up and move it. Tap rocks, thickets and scrap to clear them.
+      </p>
     </Sheet>
   )
 }

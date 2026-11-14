@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { DEFAULT_LOGO, setAgencyLogo, type LogoSpec } from '../art/logo'
 import { LEVELS, STARTING_BANK } from '../data/economy'
-import { PLOTS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import { BUILDING_IDS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import { startLayout, type CellPos } from '../scene/grid'
 import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/types'
 
 /**
@@ -10,7 +11,7 @@ import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/
  */
 
 const SAVE_KEY = 'mission-tycoon:save'
-const SAVE_VERSION = 2
+const SAVE_VERSION = 3
 
 export type Phase = 'title' | 'onboarding' | 'arrival' | 'play'
 
@@ -83,6 +84,10 @@ export interface SaveData {
   xp: number
   level: number
   buildings: Record<BuildingId, BuildingState>
+  /** where each building stands on the build grid (corner cell of its footprint) */
+  placed: Partial<Record<BuildingId, CellPos>>
+  /** ids of overgrowth the player has cleared */
+  cleared: string[]
   inventory: Record<string, number>
   deliveries: Delivery[]
   /** index of the next tour step; -1 once the tour is finished */
@@ -108,7 +113,7 @@ export interface SaveData {
 
 function freshBuildings(): Record<BuildingId, BuildingState> {
   const out = {} as Record<BuildingId, BuildingState>
-  for (const id of Object.keys(PLOTS) as BuildingId[]) {
+  for (const id of BUILDING_IDS) {
     out[id] = { level: STARTING_BUILDINGS.includes(id) ? 1 : 0 }
   }
   return out
@@ -123,6 +128,8 @@ export function freshSave(): SaveData {
     xp: 0,
     level: 1,
     buildings: freshBuildings(),
+    placed: startLayout(),
+    cleared: [],
     inventory: {},
     deliveries: [],
     tourStep: 0,
@@ -275,6 +282,8 @@ function snapshot(s: GameState): SaveData {
     xp: s.xp,
     level: s.level,
     buildings: s.buildings,
+    placed: s.placed,
+    cleared: s.cleared,
     inventory: s.inventory,
     deliveries: s.deliveries,
     tourStep: s.tourStep,

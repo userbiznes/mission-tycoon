@@ -5,7 +5,9 @@ import { processTimers } from './state/actions'
 import { onLevelUp, useGame } from './state/game'
 import { sfx } from './ui/sound'
 import { useUi } from './state/ui'
-import { BuildSheet, BuildingSheet } from './ui/BuildingSheet'
+import { BuildMenu, BuildingSheet } from './ui/BuildingSheet'
+import { BuildButton, ClearPopup, PlacementBar } from './ui/PlacementUi'
+import { usePlacement } from './state/placement'
 import { Hud } from './ui/Hud'
 import { MarketSheet } from './ui/MarketSheet'
 import { Builder } from './ui/Builder'
@@ -95,8 +97,8 @@ function Sheets() {
       return <CrewSheet />
     case 'contracts':
       return <ContractBoard />
-    case 'build':
-      return <BuildSheet id={sheet.id} />
+    case 'buildmenu':
+      return <BuildMenu />
     case 'market':
       return <MarketSheet />
     default:
@@ -110,6 +112,7 @@ export function App() {
   const begin = useGame((s) => s.begin)
   const launching = useLaunch((s) => s.active)
   const screen = useUi((s) => s.screen)
+  const placing = usePlacement((s) => s.id)
 
   // title and onboarding play over a slow beauty shot of the spaceport
   useEffect(() => {
@@ -157,8 +160,11 @@ export function App() {
             />
           )}
           {(phase === 'arrival' || phase === 'play') && !screen && <Hud />}
-          {phase === 'play' && !screen && <Tour />}
-          {phase === 'play' && !screen && <Sheets />}
+          {phase === 'play' && !screen && !placing && <Tour />}
+          {phase === 'play' && !screen && !placing && <Sheets />}
+          {phase === 'play' && !screen && <BuildButton />}
+          {phase === 'play' && !screen && <PlacementBar />}
+          {phase === 'play' && !screen && !placing && <ClearPopup />}
           {screen === 'builder' && <Builder />}
           {screen === 'launchPrep' && <LaunchPrep />}
           {screen === 'launch' && launching && <LaunchScreen />}

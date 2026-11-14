@@ -12,11 +12,11 @@ import {
   vnoise,
 } from './world'
 
-const U0 = -30
-const U1 = 30
-const V0 = -44
-const V1 = 44
-const STEP = 0.4
+const U0 = -42
+const U1 = 42
+const V0 = -62
+const V1 = 62
+const STEP = 0.5
 
 const c = (hex: string) => new THREE.Color(hex)
 

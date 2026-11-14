@@ -10,11 +10,11 @@ const _target = new THREE.Vector3()
  * sea and sky behind.
  */
 export function titleShot(): CinematicFn {
-  const [cx, cz] = uvToWorld(0, 4)
+  const [cx, cz] = uvToWorld(0, -4)
   return (camera, _dt, t) => {
     const yaw = CAMERA_YAW + Math.sin(t * 0.08) * 0.1
     const tilt = THREE.MathUtils.degToRad(11 + Math.sin(t * 0.06 + 1) * 1.2)
-    const dist = 88
+    const dist = 118
     _target.set(cx, 2, cz)
     camera.position.set(
       _target.x + Math.sin(yaw) * Math.cos(tilt) * dist,

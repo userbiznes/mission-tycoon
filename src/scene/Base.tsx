@@ -1,19 +1,19 @@
 import { useMemo, useRef, type ReactNode } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import { hasModel } from '../art/registry'
 import '../art/models'
 import { palette } from '../art/palette'
-import { PLOTS, type BuildingId } from '../data/layout'
+import type { BuildingId } from '../data/layout'
+import { buildingCenter, type CellPos } from './grid'
 import { sampleJuice } from './juice'
 import { Model } from './Model'
-import { uvToWorld } from './world'
 
 export interface BaseBuilding {
   id: BuildingId
-  /** 0 = empty plot, 1+ = built at that level */
+  at: CellPos
+  /** 0 while the first build is under way, then 1+ */
   level: number
-  /** a first build is under way on this plot */
   constructing?: boolean
 }
 
@@ -49,35 +49,70 @@ export function Juicy({ id, children }: { id: string; children: ReactNode }) {
   return <group ref={ref}>{children}</group>
 }
 
+const LONG_PRESS_MS = 520
+
 /**
- * Every plot on the plateau: a building model when built, the "Build here"
- * plot marker when empty. Purely visual; taps are reported through `onTap`.
+ * Every building on the island, where the player put it. Purely visual: a tap
+ * is reported through `onTap`, a long press through `onHold` (pick up to move).
  */
 export function Base({
   buildings,
+  hidden,
   modelOptions,
   onTap,
+  onHold,
 }: {
-  /** extra options passed to every building model (agency colours…) */
-  modelOptions?: Record<string, unknown>
   buildings: BaseBuilding[]
+  /** a building that is "in hand" and drawn by the placement ghost instead */
+  hidden?: BuildingId | null
+  modelOptions?: Record<string, unknown>
   onTap?: (id: BuildingId) => void
+  onHold?: (id: BuildingId) => void
 }) {
+  const press = useRef<{ id: BuildingId; timer: ReturnType<typeof setTimeout>; x: number; y: number; fired: boolean } | null>(null)
+  const cancel = () => {
+    if (press.current) clearTimeout(press.current.timer)
+    press.current = null
+  }
   return (
     <group name="base">
       {buildings.map((b) => {
-        const plot = PLOTS[b.id]
-        const [x, z] = uvToWorld(plot.u, plot.v)
+        if (b.id === hidden) return null
+        const [x, z] = buildingCenter(b.id, b.at)
         const built = b.level > 0
-        const modelId = built ? b.id : 'plot'
         return (
           <group
             key={b.id}
             position={[x, 0, z]}
-            rotation-y={plot.rotY}
+            onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+              cancel()
+              const id = b.id
+              press.current = {
+                id,
+                x: e.nativeEvent.clientX,
+                y: e.nativeEvent.clientY,
+                fired: false,
+                timer: setTimeout(() => {
+                  if (press.current) press.current.fired = true
+                  onHold?.(id)
+                }, LONG_PRESS_MS),
+              }
+            }}
+            onPointerMove={(e: ThreeEvent<PointerEvent>) => {
+              const p = press.current
+              if (p && Math.hypot(e.nativeEvent.clientX - p.x, e.nativeEvent.clientY - p.y) > 8) cancel()
+            }}
+            onPointerUp={() => {
+              if (press.current && !press.current.fired) cancel()
+            }}
+            onPointerLeave={() => {
+              if (press.current && !press.current.fired) cancel()
+            }}
             onClick={(e) => {
-              // a drag that ends on a building is a pan, not a tap
-              if (e.delta > 8) return
+              const held = press.current?.fired
+              cancel()
+              // a drag that ends on a building is a pan, and a long press already picked it up
+              if (e.delta > 8 || held) return
               e.stopPropagation()
               onTap?.(b.id)
             }}
@@ -85,8 +120,8 @@ export function Base({
             <Juicy id={b.id}>
               {b.constructing && hasModel('construction') ? (
                 <Model model="construction" options={{ level: 1, building: b.id }} />
-              ) : hasModel(modelId) ? (
-                <Model model={modelId} options={{ level: Math.max(1, b.level), building: b.id, ...modelOptions }} />
+              ) : hasModel(b.id) ? (
+                <Model model={b.id} options={{ level: Math.max(1, b.level), building: b.id, ...modelOptions }} />
               ) : built ? (
                 <Placeholder id={b.id} />
               ) : null}

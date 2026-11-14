@@ -10,7 +10,7 @@ export type Sheet =
   | { kind: 'contracts' }
   | { kind: 'lab' }
   | { kind: 'crew' }
-  | { kind: 'build'; id: BuildingId }
+  | { kind: 'buildmenu' }
   | { kind: 'comms' }
   | { kind: 'inventory' }
 
@@ -47,6 +47,9 @@ interface UiState {
   fly: (kind: Flyer['kind'], count: number, x: number, y: number) => void
   removeFlyer: (id: number) => void
   bumpHud: (which: 'coins' | 'xp') => void
+  /** overgrowth the player tapped and may clear */
+  clearTarget: string | null
+  setClearTarget: (id: string | null) => void
   /** a Rocco tip waiting to be read */
   tip: string | null
   /** show a contextual tip once per save */
@@ -84,6 +87,8 @@ export const useUi = create<UiState>((set, get) => ({
   },
   removeFlyer: (id) => set({ flyers: get().flyers.filter((f) => f.id !== id) }),
   bumpHud: (which) => set({ bump: { ...get().bump, [which]: get().bump[which] + 1 } }),
+  clearTarget: null,
+  setClearTarget: (clearTarget) => set({ clearTarget }),
   tip: null,
   showTip: (id) => {
     if (tipGate?.(id)) set({ tip: id })

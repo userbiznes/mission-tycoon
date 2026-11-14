@@ -5,12 +5,15 @@ import { CameraControls } from './CameraControls'
 import { Effects } from './Effects'
 import { Lights } from './Lights'
 import { Model } from './Model'
-import { Paths, Props } from './Props'
+import { GroundCover, Overgrowth, Pier, Props, Roads, useBlockedCells } from './Props'
 import { Clouds, SkyDome } from './Sky'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
 import { CAMERA_FOV, uvToWorld } from './world'
-import { PLOTS, type BuildingId } from '../data/layout'
+import { BUILDING_IDS, type BuildingId } from '../data/layout'
+import { usePlacement } from '../state/placement'
+import type { CellPos } from './grid'
+import { Placement } from './Placement'
 import { Base } from './Base'
 import { useSettings } from '../state/settings'
 import { useGame } from '../state/game'
@@ -28,10 +31,8 @@ const PREVIEW_LEVEL = Number(query.get('level') ?? 1)
 /** `?all=1` shows every building, built, for art review. */
 const SHOW_ALL = query.has('all')
 
-const ALL_IDS = Object.keys(PLOTS) as BuildingId[]
-
 function PreviewBench() {
-  const [x, z] = uvToWorld(-4.4, 6.8)
+  const [x, z] = uvToWorld(0, -6)
   return (
     <group position={[x, 0, z]}>
       <Model model={PREVIEW_MODEL!} options={{ level: PREVIEW_LEVEL, kind: query.get('kind') ?? undefined }} />
@@ -42,26 +43,40 @@ function PreviewBench() {
 /** The base as the saved game describes it. */
 function GameBase() {
   const buildings = useGame((s) => s.buildings)
+  const placed = useGame((s) => s.placed)
   const phase = useGame((s) => s.phase)
-  const list = useMemo(
-    () =>
-      ALL_IDS.map((id) => {
-        if (SHOW_ALL) return { id, level: Number(query.get('level') ?? 1) }
-        const b = buildings[id]
-        return { id, level: b.level, constructing: b.level === 0 && !!b.buildEnd }
-      }),
-    [buildings],
-  )
+  const inHand = usePlacement((s) => (s.isNew ? null : s.id))
+  const list = useMemo(() => {
+    const out: { id: BuildingId; at: CellPos; level: number; constructing?: boolean }[] = []
+    for (const id of BUILDING_IDS) {
+      const at = placed[id]
+      if (!at) continue
+      const b = buildings[id]
+      out.push({ id, at, level: SHOW_ALL ? Number(query.get('level') ?? 1) : b.level, constructing: b.level === 0 && !!b.buildEnd })
+    }
+    return out
+  }, [buildings, placed])
+  const busy = () => phase !== 'play' || !!usePlacement.getState().id
   return (
     <Base
       buildings={list}
+      hidden={inHand}
       onTap={(id) => {
-        if (phase !== 'play') return
+        if (busy()) return
         if (tourHooks.onBuildingTap?.(id)) return
         tapBuilding(id)
       }}
+      onHold={(id) => {
+        if (busy() || useGame.getState().tourStep >= 0 || useGame.getState().buildings[id].level < 1) return
+        usePlacement.getState().begin(id, false)
+      }}
     />
   )
+}
+
+function Meadow() {
+  const blocked = useBlockedCells()
+  return <GroundCover blocked={blocked} />
 }
 
 export function Scene() {
@@ -88,8 +103,12 @@ export function Scene() {
       <Suspense fallback={null}>
         <Terrain />
         <Water />
-        <Paths />
+        <Roads />
+        <Pier />
         <Props />
+        <Meadow />
+        <Overgrowth />
+        <Placement />
         <Clouds />
         {PREVIEW_MODEL ? (
           <PreviewBench />

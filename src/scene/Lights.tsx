@@ -20,7 +20,7 @@ export function Lights({ shadowSize = 2048 }: { shadowSize?: number }) {
     if (!light) return
     rig.targetWorld(_t)
     // cover what the camera can see (portrait: taller than wide), with margin for tall things
-    const half = THREE.MathUtils.clamp(rig.width * 1.55, 16, 46)
+    const half = THREE.MathUtils.clamp(rig.width * 0.8, 18, 72)
     const cam = light.shadow.camera
     if (Math.abs(cam.right - half) > 0.5) {
       cam.left = -half

@@ -1,8 +1,9 @@
 import { BUILDINGS } from '../data/buildings'
-import { PLOTS, type BuildingId } from '../data/layout'
+import { FOCUS_WIDTH, type BuildingId } from '../data/layout'
+import { OBSTACLE_INFO, allObstacles, buildingCenter } from '../scene/grid'
 import { rig, screenToIsland } from '../scene/cameraRig'
 import { juice } from '../scene/juice'
-import { CAMERA_TILT } from '../scene/world'
+import { CAMERA_TILT, worldToUv } from '../scene/world'
 import { sfx } from '../ui/sound'
 import { useGame } from './game'
 import { toMs } from './time'
@@ -10,55 +11,61 @@ import { useUi } from './ui'
 
 /** Game actions: the verbs the UI calls. They touch the save, the camera and the juice together. */
 
+/** World position of a building's centre, or null if it isn't on the map yet. */
+export function buildingWorld(id: BuildingId): [number, number] | null {
+  const at = useGame.getState().placed[id]
+  return at ? buildingCenter(id, at) : null
+}
+
 /**
- * Fly the camera to a plot. `left` slides the building towards the left of the
+ * Fly the camera to a building. `left` slides it towards the left of the
  * screen (0–0.3 of the view width) so it stays visible beside the side drawer;
  * `up` lifts it a little above centre (to clear Rocco's bubble).
  */
-export function focusPlot(id: BuildingId, left = 0, width?: number, up = 0) {
-  const plot = PLOTS[id]
-  const w = width ?? plot.focusWidth
+export function focusBuilding(id: BuildingId, left = 0, width?: number, up = 0) {
+  const pos = buildingWorld(id)
+  if (!pos) return
+  const w = width ?? FOCUS_WIDTH[id]
   // `w` is the view width up to 2.05:1; wider windows simply see more to the sides
   const shown = w * Math.max(1, rig.aspect / 2.05)
+  const [u, v] = worldToUv(pos[0], pos[1])
   const [du, dv] = screenToIsland(left * shown, (-up * (shown / rig.aspect)) / Math.sin(CAMERA_TILT))
-  rig.flyTo(plot.u + du, plot.v + dv, w)
+  rig.flyTo(u + du, v + dv, w)
 }
 
 export function tapBuilding(id: BuildingId) {
-  const b = useGame.getState().buildings[id]
   sfx('pop')
   juice(id, 'wobble')
-  focusPlot(id, 0.22)
-  if (b.level === 0 && !b.buildEnd) useUi.getState().open({ kind: 'build', id })
-  else useUi.getState().open({ kind: 'building', id })
+  focusBuilding(id, 0.22)
+  useUi.getState().open({ kind: 'building', id })
 }
 
-/** Start building on an empty plot, or upgrading a building. Returns an error string or null. */
+/** Clear a piece of overgrowth for coins. Returns an error line or null. */
+export function clearObstacle(obstacleId: string): string | null {
+  const g = useGame.getState()
+  const o = allObstacles().find((x) => x.id === obstacleId)
+  if (!o || g.cleared.includes(obstacleId)) return null
+  const info = OBSTACLE_INFO[o.kind]
+  if (!g.spend(info.cost)) return 'Not enough coins'
+  useGame.setState({ cleared: [...useGame.getState().cleared, obstacleId] })
+  if (info.xp) useGame.getState().addXp(info.xp)
+  sfx('build')
+  return null
+}
+
+/** Start upgrading a building. Returns an error string or null. (New buildings go through placement.) */
 export function startConstruction(id: BuildingId): string | null {
   const game = useGame.getState()
   const b = game.buildings[id]
   const def = BUILDINGS[id]
   if (b.buildEnd) return 'Already under construction'
-  let cost: number
-  let seconds: number
-  let needs: number
-  const toLevel = b.level + 1
-  if (b.level === 0) {
-    cost = def.buildCost
-    seconds = def.buildSeconds
-    needs = def.needsLevel
-  } else {
-    const up = def.upgrades.find((u) => u.level === toLevel)
-    if (!up) return 'Fully upgraded'
-    cost = up.cost
-    seconds = up.seconds
-    needs = up.needsLevel
-  }
-  if (game.level < needs) return `Reach level ${needs} first`
-  if (!game.spend(cost)) return 'Not enough coins'
+  const up = def.upgrades.find((u) => u.level === b.level + 1)
+  if (!up) return 'Fully upgraded'
+  if (game.level < up.needsLevel) return `Reach level ${up.needsLevel} first`
+  if (!game.spend(up.cost)) return 'Not enough coins'
   const now = Date.now()
   game.patch((s) => ({
-    buildings: { ...s.buildings, [id]: { ...s.buildings[id], buildStart: now, buildEnd: now + toMs(seconds), buildTo: toLevel } },
+    buildings: { ...s.buildings, [id]: { ...s.buildings[id], buildStart: now, buildEnd: now + toMs(up.seconds), buildTo: up.level } },
   }))
   sfx('build')
   juice(id, 'wobble')

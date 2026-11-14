@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Portrait } from './Portrait'
 import { sfx } from './sound'
 
 const INK = '#4b2f1c'
@@ -129,7 +130,7 @@ export function RoccoSays({
       {blockWorld && <div className="rocco-catch" onClick={tap} />}
       <div className="rocco" onClick={tap}>
         <div className="rocco-portrait">
-          <RoccoBust talking={!done} mood={mood} />
+          <Portrait id="rocco" className={!done ? 'talking' : ''} fallback={<RoccoBust talking={!done} mood={mood} />} />
         </div>
         <div className="rocco-bubble panel">
           <span className="rocco-name">Chief Rocco</span>

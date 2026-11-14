@@ -12,6 +12,7 @@ import { addPart, evaluateDesign, partLock, removePart, testRun, type MissionRes
 import { Icon, type IconName } from './icons'
 import { Btn, Meter, Modal } from './kit'
 import { CATEGORY_ICON, PartIcon, partStats } from './parts'
+import { Portrait } from './Portrait'
 import { RoccoBust } from './Rocco'
 import { sfx } from './sound'
 import { Turntable } from './Turntable'
@@ -323,7 +324,7 @@ export function Builder() {
       {tip && (
         <div className="tip-pop" onClick={() => setTip(null)}>
           <div className="panel">
-            <RoccoBust mood={TIPS[tip].mood} />
+            <Portrait id="rocco" fallback={<RoccoBust mood={TIPS[tip].mood} />} />
             <p>{TIPS[tip].text}</p>
           </div>
         </div>

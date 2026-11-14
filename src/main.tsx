@@ -12,8 +12,9 @@ import { useUi } from './state/ui'
 import { useLaunch } from './state/launch'
 import { flight } from './state/launch'
 import * as mission from './state/mission'
+import { usePlacement } from './state/placement'
 
 createRoot(document.getElementById('root')!).render(<App />)
 
 // handy for screenshots and debugging
-;Object.assign(window, { __rig: rig, __game: useGame, __ui: useUi, __launch: useLaunch, __flight: flight, __m: mission })
+;Object.assign(window, { __rig: rig, __game: useGame, __ui: useUi, __launch: useLaunch, __flight: flight, __m: mission, __place: usePlacement })

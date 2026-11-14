@@ -14,44 +14,25 @@ import { sfx } from './sound'
 const STAGE_ICON: Record<StageId, keyof typeof Icon> = { instruments: 'camera', storage: 'data', radio: 'comms', ground: 'dish' }
 const fmt = (n: number) => (n >= 10000 ? `${(n / 1000).toFixed(1)}k` : Math.round(n).toLocaleString('en-US'))
 
-/** Reigns-style card: drag left or right (or tap a side) to decide. Tilting previews the effect. */
+/** A decision card: two clear choices, each showing how it will move the bars. */
 function EventCard({ event, onChoose }: { event: PlannedEvent; onChoose: (c: 'a' | 'b') => void }) {
-  const [dx, setDx] = useState(0)
-  const start = useRef<number | null>(null)
-  const lean = dx < -24 ? 0 : dx > 24 ? 1 : null
-  const choose = (i: 0 | 1) => {
-    sfx('snap')
-    onChoose(i === 0 ? 'a' : 'b')
-  }
   return (
     <div className="event-wrap">
-      <div
-        className="event-card panel"
-        style={{ transform: `translateX(${dx}px) rotate(${dx * 0.06}deg)`, transition: start.current === null ? 'transform 0.25s cubic-bezier(0.2,1.4,0.4,1)' : 'none' }}
-        onPointerDown={(e) => {
-          start.current = e.clientX
-          e.currentTarget.setPointerCapture(e.pointerId)
-        }}
-        onPointerMove={(e) => start.current !== null && setDx(e.clientX - start.current)}
-        onPointerUp={() => {
-          const d = dx
-          start.current = null
-          if (d < -90) choose(0)
-          else if (d > 90) choose(1)
-          else setDx(0)
-        }}
-        onPointerCancel={() => {
-          start.current = null
-          setDx(0)
-        }}
-      >
+      <div className="event-card panel">
         <span className="eyebrow">Day {event.day} · decision</span>
         <h2>{event.title}</h2>
         <p>{event.text}</p>
         <div className="event-sides">
           {event.choices.map((c, i) => (
-            <button key={c.id} type="button" className={`side${lean === i ? ' lean' : ''}${lean !== null && lean !== i ? ' dim' : ''}`} onClick={() => choose(i as 0 | 1)}>
-              <i>{i === 0 ? '← swipe' : 'swipe →'}</i>
+            <button
+              key={c.id}
+              type="button"
+              className="side"
+              onClick={() => {
+                sfx('snap')
+                onChoose(i === 0 ? 'a' : 'b')
+              }}
+            >
               <b>{c.label}</b>
               <small>{c.blurb}</small>
               <div className="fx">
@@ -65,6 +46,7 @@ function EventCard({ event, onChoose }: { event: PlannedEvent; onChoose: (c: 'a'
                   )
                 })}
               </div>
+              <span className="pick-btn">Choose this</span>
             </button>
           ))}
         </div>

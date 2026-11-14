@@ -6,12 +6,14 @@ import { palette } from '../art/palette'
 import { createModel, disposeModel, type ModelUserData } from '../art/registry'
 import '../art/models'
 import { seeded } from '../art/kit'
-import { PLOTS } from '../data/layout'
+import { useGame } from '../state/game'
+import { buildingCenter } from './grid'
 import { GAUGE, flight, scoreTiming, useLaunch, verdictFor } from '../state/launch'
 import { sfx, startRoar } from '../ui/sound'
 import { rig } from './cameraRig'
 import { makeCloud, skyState } from './Sky'
-import { CAMERA_YAW, FWD, RIGHT, uvToWorld } from './world'
+import { usePlacement } from '../state/placement'
+import { CAMERA_YAW, FWD, RIGHT } from './world'
 
 /**
  * The rocket on the pad and everything that happens when it flies:
@@ -247,11 +249,12 @@ export function PadRocket({ visible = true }: { visible?: boolean }) {
   const serial = useLaunch((s) => s.rocketSerial)
   const scene = useThree((s) => s.scene)
 
+  const padAt = useGame((s) => s.placed.launchPad)
+  const padMoving = usePlacement((s) => s.id === 'launchPad')
   const origin = useMemo(() => {
-    const plot = PLOTS.launchPad
-    const [x, z] = uvToWorld(plot.u, plot.v)
+    const [x, z] = padAt ? buildingCenter('launchPad', padAt) : [0, 0]
     return new THREE.Vector3(x, PAD_TABLE_Y + 0.06, z)
-  }, [])
+  }, [padAt])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rocket = useMemo(() => createModel('rocket', { kind }), [kind, serial])
@@ -527,8 +530,9 @@ export function PadRocket({ visible = true }: { visible?: boolean }) {
       // the sky goes dark through the upper atmosphere; 100 km is the edge of space
       f.space = Math.min(1, Math.max(0, (f.altKm - 12) / 88))
       skyState.space = f.space
-    } else if (skyState.space !== 0 && f.phase === 'idle') {
-      skyState.space = 0
+    } else {
+      if (skyState.space !== 0 && f.phase === 'idle') skyState.space = 0
+      if (f.phase === 'idle') rocket.position.copy(origin)
     }
 
     // ---- flame ----
@@ -592,7 +596,7 @@ export function PadRocket({ visible = true }: { visible?: boolean }) {
 
   return (
     <>
-      <primitive object={rocket} visible={visible} />
+      <primitive object={rocket} visible={visible && !padMoving} />
       <primitive object={flame} />
       <primitive object={puffs.mesh} />
       <pointLight ref={light} color={palette.flame} intensity={0} distance={26} decay={1.6} />

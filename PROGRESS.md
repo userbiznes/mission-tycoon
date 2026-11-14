@@ -51,6 +51,15 @@ Updated after each milestone: what works, what's next.
 
 The game was first built portrait (per the original brief) and then turned to **landscape**: the island now runs left to right with the pad at the right end, sheets are side drawers, and the builder, launch prep, launch, operations and debrief are column layouts. A phone held upright is asked to turn sideways.
 
+## Free placement and the overgrown island (Sat Nov 14, by request)
+
+- **Bigger island** (about 45 × 85 units) with a pond, a cove, a headland, a wooded rim and a wooden pier where deliveries come ashore.
+- **Free placement on a build grid:** no fixed plots. New buildings come from the **Build** menu and go anywhere they fit; press and hold any building (or use **Move** in its drawer) to pick it up. Green footprint = fits, red = blocked.
+- **Abandoned start:** only the five old buildings needed for the first mission stand, surrounded by overgrowth (thickets, boulders, stumps, dead trees, rusty scrap). Tap a piece to clear it for a few coins and win back the land.
+- **Roads grow on their own:** a dirt track is routed from the pier to every front door and re-routes whenever something moves; the delivery truck follows it.
+- **Decision cards** are now two plain buttons (the swipe gesture was removed).
+- **Character portraits:** the game loads `public/characters/<id>.png` when present (falls back to the built-in drawings) and labels them "AI-generated". Prompts are in `docs/character-prompts.md`.
+
 **Decisions and cuts**
 - Tone mapping: Khronos Neutral (see M0).
 - The mission globe is procedural (no Blue Marble texture), so the game ships with no external imagery at all.

@@ -11,6 +11,7 @@ import { labSlots, missingInputs, rawCapacity, rawStored } from '../sim'
 import { TimerRow } from './BuildingSheet'
 import { Icon } from './icons'
 import { Btn, Meter, Sheet, formatTime, useNow } from './kit'
+import { Portrait } from './Portrait'
 import { RoccoBust } from './Rocco'
 import { sfx } from './sound'
 
@@ -240,9 +241,15 @@ export function CrewSheet() {
           const seat = seatOf(c.id)
           return (
             <div key={c.id} className={`part-card card${locked ? ' locked' : ''}`}>
-              <span className="part-icon" style={{ background: mine ? '#d6f3c2' : '#fbe3ac' }}>
-                <Icon.crew />
-              </span>
+              <Portrait
+                id={c.id}
+                className="crew-face"
+                fallback={
+                  <span className="part-icon" style={{ background: mine ? '#d6f3c2' : '#fbe3ac' }}>
+                    <Icon.crew />
+                  </span>
+                }
+              />
               <div className="grow">
                 <b>
                   {c.name} <span className="owned" style={{ background: '#3e9fe8' }}>{TRAITS[c.trait].name}</span>
@@ -308,7 +315,7 @@ export function TipHost() {
   return (
     <div className="tip-pop" onClick={closeTip}>
       <div className="panel">
-        <RoccoBust mood={TIPS[tip].mood} />
+        <Portrait id="rocco" fallback={<RoccoBust mood={TIPS[tip].mood} />} />
         <p>{TIPS[tip].text}</p>
       </div>
     </div>

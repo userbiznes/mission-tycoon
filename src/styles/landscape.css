@@ -342,3 +342,124 @@
 .stars.big svg:nth-child(2) {
   transform: translateY(-0.22em) scale(1.1);
 }
+
+/* ---------- free placement ---------- */
+.build-btn {
+  position: absolute;
+  right: 0.7em;
+  bottom: calc(0.8em + var(--safe-bottom));
+  z-index: 6;
+  animation: rise-in 0.5s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+.place-bar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(0.8em + var(--safe-bottom));
+  transform: translateX(-50%);
+  width: min(92%, 30em);
+  z-index: 12;
+  animation: rise-in 0.4s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+.place-bar .panel {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.5em 0.6em 0.55em 0.9em;
+  border-radius: 1.2em;
+}
+.place-bar .grow {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.15;
+}
+.place-bar small {
+  display: block;
+  font-size: 0.8em;
+  color: var(--ink-soft);
+}
+.place-bar small.bad {
+  color: var(--red-dark);
+  font-weight: 700;
+}
+.clear-pop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.45em 0.6em 0.5em;
+  border-radius: 1em;
+  pointer-events: auto;
+  white-space: nowrap;
+  animation: pop-in 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.clear-pop b {
+  font-size: 0.9em;
+}
+.clear-pop > div {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+}
+.pin > .clear-pop {
+  transform: translate(-50%, -100%);
+}
+.event-card {
+  cursor: default;
+}
+.side .pick-btn {
+  margin-top: auto;
+  align-self: stretch;
+  padding: 0.2em 0.6em 0.3em;
+  border: 0.13em solid var(--ink);
+  border-radius: 0.8em;
+  background: linear-gradient(180deg, #8be05f, #55bb3d);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86em;
+  text-align: center;
+  text-shadow: 0 0.08em 0 rgba(60, 30, 10, 0.5);
+}
+.side:active {
+  transform: scale(0.97);
+}
+
+/* ---------- character portraits (generated artwork) ---------- */
+.portrait {
+  position: relative;
+  display: block;
+  flex: none;
+}
+.portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0.2em 0 rgba(60, 30, 10, 0.3));
+}
+.portrait.talking img {
+  animation: rocco-talk 0.34s ease-in-out infinite;
+}
+.portrait .ai-tag {
+  position: absolute;
+  left: 50%;
+  bottom: 0.1em;
+  transform: translateX(-50%);
+  padding: 0 0.4em 0.08em;
+  border-radius: 0.5em;
+  background: rgba(75, 47, 28, 0.82);
+  color: #fff;
+  font-style: normal;
+  font-size: 0.5em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.tip-pop .portrait {
+  width: 5em;
+}
+.crew-face {
+  width: 3.4em;
+}
+.crew-face .ai-tag {
+  font-size: 0.42em;
+}

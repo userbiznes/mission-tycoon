@@ -93,7 +93,7 @@ function smin(a: number, b: number, k: number): number {
 /** Width of sand between the waterline and the grassy bank. */
 export const BEACH_W = 1.9
 /** Width of the grassy bank that climbs to the plateau. */
-export const BANK_W = 1.5
+export const BANK_W = 2.6
 /** Anything with coast distance below this is flat, buildable plateau. */
 export const PLATEAU_D = -(BEACH_W + BANK_W)
 
@@ -102,18 +102,18 @@ export const PLATEAU_D = -(BEACH_W + BANK_W)
  * Negative on land, positive at sea.
  */
 export function coastUv(u: number, v: number): number {
-  // main body of the headland
-  let d = sdRoundBox(u, v + 2.5, 12.0, 25.0, 8.5)
-  // launch pad promontory
-  const pad = Math.hypot(u - 2.6, v - 19.6) - 9.6
-  d = smin(d, pad, 5)
-  // a small bay on the west side for a proper beach
-  const bay = Math.hypot(u + 16.2, v - 12.4) - 5.4
-  d = -smin(-d, bay, 3)
+  // a broad island: about 45 units across and 85 long
+  let d = sdRoundBox(u, v, 22.5, 42.5, 16)
+  // a headland at the east end and a bulge on the north shore
+  d = smin(d, Math.hypot(u + 4, v - 36) - 15.5, 7)
+  d = smin(d, Math.hypot(u + 19, v + 12) - 11, 8)
+  // a sheltered cove on the south shore, and a freshwater pond inland
+  d = -smin(-d, Math.hypot(u - 27, v - 14) - 8.5, 4)
+  d = -smin(-d, Math.hypot(u - 9, v - 27) - 3.4, 2.5)
   // organic wobble
-  d += 0.75 * Math.sin(u * 0.33 + 1.3) * Math.cos(v * 0.24 - 0.4)
-  d += 0.45 * Math.sin(v * 0.61 + u * 0.37 + 2.1)
-  d += (fbm(u * 0.22 + 7.1, v * 0.22 - 3.4, 2) - 0.5) * 1.3
+  d += 0.9 * Math.sin(u * 0.27 + 1.3) * Math.cos(v * 0.19 - 0.4)
+  d += 0.5 * Math.sin(v * 0.47 + u * 0.31 + 2.1)
+  d += (fbm(u * 0.18 + 7.1, v * 0.18 - 3.4, 2) - 0.5) * 1.6
   return d
 }
 export function coastWorld(x: number, z: number): number {
@@ -152,4 +152,4 @@ export function groundHeightWorld(x: number, z: number): number {
 }
 
 /** Region (in island frame) baked into the coast-distance texture for the water shader. */
-export const SDF_REGION = { u0: -48, v0: -62, w: 96, h: 124 }
+export const SDF_REGION = { u0: -64, v0: -84, w: 128, h: 168 }
