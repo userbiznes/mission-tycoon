@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { DEFAULT_LOGO, setAgencyLogo, type LogoSpec } from '../art/logo'
 import { LEVELS, STARTING_BANK } from '../data/economy'
 import { PLOTS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/types'
 
 /**
  * The saved game. Everything here is plain JSON and is written to localStorage
@@ -37,6 +38,43 @@ export interface Player {
   logo: LogoSpec
 }
 
+/** The mission being designed right now. */
+export interface Draft {
+  contractId: string
+  design: { busId: string | null; parts: string[] }
+  orbitId: OrbitId
+  rocketId: RocketId
+  stationIds: StationId[]
+}
+
+/** A satellite that stays in orbit after its mission and keeps sending raw data. */
+export interface SatelliteRec {
+  id: string
+  name: string
+  contractId: string
+  orbitId: OrbitId
+  mbPerDay: Partial<Record<RawDataType, number>>
+  carry: Partial<Record<RawDataType, number>>
+  daysLeft: number
+  daysTotal: number
+  /** epoch ms of the next in-game day of passes */
+  nextAt: number
+}
+
+export interface LabJob {
+  id: string
+  recipeId: string
+  start: number
+  end: number
+}
+
+export interface OrderRec {
+  id: string
+  templateId: string
+  /** epoch ms when a filled slot offers a new order; 0 = available now */
+  readyAt: number
+}
+
 export interface SaveData {
   version: number
   started: boolean
@@ -50,6 +88,20 @@ export interface SaveData {
   /** index of the next tour step; -1 once the tour is finished */
   tourStep: number
   tipsSeen: string[]
+  draft: Draft | null
+  /** best star count per contract id */
+  bestStars: Record<string, number>
+  missionsFlown: number
+  satellites: SatelliteRec[]
+  /** raw data and lab products */
+  items: Partial<Record<ItemId, number>>
+  labJobs: LabJob[]
+  orders: OrderRec[]
+  /** hired crew ids and who sits where */
+  hired: string[]
+  seats: Partial<Record<'science' | 'spacecraft' | 'launch' | 'ground', string>>
+  /** extra skill points earned by crew, by crew id and seat */
+  crewXp: Record<string, number>
   /** free-form bag for systems added by later milestones (lab, satellites, crew, campaign…) */
   ext: Record<string, unknown>
 }
@@ -75,6 +127,16 @@ export function freshSave(): SaveData {
     deliveries: [],
     tourStep: 0,
     tipsSeen: [],
+    draft: null,
+    bestStars: {},
+    missionsFlown: 0,
+    satellites: [],
+    items: {},
+    labJobs: [],
+    orders: [],
+    hired: [],
+    seats: {},
+    crewXp: {},
     ext: {},
   }
 }
@@ -208,6 +270,16 @@ function snapshot(s: GameState): SaveData {
     deliveries: s.deliveries,
     tourStep: s.tourStep,
     tipsSeen: s.tipsSeen,
+    draft: s.draft,
+    bestStars: s.bestStars,
+    missionsFlown: s.missionsFlown,
+    satellites: s.satellites,
+    items: s.items,
+    labJobs: s.labJobs,
+    orders: s.orders,
+    hired: s.hired,
+    seats: s.seats,
+    crewXp: s.crewXp,
     ext: s.ext,
   }
 }

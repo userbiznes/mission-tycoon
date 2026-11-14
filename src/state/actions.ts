@@ -89,3 +89,77 @@ export function onTimer(hook: (e: TimerEvent) => void): () => void {
   timerHooks.add(hook)
   return () => timerHooks.delete(hook)
 }
+
+// ------------------------------------------------------------------ market
+import { STOCK_MARKUP } from '../data/economy'
+import { PART_BY_ID } from '../data/parts'
+
+export function stockPrice(partId: string): number {
+  return Math.round(PART_BY_ID[partId].cost * STOCK_MARKUP)
+}
+
+/** Market level speeds up deliveries. */
+function deliverySeconds(partId: string): number {
+  const lvl = useGame.getState().buildings.partsMarket.level
+  const speed = lvl >= 3 ? 0.5 : lvl === 2 ? 0.7 : 1
+  return PART_BY_ID[partId].deliverySec * speed
+}
+
+/** Buy from stock: instant, 30% dearer. */
+export function buyNow(partId: string): boolean {
+  const game = useGame.getState()
+  if (!game.spend(stockPrice(partId))) {
+    sfx('error')
+    useUi.getState().toast('Not enough coins', 'bad')
+    return false
+  }
+  game.addParts(partId, 1)
+  sfx('buy')
+  juice('partsMarket', 'wobble')
+  return true
+}
+
+/** Order: cheaper, but a truck has to bring it. */
+export function orderPart(partId: string, seconds?: number): boolean {
+  const game = useGame.getState()
+  if (!game.spend(PART_BY_ID[partId].cost)) {
+    sfx('error')
+    useUi.getState().toast('Not enough coins', 'bad')
+    return false
+  }
+  const now = Date.now()
+  const id = `d${now}${Math.floor(Math.random() * 1000)}`
+  game.patch((s) => ({
+    deliveries: [...s.deliveries, { id, partId, qty: 1, start: now, end: now + toMs(seconds ?? deliverySeconds(partId)) }],
+  }))
+  sfx('buy')
+  return true
+}
+
+/** Make an ordered delivery arrive within `ms` (the tour uses this so nobody waits). */
+export function rushDeliveries(ms = 4500) {
+  const now = Date.now()
+  useGame.getState().patch((s) => ({
+    deliveries: s.deliveries.map((d) => (d.end - now > ms ? { ...d, start: Math.min(d.start, now - 1), end: now + ms } : d)),
+  }))
+}
+
+onTimer((e) => {
+  if (e.kind !== 'tick') return
+  const game = useGame.getState()
+  const due = game.deliveries.filter((d) => e.now >= d.end)
+  if (!due.length) return
+  game.patch((s) => ({ deliveries: s.deliveries.filter((d) => e.now < d.end) }))
+  for (const d of due) {
+    useGame.getState().addParts(d.partId, d.qty)
+    useUi.getState().toast(`Delivered: ${PART_BY_ID[d.partId].name}`, 'good')
+  }
+  sfx('success')
+  juice('partsMarket', 'wobble')
+  deliveryHooks.forEach((h) => h())
+})
+const deliveryHooks = new Set<() => void>()
+export function onDelivery(hook: () => void): () => void {
+  deliveryHooks.add(hook)
+  return () => deliveryHooks.delete(hook)
+}

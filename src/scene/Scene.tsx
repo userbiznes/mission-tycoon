@@ -14,6 +14,7 @@ import { PLOTS, type BuildingId } from '../data/layout'
 import { Base } from './Base'
 import { useSettings } from '../state/settings'
 import { useGame } from '../state/game'
+import { useUi } from '../state/ui'
 import { tapBuilding } from '../state/actions'
 import { tourHooks } from '../ui/Tour'
 import { PinProjector } from './pins'
@@ -64,8 +65,12 @@ function GameBase() {
 
 export function Scene() {
   const low = useSettings((s) => s.lowQuality)
+  // full-screen flows cover the world: stop drawing it to save the phone's GPU
+  const screen = useUi((s) => s.screen)
+  const paused = screen === 'builder' || screen === 'launchPrep' || screen === 'ops' || screen === 'debrief'
   return (
     <Canvas
+      frameloop={paused ? 'never' : 'always'}
       shadows={{ type: THREE.PCFShadowMap }}
       dpr={[1, low ? 1.5 : 2]}
       gl={{
