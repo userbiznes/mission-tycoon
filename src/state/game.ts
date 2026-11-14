@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { DEFAULT_LOGO, setAgencyLogo, type LogoSpec } from '../art/logo'
+import { LEVELS, STARTING_BANK } from '../data/economy'
 import { PLOTS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
 
 /**
@@ -66,7 +67,7 @@ export function freshSave(): SaveData {
     version: SAVE_VERSION,
     started: false,
     player: { name: '', agency: '', logo: DEFAULT_LOGO },
-    coins: 2500,
+    coins: STARTING_BANK,
     xp: 0,
     level: 1,
     buildings: freshBuildings(),
@@ -119,7 +120,7 @@ export interface GameState extends SaveData {
 }
 
 /** XP needed to reach each level (index = level − 1). */
-export const LEVEL_XP = [0, 3, 8, 15, 26, 40, 60, 85, 120]
+export const LEVEL_XP = LEVELS.map((l) => l.xp)
 
 export function levelForXp(xp: number): number {
   let level = 1
@@ -131,7 +132,7 @@ export function levelForXp(xp: number): number {
 export function levelProgress(xp: number): number {
   const level = levelForXp(xp)
   const lo = LEVEL_XP[level - 1]
-  const hi = LEVEL_XP[level] ?? lo + 50
+  const hi = LEVEL_XP[level] ?? lo + 200
   return Math.min(1, (xp - lo) / (hi - lo))
 }
 
