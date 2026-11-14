@@ -1,0 +1,153 @@
+/**
+ * The one and only place colors are defined.
+ * Warm, saturated, sunny-afternoon: creamy whites, sky blues, orange/red accents,
+ * varied grass greens, sandy paths, deep teal ocean.
+ * Nothing else in the codebase should hard-code a color: import from here.
+ */
+export const palette = {
+  // --- sky & light ---
+  skyTop: '#58b4ee',
+  skyMid: '#8fd3f7',
+  skyHorizon: '#dff4fb',
+  sun: '#fff0d2',
+  sunGlow: '#ffe2a6',
+  hemiSky: '#bfe6ff',
+  hemiGround: '#f2c58a',
+  cloud: '#ffffff',
+  cloudShade: '#e3f0fa',
+
+  // --- ocean ---
+  oceanDeep: '#0c6c88',
+  oceanMid: '#1b96a6',
+  oceanShallow: '#59d3c6',
+  oceanLagoon: '#9fe9d6',
+  foam: '#f6fffb',
+
+  // --- land ---
+  grass: '#7cc44c',
+  grassLight: '#9bd65a',
+  grassDeep: '#60b148',
+  grassShade: '#4f9d3e',
+  grassDry: '#c2d86a',
+  sand: '#f6dfa6',
+  sandLight: '#fcecc0',
+  sandWet: '#e6c88e',
+  dirt: '#cf9d66',
+  dirtDark: '#b07f4f',
+  path: '#f0d49b',
+  pathEdge: '#dcb679',
+  cliff: '#c99668',
+  cliffDark: '#a87650',
+  rock: '#b9b2a6',
+  rockDark: '#978f84',
+  seabed: '#2aa39f',
+
+  // --- plants ---
+  leaf: '#5fb54a',
+  leafLight: '#86cf55',
+  leafDark: '#3f9440',
+  pine: '#3f9a63',
+  pineDark: '#2f7f55',
+  trunk: '#9a6a41',
+  trunkDark: '#7a5030',
+  flowerPink: '#ff8fb1',
+  flowerYellow: '#ffd84d',
+  flowerWhite: '#fff8ec',
+  flowerOrange: '#ff9d47',
+  flowerBlue: '#7fb6ff',
+
+  // --- building bodies ---
+  cream: '#fff1d6',
+  creamShade: '#f2dcb8',
+  white: '#fffaf0',
+  plaster: '#f8e3c0',
+  brick: '#d98a62',
+
+  // --- accents ---
+  red: '#e9523b',
+  redDark: '#c23d2c',
+  orange: '#f6963a',
+  orangeDark: '#d97722',
+  yellow: '#fcc840',
+  yellowDark: '#e0a524',
+  teal: '#2fb7aa',
+  tealDark: '#1f938b',
+  blue: '#4ba4e3',
+  blueDark: '#2f7fc0',
+  navy: '#2d4a6b',
+  navyDark: '#1f3550',
+  purple: '#8d6fd1',
+  pink: '#f27aa0',
+  green: '#63bf4f',
+
+  // --- roofs ---
+  roofRed: '#dc5a41',
+  roofBlue: '#4d92d3',
+  roofTeal: '#35ad9e',
+  roofOrange: '#ef8b3a',
+  roofGrey: '#8fa0ad',
+
+  // --- structure ---
+  concrete: '#d6cfc1',
+  concreteLight: '#e6e0d4',
+  concreteDark: '#aca598',
+  asphalt: '#6e7480',
+  metal: '#a7b4bf',
+  metalLight: '#c9d3db',
+  metalDark: '#6f7d8a',
+  steel: '#54616d',
+  soot: '#3d3a3c',
+  rust: '#bd6a3c',
+  rustDark: '#96492a',
+  rustLight: '#d98952',
+  wood: '#c08a55',
+  woodLight: '#d9a871',
+  woodDark: '#93603a',
+  rubber: '#3b3f47',
+  hazard: '#fcc840',
+  hazardDark: '#3b3f47',
+  canvasTent: '#fbe6b8',
+
+  // --- glass & lights ---
+  glass: '#8fdcff',
+  glassDark: '#4fa8d8',
+  glassDeep: '#2f6f9f',
+  lampWarm: '#ffd98a',
+  lampHot: '#fff2c4',
+  beaconRed: '#ff5a3c',
+  beaconGreen: '#6dff9a',
+  screenGlow: '#7ff0ff',
+  flame: '#ffb347',
+  flameHot: '#fff3b0',
+  smoke: '#f4f1ea',
+  steam: '#ffffff',
+
+  // --- characters ---
+  skinA: '#f2c39b',
+  skinB: '#c98a5e',
+  skinC: '#8d5a3b',
+  hairGrey: '#c9c9cf',
+  hairDark: '#4a3a33',
+  hardHat: '#fcc840',
+  labCoat: '#fdfaf2',
+  overalls: '#4b86c9',
+  vest: '#f6963a',
+
+  // --- UI ---
+  ink: '#4b2f1c',
+  inkSoft: '#7a5638',
+  panel: '#fff6e0',
+  panelEdge: '#f3d9a4',
+  panelDeep: '#e9c583',
+  coin: '#fcc840',
+  coinEdge: '#d9941f',
+  xp: '#6fc7ff',
+  good: '#63bf4f',
+  warn: '#f6963a',
+  bad: '#e9523b',
+  backdropA: '#27405e',
+  backdropB: '#13233a',
+} as const
+
+export type PaletteKey = keyof typeof palette
+export type PaletteColor = (typeof palette)[PaletteKey]
