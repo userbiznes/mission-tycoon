@@ -19,7 +19,10 @@ export interface Plot {
   v: number
   /** clearance radius kept free of props */
   radius: number
-  /** rotation of the building around Y, radians */
+  /**
+   * rotation of the building around Y, radians. Models are built with their front door on +Z;
+   * west-side plots turn a quarter so the door faces the road.
+   */
   rotY: number
   /** camera zoom (visible world width) when focused */
   focusWidth: number
@@ -29,12 +32,12 @@ export interface Plot {
 
 export const PLOTS: Record<BuildingId, Plot> = {
   launchPad: { id: 'launchPad', u: 2.4, v: 18.8, radius: 5.2, rotY: 0, focusWidth: 16, door: [-2.6, -5.2] },
-  missionControl: { id: 'missionControl', u: -4.4, v: 6.8, radius: 4.1, rotY: 0, focusWidth: 13, door: [2.4, -3.6] },
+  missionControl: { id: 'missionControl', u: -4.4, v: 6.8, radius: 4.1, rotY: Math.PI / 2, focusWidth: 13, door: [2.4, -3.6] },
   commsCenter: { id: 'commsCenter', u: 4.6, v: 3.4, radius: 4.0, rotY: 0, focusWidth: 13, door: [-3.2, -2.4] },
   integrationBay: { id: 'integrationBay', u: 4.5, v: -7.0, radius: 4.1, rotY: 0, focusWidth: 13, door: [-3.4, -2.6] },
-  partsMarket: { id: 'partsMarket', u: -4.5, v: -4.4, radius: 4.1, rotY: 0, focusWidth: 13, door: [3.0, -3.2] },
-  scienceLab: { id: 'scienceLab', u: -5.6, v: 17.0, radius: 3.4, rotY: 0, focusWidth: 12, door: [3.0, -3.0] },
-  engineeringLab: { id: 'engineeringLab', u: -4.5, v: -15.6, radius: 3.6, rotY: 0, focusWidth: 12, door: [3.2, -2.2] },
+  partsMarket: { id: 'partsMarket', u: -4.5, v: -4.4, radius: 4.1, rotY: Math.PI / 2, focusWidth: 13, door: [3.0, -3.2] },
+  scienceLab: { id: 'scienceLab', u: -5.6, v: 17.0, radius: 3.4, rotY: Math.PI / 2, focusWidth: 12, door: [3.0, -3.0] },
+  engineeringLab: { id: 'engineeringLab', u: -4.5, v: -15.6, radius: 3.6, rotY: Math.PI / 2, focusWidth: 12, door: [3.2, -2.2] },
   crewQuarters: { id: 'crewQuarters', u: 4.5, v: -17.6, radius: 3.6, rotY: 0, focusWidth: 12, door: [-3.2, -2.0] },
 }
 
