@@ -28,6 +28,7 @@ export type ReasonId =
   | 'sloppyLaunch'
   | 'scienceMissed'
   | 'scienceMet'
+  | 'scienceMetBarely'
   | 'allHome'
   | 'profit'
   | 'efficient'
@@ -158,6 +159,10 @@ export const REASONS: Record<ReasonId, ReasonTemplate> = {
   scienceMet: {
     tone: 'good',
     text: 'Science target met with {pct}% to spare.',
+  },
+  scienceMetBarely: {
+    tone: 'good',
+    text: 'Science target met, with almost nothing to spare.',
   },
   allHome: {
     tone: 'good',
