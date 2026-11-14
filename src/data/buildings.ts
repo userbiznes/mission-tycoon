@@ -77,7 +77,7 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
     name: 'Comms Center',
     role: 'Brings data down and stores it',
     blurb: 'The dish talks to your satellites. No dish time, no data, no paycheck.',
-    action: 'Check the dish',
+    action: 'Send data to the lab',
     buildCost: 0,
     buildSeconds: 0,
     needsLevel: 1,

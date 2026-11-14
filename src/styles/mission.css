@@ -975,3 +975,49 @@
 .opt.station small {
   display: block;
 }
+
+/* ---------- lab, crew ---------- */
+.shelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+}
+.chip.sell {
+  font: inherit;
+  font-size: 0.82em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.why-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-bottom: 0.4em;
+  padding: 0.1em 0.6em 0.16em 0.2em;
+  border: 0.12em solid #94caf3;
+  border-radius: 1em;
+  background: #d3ecff;
+  font: inherit;
+  font-size: 0.82em;
+  font-weight: 700;
+  color: #1f5f96;
+  cursor: pointer;
+}
+.why-link svg {
+  width: 1.3em;
+  height: 1.3em;
+}
+.part-icon b {
+  font-size: 1em;
+}
+.seat-row {
+  display: flex;
+  gap: 0.25em;
+}
+.seat-row .tab {
+  font-size: 0.74em;
+  padding: 0.3em 0.1em 0.36em;
+}
+.tip-pop {
+  z-index: 90;
+}

@@ -26,4 +26,36 @@ Updated after each milestone: what works, what's next.
 - The base sits on a long, narrow headland so the whole spaceport, both beaches and the sea fit a portrait screen at the default zoom.
 - Clouds drift only over the sea rows so they never hide a building.
 
-**Next: M1** — the other four starting buildings (old versions), construction plots, tap → bottom sheet, HUD.
+---
+
+## M1–M4: Base, onboarding, market, rules engine, first full mission ✅ (Sat Nov 14)
+
+**What works**
+- **Base:** all eight buildings (five old starters, three to build on plots), paths, props, tap → wobble → fly-to → drawer with Status / Crew / Upgrade / Tasks tabs. HUD with agency logo, level, XP bar and coins; rewards fly to the counters.
+- **Onboarding:** title over a live beauty shot, name and agency, logo builder (4 shapes × 6 icons × 10 + 10 colours, Skip = random). The logo is on the HQ sign, the flag, the truck, the satellite and every rocket.
+- **Parts Market:** seven stalls; Buy now (+30%, instant) vs Order (cheaper, a truck drives in with it); inventory.
+- **Rules engine (`src/sim`, 56 unit tests):** the six bars with sunlight and shadow power checks, slot limits, pointing requirements, budget and reserve, lifetime, part locks, GO / NO-GO per seat, day-by-day mission simulation, event cards with previews, stars, ranked debrief reasons, payout, XP, closest real NASA mission, in-orbit production, lab rules.
+- **Builder:** 3D turntable, tap or drag parts on (they pop into place), six live bars with one-line reasons, "Why?" for every bar, free test run that predicts the stars.
+- **Launch prep:** orbit, rocket, ground stations, mass gauge, GO / NO-GO poll; you can launch over a NO-GO.
+- **Launch cinematic:** countdown, hold-to-fire, liftoff with flame, smoke, shake and a chase camera, stage separation, burn at the top, sky fading to space, real altitude and speed readouts. Autopilot always available. A sloppy flight costs orbital life.
+- **Operations:** stylized procedural globe with orbit ring, satellite, ground stations and contact beam; time-lapse; data pipeline strip with the slowest link in red; Reigns-style swipe decision cards.
+- **Debrief:** 0–3 stars, top three reasons with fixes, payout breakdown, XP, closest real NASA mission, "Fix and relaunch" / "Back to base".
+
+## M5–M7: Tour, economy loop, depth ✅ / partly (Sat Nov 14)
+
+- **Tour:** Chief Rocco's eight-stop scripted tour with a camera move and one real action per stop; contextual tips shown once each (shadow, bottleneck, overweight, test run, construction, lab, orders, storage).
+- **Economy loop:** satellites stay in orbit for their lifetime and send raw data every in-game day; the Comms Center stores it (overflow is lost); the Science Lab runs recipes on NASA's data levels; products sell or fill small orders at Mission Control; construction on plots; upgrades.
+- **Depth:** crew hiring and the four mission seats (their skills change science, mass, launch window and downlink), five event cards, three fully specified campaign missions (First Light, Fire Watch, Storm Chaser) plus Moon and Mars as stretch data, agency levels that unlock parts, rockets, orbits and stations.
+
+## Landscape redesign (Sat Nov 14, by request)
+
+The game was first built portrait (per the original brief) and then turned to **landscape**: the island now runs left to right with the pad at the right end, sheets are side drawers, and the builder, launch prep, launch, operations and debrief are column layouts. A phone held upright is asked to turn sideways.
+
+**Decisions and cuts**
+- Tone mapping: Khronos Neutral (see M0).
+- The mission globe is procedural (no Blue Marble texture), so the game ships with no external imagery at all.
+- The launch grant is paid at launch, not when a contract is taken, so it cannot be farmed.
+- **Cut (per the brief's cut order):** the Engineering Lab's research and test campaigns (the building can be built but has no function yet), crew posted to buildings, pass-and-play team mode, sandbox and versus.
+- Two background helpers (art and rules) were stopped early by a usage limit; their finished work was merged and the rest was completed in the main thread.
+
+**Next: M8** — final polish pass, a phone test on a real device, and submission.

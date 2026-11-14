@@ -47,9 +47,19 @@ interface UiState {
   fly: (kind: Flyer['kind'], count: number, x: number, y: number) => void
   removeFlyer: (id: number) => void
   bumpHud: (which: 'coins' | 'xp') => void
+  /** a Rocco tip waiting to be read */
+  tip: string | null
+  /** show a contextual tip once per save */
+  showTip: (id: string) => void
+  closeTip: () => void
 }
 
 let nextId = 1
+/** set by the game store: returns true the first time a tip id is seen */
+let tipGate: ((id: string) => boolean) | null = null
+export function setTipGate(fn: (id: string) => boolean) {
+  tipGate = fn
+}
 
 export const useUi = create<UiState>((set, get) => ({
   sheet: null,
@@ -74,4 +84,9 @@ export const useUi = create<UiState>((set, get) => ({
   },
   removeFlyer: (id) => set({ flyers: get().flyers.filter((f) => f.id !== id) }),
   bumpHud: (which) => set({ bump: { ...get().bump, [which]: get().bump[which] + 1 } }),
+  tip: null,
+  showTip: (id) => {
+    if (tipGate?.(id)) set({ tip: id })
+  },
+  closeTip: () => set({ tip: null }),
 }))

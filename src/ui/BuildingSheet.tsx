@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { BUILDINGS } from '../data/buildings'
 import type { BuildingId } from '../data/layout'
 import { startConstruction } from '../state/actions'
@@ -162,6 +162,8 @@ export function BuildingSheet({
 /** Sheet for an empty plot: pick the blueprint and build. */
 export function BuildSheet({ id }: { id: BuildingId }) {
   const close = useUi((s) => s.close)
+  const showTip = useUi((s) => s.showTip)
+  useEffect(() => showTip('construction'), [showTip])
   const toast = useUi((s) => s.toast)
   const level = useGame((s) => s.level)
   const coins = useGame((s) => s.coins)

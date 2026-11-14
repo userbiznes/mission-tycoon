@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { PLOTS, type BuildingId } from '../data/layout'
 import { TOUR } from '../data/tutorial'
-import { focusPlot } from '../state/actions'
+import { focusPlot, rushDeliveries } from '../state/actions'
 import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { rig } from '../scene/cameraRig'
@@ -44,6 +44,7 @@ export function Tour() {
   const player = useGame((s) => s.player)
   const sheet = useUi((s) => s.sheet)
   const screen = useUi((s) => s.screen)
+  const deliveries = useGame((s) => s.deliveries)
   // the line for a step has been read and we're waiting for the player's action
   const [waiting, setWaiting] = useState(false)
   const def = step >= 0 ? TOUR[step] : null
@@ -91,7 +92,13 @@ export function Tour() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [def, waiting, step])
 
-  if (!def || sheet || screen) return null
+  // "Battery's here!" waits for the truck; hurry it along so nobody stands around
+  const waitingForTruck = def?.id === 'truck' && deliveries.length > 0
+  useEffect(() => {
+    if (def?.id === 'truck') rushDeliveries(5200)
+  }, [def])
+
+  if (!def || sheet || screen || waitingForTruck) return null
 
   const text = def.text.replace('{name}', player.name || 'Chief').replace('{agency}', player.agency || 'the agency')
   const focusId = def.focus && def.focus !== 'home' ? def.focus : null

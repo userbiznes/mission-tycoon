@@ -5,7 +5,9 @@ import { acceptContract, boardContracts } from '../state/mission'
 import { useUi } from '../state/ui'
 import { Stars } from './Builder'
 import { Icon } from './icons'
-import { Btn, Sheet } from './kit'
+import { useState } from 'react'
+import { OrdersList } from './EconomySheets'
+import { Btn, Sheet, Tabs } from './kit'
 
 function ContractCard({ c, stars, locked }: { c: ContractDef; stars: number | null; locked: boolean }) {
   const draft = useGame((s) => s.draft)
@@ -56,19 +58,40 @@ function ContractCard({ c, stars, locked }: { c: ContractDef; stars: number | nu
   )
 }
 
-/** Mission Control's contract board: the big jobs. */
+/** Mission Control's boards: big contracts and small orders. */
 export function ContractBoard() {
   const close = useUi((s) => s.close)
+  const [tab, setTab] = useState<'contracts' | 'orders'>('contracts')
   // re-read when progress changes
   useGame((s) => s.bestStars)
   useGame((s) => s.level)
   return (
-    <Sheet title="Contract board" subtitle="Pick a job, then design the satellite for it" icon={<Icon.clipboard />} onClose={close} tall>
-      <div className="contracts">
-        {boardContracts().map(({ contract, stars, locked }) => (
-          <ContractCard key={contract.id} c={contract} stars={stars} locked={locked} />
-        ))}
-      </div>
+    <Sheet
+      title="Mission Control"
+      subtitle={tab === 'contracts' ? 'Pick a job, then design the satellite for it' : 'Quick jobs, filled from the Science Lab'}
+      icon={<Icon.clipboard />}
+      onClose={close}
+      tall
+      tabs={
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: 'contracts', label: 'Contracts' },
+            { id: 'orders', label: 'Small orders' },
+          ]}
+        />
+      }
+    >
+      {tab === 'contracts' ? (
+        <div className="contracts">
+          {boardContracts().map(({ contract, stars, locked }) => (
+            <ContractCard key={contract.id} c={contract} stars={stars} locked={locked} />
+          ))}
+        </div>
+      ) : (
+        <OrdersList />
+      )}
     </Sheet>
   )
 }

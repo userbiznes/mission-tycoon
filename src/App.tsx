@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { Scene } from './scene/Scene'
 import { arriveAtBase, startTitleShot } from './scene/cinematics'
 import { processTimers } from './state/actions'
-import { useGame } from './state/game'
+import { onLevelUp, useGame } from './state/game'
+import { sfx } from './ui/sound'
 import { useUi } from './state/ui'
 import { BuildSheet, BuildingSheet } from './ui/BuildingSheet'
 import { Hud } from './ui/Hud'
@@ -12,6 +13,8 @@ import { ContractBoard } from './ui/ContractBoard'
 import { Debrief } from './ui/Debrief'
 import { LaunchPrep } from './ui/LaunchPrep'
 import { Ops } from './ui/Ops'
+import { CommsStatus, CrewSheet, LabSheet, TipHost } from './ui/EconomySheets'
+import './state/economy'
 import { tourHooks } from './ui/Tour'
 import { acceptContract } from './state/mission'
 import type { BuildingId } from './data/layout'
@@ -48,10 +51,26 @@ function buildingAction(id: BuildingId) {
         ui.open({ kind: 'contracts' })
       }
       break
+    case 'scienceLab':
+      ui.open({ kind: 'lab' })
+      break
+    case 'crewQuarters':
+      ui.open({ kind: 'crew' })
+      break
+    case 'commsCenter':
+      ui.open({ kind: 'lab' })
+      break
     default:
-      ui.toast('Coming with the next upgrade')
+      ui.toast('The workshop is still being fitted out')
   }
 }
+
+onLevelUp((level, unlocks) => {
+  setTimeout(() => {
+    sfx('success')
+    useUi.getState().toast(`Agency level ${level}! Unlocked: ${unlocks.slice(0, 3).join(', ')}`, 'good')
+  }, 900)
+})
 
 tourHooks.openShop = () => useUi.getState().open({ kind: 'market' })
 tourHooks.startFirstContract = () => acceptContract('firstLight')
@@ -63,7 +82,17 @@ function Sheets() {
     case 'settings':
       return <SettingsSheet />
     case 'building':
-      return <BuildingSheet id={sheet.id} onAction={() => buildingAction(sheet.id)} />
+      return (
+        <BuildingSheet
+          id={sheet.id}
+          onAction={() => buildingAction(sheet.id)}
+          status={sheet.id === 'commsCenter' ? <CommsStatus /> : undefined}
+        />
+      )
+    case 'lab':
+      return <LabSheet />
+    case 'crew':
+      return <CrewSheet />
     case 'contracts':
       return <ContractBoard />
     case 'build':
@@ -135,6 +164,7 @@ export function App() {
           {screen === 'launch' && launching && <LaunchScreen />}
           {screen === 'ops' && <Ops />}
           {screen === 'debrief' && <Debrief />}
+          <TipHost />
           <Toasts />
           <Flyers />
         </div>

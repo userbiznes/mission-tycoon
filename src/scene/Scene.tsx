@@ -19,6 +19,7 @@ import { tapBuilding } from '../state/actions'
 import { tourHooks } from '../ui/Tour'
 import { PinProjector } from './pins'
 import { PadRocket } from './Launch'
+import { DeliveryTruck } from './Truck'
 
 const query = new URLSearchParams(window.location.search)
 /** `?model=<id>&level=2` shows one model alone on the grass: the art preview bench. */
@@ -96,6 +97,7 @@ export function Scene() {
           <>
             <GameBase />
             <PadRocket />
+            <DeliveryTruck />
           </>
         )}
       </Suspense>

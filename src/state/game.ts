@@ -181,6 +181,12 @@ export interface GameState extends SaveData {
   reset: () => void
 }
 
+let levelUpHook: ((level: number, unlocks: string[]) => void) | null = null
+/** Called when the agency levels up (the UI shows the fanfare). */
+export function onLevelUp(fn: (level: number, unlocks: string[]) => void) {
+  levelUpHook = fn
+}
+
 /** XP needed to reach each level (index = level − 1). */
 export const LEVEL_XP = LEVELS.map((l) => l.xp)
 
@@ -218,8 +224,11 @@ export const useGame = create<GameState>((set, get) => ({
     return true
   },
   addXp: (n) => {
+    const before = get().level
     const xp = get().xp + n
-    set({ xp, level: levelForXp(xp) })
+    const level = levelForXp(xp)
+    set({ xp, level })
+    if (level > before) levelUpHook?.(level, LEVELS.find((l) => l.level === level)?.unlocks ?? [])
   },
   addParts: (partId, qty) => {
     const inventory = { ...get().inventory }
@@ -298,3 +307,7 @@ useGame.subscribe(() => {
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', saveNow)
 }
+
+// contextual tips are shown once per save
+import { setTipGate } from './ui'
+setTipGate((id) => useGame.getState().markTip(id))
