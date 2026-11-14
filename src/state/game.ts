@@ -10,7 +10,7 @@ import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/
  */
 
 const SAVE_KEY = 'mission-tycoon:save'
-const SAVE_VERSION = 1
+const SAVE_VERSION = 2
 
 export type Phase = 'title' | 'onboarding' | 'arrival' | 'play'
 
