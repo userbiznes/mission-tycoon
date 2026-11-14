@@ -12,7 +12,7 @@ import { TimerRow } from './BuildingSheet'
 import { Icon } from './icons'
 import { Btn, Meter, Sheet, formatTime, useNow } from './kit'
 import { Portrait } from './Portrait'
-import { RoccoBust } from './Rocco'
+import { RoccoSays } from './Rocco'
 import { sfx } from './sound'
 
 const at = (e: React.MouseEvent) => {
@@ -312,12 +312,5 @@ export function TipHost() {
     if (tip) sfx('pop')
   }, [tip])
   if (!tip || !TIPS[tip]) return null
-  return (
-    <div className="tip-pop" onClick={closeTip}>
-      <div className="panel">
-        <Portrait id="rocco" fallback={<RoccoBust mood={TIPS[tip].mood} />} />
-        <p>{TIPS[tip].text}</p>
-      </div>
-    </div>
-  )
+  return <RoccoSays key={tip} text={TIPS[tip].text} mood={TIPS[tip].mood} onNext={closeTip} />
 }

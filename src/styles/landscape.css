@@ -533,3 +533,158 @@
   line-height: 1.2;
   color: var(--ink-soft);
 }
+
+/* ---------- dialogue: big character on the left, big bubble on the right ---------- */
+.dialog {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 3% 0 0;
+  background: rgba(18, 26, 20, 0.58);
+  z-index: 95;
+  cursor: pointer;
+  animation: fade-in 0.25s ease both;
+}
+.dialog-char {
+  flex: 0 0 32%;
+  height: 94%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: char-in 0.5s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+.dialog-char .portrait,
+.dialog-char .rocco-figure {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 0.4em 0.6em rgba(0, 0, 0, 0.35));
+}
+.dialog-char .portrait img {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  filter: none;
+}
+.dialog-char .portrait .ai-tag {
+  font-size: 0.6em;
+  bottom: 0.6em;
+}
+.rocco-figure .rocco-head {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: rocco-idle 3.4s ease-in-out infinite;
+}
+.rocco-figure.talking .rocco-head {
+  animation: rocco-talk 0.34s ease-in-out infinite;
+}
+.rocco-figure .rocco-mouth {
+  transform-box: fill-box;
+  transform-origin: 50% 20%;
+  transform: scaleY(0);
+}
+.rocco-figure.talking .rocco-mouth {
+  animation: rocco-mouth 0.22s ease-in-out infinite;
+}
+.rocco-figure .rocco-eyes {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: blink 4.2s infinite;
+}
+.dialog-bubble {
+  position: relative;
+  flex: 1;
+  align-self: center;
+  min-height: 52%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.4em 2em 1.6em;
+  border: 0.14em solid #c9ab77;
+  border-radius: 1.3em;
+  background: linear-gradient(180deg, #fff6df 0%, #f6e3b8 100%);
+  box-shadow:
+    inset 0 0.2em 0 rgba(255, 255, 255, 0.85),
+    0 0.6em 1.4em rgba(0, 0, 0, 0.35);
+  animation: pop-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+/* the tail, pointing at the speaker */
+.dialog-bubble::before {
+  content: '';
+  position: absolute;
+  left: -1.5em;
+  top: 58%;
+  width: 0;
+  height: 0;
+  border: 0.9em solid transparent;
+  border-right: 1.7em solid #f9e9c4;
+  border-left: none;
+  filter: drop-shadow(-0.1em 0 0 #c9ab77);
+}
+.dialog-bubble p {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1.32;
+  text-align: center;
+  color: #6b4426;
+}
+.dialog-bubble .ghost {
+  visibility: hidden;
+}
+.dialog-bubble .rocco-name {
+  top: -0.85em;
+  left: 1.6em;
+  font-size: 0.95em;
+}
+.dialog-bubble .rocco-next {
+  right: 1.2em;
+  bottom: 0.9em;
+}
+@keyframes char-in {
+  from {
+    transform: translateX(-60%);
+    opacity: 0;
+  }
+}
+/* the prompt while the player acts in the world */
+.hint-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  bottom: calc(1em + var(--safe-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.35em 1.3em 0.4em 0.4em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 2.4em;
+  background: linear-gradient(180deg, #ffe069, #f9b92f);
+  box-shadow: 0 0.3em 0 rgba(60, 30, 10, 0.3);
+  z-index: 30;
+  cursor: pointer;
+  animation: rise-in 0.45s cubic-bezier(0.2, 1.25, 0.4, 1) both, pulse 1.1s ease-in-out 0.6s infinite;
+}
+.hint-bar .face {
+  width: 2.9em;
+  height: 2.9em;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 0.13em solid var(--ink);
+  background: #bfe6ff;
+}
+.hint-bar .face svg,
+.hint-bar .face .portrait {
+  width: 130%;
+  margin: 6% 0 0 -15%;
+}
+.hint-bar .face .ai-tag {
+  display: none;
+}
+.hint-bar b {
+  font-size: 1.15em;
+}

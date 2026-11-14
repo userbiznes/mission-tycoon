@@ -12,8 +12,7 @@ import { addPart, evaluateDesign, partLock, removePart, testRun, type MissionRes
 import { Icon, type IconName } from './icons'
 import { Btn, Meter, Modal } from './kit'
 import { CATEGORY_ICON, PartIcon, partStats } from './parts'
-import { Portrait } from './Portrait'
-import { RoccoBust } from './Rocco'
+import { RoccoSays } from './Rocco'
 import { sfx } from './sound'
 import { Turntable } from './Turntable'
 
@@ -321,14 +320,7 @@ export function Builder() {
       )}
       {why && <WhyModal bar={ev.bars[why]} onClose={() => setWhy(null)} />}
       {test && !tip && <TestRunModal result={test} onClose={() => setTest(null)} onPad={() => { setTest(null); setScreen('launchPrep') }} />}
-      {tip && (
-        <div className="tip-pop" onClick={() => setTip(null)}>
-          <div className="panel">
-            <Portrait id="rocco" fallback={<RoccoBust mood={TIPS[tip].mood} />} />
-            <p>{TIPS[tip].text}</p>
-          </div>
-        </div>
-      )}
+      {tip && <RoccoSays key={tip} text={TIPS[tip].text} mood={TIPS[tip].mood} onNext={() => setTip(null)} />}
     </div>
   )
 }

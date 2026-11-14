@@ -1,9 +1,14 @@
 # Character prompts
 
-Portraits for Mission Tycoon. Generate each as a **square, transparent-background PNG** (1024×1024),
-bust framing (head and shoulders, facing three-quarters towards the viewer), and save it under
+Characters for Mission Tycoon. Save each as a **transparent-background PNG** under
 `public/characters/` with the file name shown. The game loads them automatically and labels each
 one "AI-generated".
+
+- **Chief Rocco** appears large on the left of every dialogue, so generate him **from the waist up
+  in a tall frame (about 3:4, e.g. 1024×1365)**, body turned slightly towards the right of the
+  picture, one hand on his hip and the other hand open and raised as if presenting something to
+  his left (the speech bubble sits there). Keep his feet and legs out of frame.
+- **Crew members** are shown small on their cards: **square (1024×1024), head and shoulders**.
 
 The prompts describe the look directly instead of naming another game or studio. That keeps the
 characters original (the brief's own rule) and stops generators from producing lookalikes of
@@ -20,6 +25,9 @@ existing characters. Every character is an adult.
 > view, looking at the viewer. Plain transparent background, no text, no logos, no watermark.
 > Adult character.
 
+For Rocco, swap "Head-and-shoulders bust" for: "Waist-up figure with both arms visible, chunky
+hands with four simple fingers".
+
 Negative prompt (if your tool supports it):
 
 > realistic, photo, gritty, dark, scary, child, teenager, text, logo, watermark, extra limbs,
@@ -30,8 +38,9 @@ Negative prompt (if your tool supports it):
 > [style block] A retired flight director in his sixties: stocky, kind but gruff. Thick grey
 > walrus mustache, bushy grey eyebrows, grey hair at the temples. Navy blue baseball cap with an
 > orange band and a plain round yellow badge, a black headset with a boom microphone, navy bomber
-> jacket with orange trim over a cream shirt. One eyebrow raised, small proud smile, as if about to
-> give advice.
+> jacket with orange trim over a cream shirt. Stout barrel chest, one hand on his hip, the other
+> hand open and raised to the side as if presenting something. One eyebrow raised, small proud
+> smile, as if about to give advice.
 
 Optional second expression, saved as `rocco-worried.png` if you want it later:
 

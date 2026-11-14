@@ -23,6 +23,8 @@ export function footprintCenter(i: number, j: number, size: number): [number, nu
   return [(i + size / 2) * CELL, (j + size / 2) * CELL]
 }
 export function buildingCenter(id: BuildingId, at: CellPos): [number, number] {
+  // the market is a fixed landmark on the quay, not on the grid
+  if (id === 'partsMarket') return MARKET_WORLD
   return footprintCenter(at.i, at.j, FOOTPRINT[id])
 }
 export function worldToCell(x: number, z: number): CellPos {
@@ -55,26 +57,56 @@ export function zoneOfCell(i: number, j: number): number {
 }
 
 // ------------------------------------------------------------------ the dock and the start layout
-/** The dock: a square deck of cells on the south shore with a jetty running out to sea. */
-export const DOCK_SIZE = 8
-export const DOCK: CellPos = cellForCenter(...uvToWorld(DOCK_SPOT[0], DOCK_SPOT[1]), DOCK_SIZE)
-export const JETTY = { i: DOCK.i + DOCK_SIZE, j: DOCK.j + 4, len: 6, wide: 2 }
-/** The market's fixed spot in the middle of the deck. */
-export const MARKET_AT: CellPos = { i: DOCK.i + 2, j: DOCK.j + 1 }
-
-const dockCells = new Set<number>()
-for (let a = 0; a < DOCK_SIZE; a++) for (let b = 0; b < DOCK_SIZE; b++) dockCells.add(key(DOCK.i + a, DOCK.j + b))
-export function isDock(i: number, j: number): boolean {
-  return dockCells.has(key(i, j))
+/**
+ * The dock is a quay built along the south shore, so it is laid out in its own
+ * frame: local X runs along the shore (screen-right), local Z runs out to sea
+ * (towards the camera). The Parts Market stands on it, facing the water.
+ */
+export const DOCK_CENTER: [number, number] = uvToWorld(DOCK_SPOT[0], DOCK_SPOT[1])
+export const DOCK_YAW = Math.PI / 4
+export const DECK = { w: 13.2, d: 7.6 }
+export const PIER = { x: 4.3, w: 2.8, len: 9.5 }
+const DC = Math.SQRT1_2
+/** Dock-local (x along shore, z out to sea) → world (x, z). */
+export function dockWorld(lx: number, lz: number): [number, number] {
+  return [DOCK_CENTER[0] + DC * lx + DC * lz, DOCK_CENTER[1] - DC * lx + DC * lz]
 }
+export function dockLocal(x: number, z: number): [number, number] {
+  const dx = x - DOCK_CENTER[0]
+  const dz = z - DOCK_CENTER[1]
+  return [DC * dx - DC * dz, DC * dx + DC * dz]
+}
+/** On or right beside the quay or its pier: nothing else may stand or grow here. */
+export function nearDock(x: number, z: number, margin = 1): boolean {
+  const [lx, lz] = dockLocal(x, z)
+  const onDeck = Math.abs(lx) < DECK.w / 2 + margin && lz > -DECK.d / 2 - margin - 1.6 && lz < DECK.d / 2 + margin
+  const onPier = Math.abs(lx - PIER.x) < PIER.w / 2 + margin && lz >= DECK.d / 2 && lz < DECK.d / 2 + PIER.len + margin
+  return onDeck || onPier
+}
+export function isDock(i: number, j: number): boolean {
+  return nearDock((i + 0.5) * CELL, (j + 0.5) * CELL, 0.6)
+}
+/** The market's fixed spot on the deck. */
+export const MARKET_LOCAL: [number, number] = [-2.9, -0.5]
+export const MARKET_WORLD: [number, number] = dockWorld(MARKET_LOCAL[0], MARKET_LOCAL[1])
 
 export function startLayout(): Partial<Record<BuildingId, CellPos>> {
-  const out: Partial<Record<BuildingId, CellPos>> = { partsMarket: MARKET_AT }
+  const out: Partial<Record<BuildingId, CellPos>> = { partsMarket: worldToCell(MARKET_WORLD[0], MARKET_WORLD[1]) }
   for (const id of Object.keys(START_SPOTS) as BuildingId[]) {
     const [x, z] = uvToWorld(START_SPOTS[id][0], START_SPOTS[id][1])
     out[id] = cellForCenter(x, z, FOOTPRINT[id])
   }
   return out
+}
+
+let dockKeys: number[] | null = null
+function dockCellKeys(): number[] {
+  if (!dockKeys) {
+    dockKeys = []
+    const c = worldToCell(DOCK_CENTER[0], DOCK_CENTER[1])
+    for (let i = c.i - 14; i <= c.i + 14; i++) for (let j = c.j - 14; j <= c.j + 14; j++) if (isDock(i, j)) dockKeys.push(key(i, j))
+  }
+  return dockKeys
 }
 
 // ------------------------------------------------------------------ overgrowth
@@ -111,11 +143,11 @@ export function allObstacles(): Obstacle[] {
   const start = startLayout()
   // keep the old buildings, a little yard around each, and the dock clear
   for (const id of Object.keys(start) as BuildingId[]) {
+    if (id === 'partsMarket') continue
     const at = start[id]!
     const n = FOOTPRINT[id]
     for (let i = at.i - 2; i < at.i + n + 2; i++) for (let j = at.j - 2; j < at.j + n + 2; j++) taken.add(key(i, j))
   }
-  for (let i = DOCK.i - 2; i < DOCK.i + DOCK_SIZE + 2; i++) for (let j = DOCK.j - 2; j < DOCK.j + DOCK_SIZE + 2; j++) taken.add(key(i, j))
   const kinds: ObstacleKind[] = ['thicket', 'thicket', 'thicket', 'boulder', 'rock', 'rock', 'stump', 'scrap', 'deadTree', 'deadTree']
   const out: Obstacle[] = []
   let tries = 0
@@ -126,7 +158,7 @@ export function allObstacles(): Obstacle[] {
     const i = Math.floor(-46 + rnd() * 92)
     const j = Math.floor(-46 + rnd() * 92)
     let ok = true
-    for (let a = 0; a < size && ok; a++) for (let b = 0; b < size && ok; b++) if (!isLand(i + a, j + b) || taken.has(key(i + a, j + b))) ok = false
+    for (let a = 0; a < size && ok; a++) for (let b = 0; b < size && ok; b++) if (!isLand(i + a, j + b) || taken.has(key(i + a, j + b)) || nearDock((i + a + 0.5) * CELL, (j + b + 0.5) * CELL, 3)) ok = false
     if (!ok) continue
     // the starting land is only lightly overgrown; the fenced-off east is wild
     if (zoneOfCell(i, j) === 0 && rnd() < 0.55) continue
@@ -144,12 +176,12 @@ export type Placed = Partial<Record<BuildingId, CellPos>>
 export function occupancy(placed: Placed, cleared: string[], ignore?: BuildingId): Set<number> {
   const occ = new Set<number>()
   for (const id of Object.keys(placed) as BuildingId[]) {
-    if (id === ignore) continue
+    if (id === ignore || id === 'partsMarket') continue
     const at = placed[id]!
     const n = FOOTPRINT[id]
     for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) occ.add(key(at.i + a, at.j + b))
   }
-  for (const k of dockCells) occ.add(k)
+  for (const k of dockCellKeys()) occ.add(k)
   const gone = new Set(cleared)
   for (const o of allObstacles()) {
     if (gone.has(o.id)) continue

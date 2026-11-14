@@ -7,7 +7,7 @@ import { useUi } from '../state/ui'
 import { rig } from '../scene/cameraRig'
 import { juice } from '../scene/juice'
 import { Pin } from '../scene/pins'
-import { RoccoSays } from './Rocco'
+import { RoccoHint, RoccoSays } from './Rocco'
 import { sfx } from './sound'
 
 /** Lets the rest of the game ask "is the tour handling this tap?" */
@@ -20,7 +20,7 @@ export const tourHooks: {
   startFirstContract: (() => void) | null
 } = { onBuildingTap: null, onShopDone: null, openShop: null, startFirstContract: null }
 
-const PIN_HEIGHT: Partial<Record<BuildingId, number>> = { launchPad: 8.2, commsCenter: 5.6 }
+const PIN_HEIGHT: Partial<Record<BuildingId, number>> = { launchPad: 8.2, commsCenter: 5.8, missionControl: 6.0, partsMarket: 4.8 }
 
 function Arrow() {
   return (
@@ -123,14 +123,17 @@ export function Tour() {
     advance()
   }
 
-  return (
-    <>
-      {waiting && plot && focusId && (
-        <Pin at={[px, PIN_HEIGHT[focusId] ?? 4.6, pz]}>
-          <Arrow />
-        </Pin>
-      )}
-      <RoccoSays key={def.id} text={text} mood={def.mood} onNext={onNext} hint={waiting ? def.hint : undefined} blockWorld={!waiting} />
-    </>
-  )
+  if (waiting) {
+    return (
+      <>
+        {plot && focusId && (
+          <Pin at={[px, PIN_HEIGHT[focusId] ?? 4.6, pz]}>
+            <Arrow />
+          </Pin>
+        )}
+        <RoccoHint text={def.hint ?? 'Tap it'} onSkip={onNext} />
+      </>
+    )
+  }
+  return <RoccoSays key={def.id} text={text} mood={def.mood} onNext={onNext} />
 }

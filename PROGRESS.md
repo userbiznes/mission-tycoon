@@ -71,6 +71,12 @@ Studied the eight official store screenshots of a leading farm-builder for genre
 - **Shop tray**: the Build button is bottom-left and opens a tray of blueprints along the bottom.
 - The starting buildings are grouped near the dock so the whole spaceport and the dock fit the opening view.
 
+## Buildings, quay and dialogue redesign (Sat Nov 14, by request)
+
+- **Every building redesigned** as one bold shape in its own colour with a signature feature: blue control tower (Mission Control), teal barrel hangar with a satellite at the door (Integration Bay), one enormous white dish (Comms Center), orange dockside depot with a gear-and-wrench sign (Parts Market), white observatory dome on a violet drum (Science Lab), slate workshop with a saw-tooth roof and a turning gear (Engineering Lab), green-roofed log cabin with a washing line (Crew Quarters). All in `src/art/models/buildings.ts`.
+- **The quay rebuilt** along the shore: plank deck with visible gaps, heavy rope posts, a pier, a yellow cargo crane, stacked crates and barrels; the market faces the water and the delivery boat ties up under the crane.
+- **Dialogues** now show the character large on the left over a dimmed scene with a big speech bubble on the right; while the player is asked to act, a small prompt bar and an arrow take over. Rocco's portrait slot (`public/characters/rocco.png`) is now a waist-up figure.
+
 **Decisions and cuts**
 - Tone mapping: Khronos Neutral (see M0).
 - The mission globe is procedural (no Blue Marble texture), so the game ships with no external imagery at all.

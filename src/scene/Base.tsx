@@ -5,7 +5,10 @@ import { hasModel } from '../art/registry'
 import '../art/models'
 import { palette } from '../art/palette'
 import type { BuildingId } from '../data/layout'
-import { buildingCenter, type CellPos } from './grid'
+import { DOCK_YAW, buildingCenter, type CellPos } from './grid'
+
+/** Height of the quay's planks: the market stands on them. */
+export const DECK_TOP = 0.14
 import { sampleJuice } from './juice'
 import { Model } from './Model'
 
@@ -85,8 +88,8 @@ export function Base({
         return (
           <group
             key={b.id}
-            position={[x, b.id === 'partsMarket' ? 0.1 : 0, z]}
-            rotation-y={(b.facing ?? 0) * (Math.PI / 2)}
+            position={[x, b.id === 'partsMarket' ? DECK_TOP : 0, z]}
+            rotation-y={b.id === 'partsMarket' ? DOCK_YAW : (b.facing ?? 0) * (Math.PI / 2)}
             onPointerDown={(e: ThreeEvent<PointerEvent>) => {
               cancel()
               const id = b.id

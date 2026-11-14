@@ -8,7 +8,7 @@ import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { usePlacement } from '../state/placement'
 import { sfx } from '../ui/sound'
-import { CELL, DOCK, DOCK_SIZE, allObstacles, cellKey, isLand, occupancy, worldToCell, type Obstacle, type ObstacleKind } from './grid'
+import { CELL, nearDock, allObstacles, cellKey, isLand, occupancy, worldToCell, type Obstacle, type ObstacleKind } from './grid'
 import { BEACH_W, PLATEAU_D, coastUv, groundHeightUv, uvToWorld, vnoise } from './world'
 
 // ------------------------------------------------------------------ prop geometry
@@ -186,10 +186,6 @@ function deadTree(): THREE.BufferGeometry {
   return k.geometry()
 }
 
-const DOCK_X = (DOCK.i + DOCK_SIZE / 2) * CELL
-const DOCK_Z = (DOCK.j + DOCK_SIZE / 2) * CELL
-const DOCK_R = (DOCK_SIZE / 2) * CELL + 2.2
-
 // ------------------------------------------------------------------ scatter
 interface Spot {
   x: number
@@ -211,7 +207,7 @@ function scatter(seed: number, count: number, accept: (u: number, v: number, d: 
     if (!accept(u, v, d, rnd)) continue
     const [x, z] = uvToWorld(u, v)
     // nothing grows through the dock
-    if (Math.abs(x - DOCK_X) < DOCK_R && Math.abs(z - DOCK_Z) < DOCK_R) continue
+    if (nearDock(x, z, 2.2)) continue
     out.push({ x, z, y: groundHeightUv(u, v), s: scale[0] + rnd() * (scale[1] - scale[0]), rot: rnd() * Math.PI * 2 })
   }
   return out

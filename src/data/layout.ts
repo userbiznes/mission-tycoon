@@ -72,7 +72,7 @@ export const START_FACING: Partial<Record<BuildingId, number>> = {
 }
 
 /** Centre of the dock on the south shore. The Parts Market stands on it and deliveries arrive by boat. */
-export const DOCK_SPOT: [number, number] = [24.5, -27.5]
+export const DOCK_SPOT: [number, number] = [22.2, -27.5]
 
 /**
  * The island opens up from west to east. Land beyond a boundary is fenced off

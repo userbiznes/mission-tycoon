@@ -10,96 +10,145 @@ import { useGame } from '../state/game'
 import { usePlacement } from '../state/placement'
 import { useUi } from '../state/ui'
 import { sfx } from '../ui/sound'
-import { CELL, DOCK, DOCK_SIZE, JETTY, zoneOfCell } from './grid'
+import { DECK, DOCK_CENTER, DOCK_YAW, PIER, dockWorld, zoneOfCell } from './grid'
 import { Instances, treePine, treeRound, type Spot } from './Props'
-import { ISLAND_U, ISLAND_V, PLATEAU_D, coastUv, uvToWorld, worldToUv } from './world'
+import { PLATEAU_D, coastUv, uvToWorld, worldToUv } from './world'
 
-const DECK_Y = 0.1
+const TOP = 0.14
 
 /**
- * The dock: a plank deck on posts over the shallows, ringed with rope posts,
- * with a jetty where the delivery boat ties up. The Parts Market stands on it.
+ * The quay: a broad plank deck along the shore with a ramp down to the grass,
+ * heavy rope posts on the seaward sides, a pier for the delivery boat and a
+ * little yellow crane to lift the cargo off. The Parts Market stands on it.
  */
 export function Dock() {
   const object = useMemo(() => {
     const kit = new Kit()
-    const x0 = DOCK.i * CELL
-    const z0 = DOCK.j * CELL
-    const size = DOCK_SIZE * CELL
-    const deck = (x: number, z: number, w: number, d: number) => {
-      kit.box(w, 0.22, d, { color: palette.woodDark, top: palette.wood, at: [x + w / 2, DECK_Y - 0.17, z + d / 2], r: 0.05 })
-      // planks run across the short way, with small gaps
-      const n = Math.round(d / 0.62)
-      for (let p = 0; p < n; p++) {
-        const shade = p % 3 === 0 ? palette.wood : palette.woodLight
-        kit.box(w + 0.16, 0.08, d / n - 0.07, { color: palette.wood, top: shade, at: [x + w / 2, DECK_Y - 0.03, z + (p + 0.5) * (d / n)], r: 0.025, shade: 0.05 })
-      }
-      // legs down into the water
-      for (let px = x + 0.3; px <= x + w - 0.2; px += Math.max(2.4, (w - 0.6) / Math.round((w - 0.6) / 2.6))) {
-        for (const pz of [z + 0.3, z + d - 0.3]) kit.cyl(0.19, 0.23, 3.2, { color: palette.trunkDark, top: palette.woodDark, at: [px, DECK_Y - 1.7, pz], bevel: 0.04, seg: 8 })
-      }
-    }
-    deck(x0, z0, size, size)
-    const jx = JETTY.i * CELL
-    const jz = JETTY.j * CELL
-    deck(jx - 0.1, jz, JETTY.len * CELL, JETTY.wide * CELL)
+    const W = DECK.w
+    const D = DECK.d
+    const tones = [palette.wood, palette.woodLight, palette.wood, palette.plankWarm, palette.woodLight]
 
-    // rope posts round the seaward sides (the landward corner is left open)
-    const posts: [number, number][] = []
-    const step = 1.5
-    for (let t = step * 2; t <= size + 0.01; t += step) posts.push([x0 + t, z0 + size]) // front-left edge
-    for (let t = size - step; t >= JETTY.wide * CELL + (jz - z0) + 0.5; t -= step) posts.push([x0 + size, z0 + t]) // front-right edge, down to the jetty
-    for (let t = 0; t < posts.length; t++) {
-      const [px, pz] = posts[t]
-      kit.cyl(0.13, 0.15, 1.0, { color: palette.woodDark, top: palette.woodLight, at: [px, DECK_Y + 0.5, pz], bevel: 0.04, seg: 8 })
-      kit.sphere(0.16, { color: palette.woodLight, at: [px, DECK_Y + 1.04, pz], seg: 8 })
-      if (t > 0) {
-        const [qx, qz] = posts[t - 1]
-        if (Math.hypot(px - qx, pz - qz) < step * 1.6) {
-          const mid: [number, number, number] = [(px + qx) / 2, DECK_Y + 0.58, (pz + qz) / 2]
-          kit.pipe([[qx, DECK_Y + 0.82, qz], mid, [px, DECK_Y + 0.82, pz]], 0.045, { color: palette.dirtDark, top: palette.dirt, radial: 6, tension: 0.5 })
-        }
+    /** A run of planks lying across `w`, each `d` long, on a dark frame so the gaps read. */
+    const planks = (cx: number, cz: number, w: number, d: number, alongX: boolean) => {
+      kit.box(w + 0.1, 0.26, d + 0.1, { color: palette.trunkDark, top: palette.woodDark, at: [cx, TOP - 0.2, cz], r: 0.06 })
+      const span = alongX ? d : w
+      const n = Math.max(1, Math.round(span / 0.6))
+      const step = span / n
+      for (let p = 0; p < n; p++) {
+        const off = -span / 2 + (p + 0.5) * step
+        kit.box(alongX ? w : step - 0.07, 0.09, alongX ? step - 0.07 : d, {
+          color: palette.wood,
+          top: tones[(p * 3 + (alongX ? 1 : 0)) % tones.length],
+          at: [alongX ? cx : cx + off, TOP - 0.045, alongX ? cz + off : cz],
+          r: 0.03,
+          shade: 0.04,
+        })
       }
     }
-    // jetty bollards, a lamp, a lifebuoy and waiting cargo
-    for (const t of [1.5, 4.5, 7.5]) kit.cyl(0.16, 0.2, 0.4, { color: palette.steel, top: palette.metal, at: [jx + t, DECK_Y + 0.2, jz + 0.3], bevel: 0.06, seg: 10, mat: 'metal' })
-    kit.cyl(0.07, 0.09, 2.6, { color: palette.metalDark, top: palette.metalLight, at: [x0 + size - 0.5, DECK_Y + 1.3, z0 + 0.6], bevel: 0.02, seg: 8 })
-    kit.sphere(0.24, { color: palette.lampWarm, top: palette.lampHot, at: [x0 + size - 0.5, DECK_Y + 2.7, z0 + 0.6], seg: 10, mat: 'glow', shade: 0 })
-    kit.torus(0.3, 0.1, { color: palette.red, top: palette.white, at: [x0 + size - 0.02, DECK_Y + 0.75, z0 + 3.0], rot: [0, 0, Math.PI / 2], tube: 8, seg: 16 })
-    for (const [cx, cz, s, r] of [
-      [x0 + 1.0, z0 + size - 1.2, 0.8, 0.2],
-      [x0 + 1.9, z0 + size - 0.9, 0.6, -0.4],
-      [x0 + 1.2, z0 + size - 2.1, 0.55, 0.6],
-      [x0 + size - 1.1, z0 + size - 1.3, 0.7, 0.3],
-    ] as const) {
-      kit.box(s, s, s, { color: palette.woodDark, top: palette.wood, at: [cx, DECK_Y + s / 2, cz], rot: [0, r, 0], r: 0.05 })
-      kit.box(s * 1.06, 0.09, s * 1.06, { color: palette.wood, top: palette.woodLight, at: [cx, DECK_Y + s * 0.8, cz], rot: [0, r, 0], r: 0.02 })
+    const post = (x: number, z: number, tall = true) => {
+      kit.cyl(0.2, 0.24, 3.4, { color: palette.trunkDark, top: palette.woodDark, at: [x, TOP - 1.55, z], bevel: 0.04, seg: 10 })
+      if (tall) {
+        kit.cyl(0.19, 0.2, 0.95, { color: palette.woodDark, top: palette.wood, at: [x, TOP + 0.47, z], bevel: 0.04, seg: 10 })
+        kit.cyl(0.25, 0.25, 0.12, { color: palette.plankWarm, top: palette.woodLight, at: [x, TOP + 0.98, z], bevel: 0.04, seg: 10 })
+        kit.torus(0.2, 0.04, { color: palette.rope, at: [x, TOP + 0.62, z], tube: 6, seg: 10 })
+      }
     }
-    for (const [bx, bz, c1, c2] of [
-      [x0 + size - 1.9, z0 + size - 0.8, palette.blueDark, palette.blue],
-      [x0 + size - 0.9, z0 + size - 2.3, palette.tealDark, palette.teal],
-    ] as const)
-      kit.cyl(0.26, 0.26, 0.66, { color: c1, top: c2, at: [bx, DECK_Y + 0.33, bz], bevel: 0.06, seg: 12 })
+    const rope = (a: [number, number], b: [number, number]) => {
+      kit.pipe([[a[0], TOP + 0.62, a[1]], [(a[0] + b[0]) / 2, TOP + 0.36, (a[1] + b[1]) / 2], [b[0], TOP + 0.62, b[1]]], 0.055, { color: palette.rope, top: palette.ropeLight, radial: 6, tension: 0.5 })
+    }
+
+    // ---- the deck, its ramp and the pier
+    planks(0, 0, W, D, false)
+    const pz = D / 2 + PIER.len / 2
+    planks(PIER.x, pz, PIER.w, PIER.len, true)
+    // two broad steps down to the lawn
+    for (let i = 0; i < 2; i++) kit.box(W * 0.5 - i * 0.6, 0.16, 0.7, { color: palette.rockDark, top: palette.rock, at: [-0.6, TOP - 0.16 - i * 0.12, -D / 2 - 0.3 - i * 0.6], r: 0.07 })
+
+    // ---- rope posts round the three seaward sides
+    const ring: [number, number][] = []
+    const xs = [-W / 2, -W / 2 + 2.2, -W / 2 + 4.4, -W / 2 + 6.6, PIER.x - PIER.w / 2]
+    ring.push([-W / 2, -D / 2 + 0.2], [-W / 2, 0])
+    for (const x of xs) ring.push([x, D / 2])
+    for (let i = 0; i < ring.length; i++) {
+      post(ring[i][0], ring[i][1])
+      if (i > 0) rope(ring[i - 1], ring[i])
+    }
+    const right: [number, number][] = [[W / 2, D / 2], [W / 2, 0.6], [W / 2, -D / 2 + 0.2]]
+    right.forEach((r, i) => {
+      post(r[0], r[1])
+      if (i > 0) rope(right[i - 1], r)
+    })
+    // pier posts: low on the mooring side so cargo can swing over, tall on the outside
+    for (let z = D / 2 + 2; z <= D / 2 + PIER.len + 0.01; z += 2.5) {
+      post(PIER.x - PIER.w / 2, z, false)
+      post(PIER.x + PIER.w / 2, z)
+      kit.cyl(0.2, 0.26, 0.42, { color: palette.steel, top: palette.metal, at: [PIER.x - PIER.w / 2 + 0.45, TOP + 0.21, z], bevel: 0.07, seg: 10, mat: 'metal' })
+    }
+    for (let z = D / 2 + 2; z < D / 2 + PIER.len - 1; z += 2.5) rope([PIER.x + PIER.w / 2, z], [PIER.x + PIER.w / 2, z + 2.5])
+    post(PIER.x + PIER.w / 2, D / 2)
+
+    // ---- the cargo crane at the water's edge
+    const cx = 1.6
+    const cz = D / 2 - 0.9
+    kit.cyl(0.5, 0.6, 0.3, { color: palette.steel, top: palette.metal, at: [cx, TOP + 0.15, cz], bevel: 0.08, seg: 14, mat: 'metal' })
+    kit.cyl(0.2, 0.26, 3.0, { color: palette.yellowDark, top: palette.yellow, at: [cx, TOP + 1.7, cz], bevel: 0.05, seg: 12 })
+    kit.box(0.7, 0.6, 0.7, { color: palette.yellowDark, top: palette.yellow, at: [cx, TOP + 3.3, cz], r: 0.12 })
+    kit.box(0.4, 0.3, 0.06, { color: palette.glassDark, top: palette.glass, at: [cx, TOP + 3.34, cz + 0.36], r: 0.03, mat: 'glass' })
+    kit.beam([cx, TOP + 3.5, cz + 0.2], [cx - 0.5, TOP + 4.3, cz + 3.4], 0.24, { color: palette.yellowDark, top: palette.yellow })
+    kit.beam([cx, TOP + 3.9, cz - 0.3], [cx - 0.5, TOP + 4.36, cz + 3.4], 0.05, { color: palette.steel, round: true })
+    kit.box(0.5, 0.5, 0.6, { color: palette.rubber, top: palette.steel, at: [cx, TOP + 3.3, cz - 0.6], r: 0.1 })
+    kit.beam([cx - 0.5, TOP + 4.26, cz + 3.4], [cx - 0.5, TOP + 2.5, cz + 3.4], 0.04, { color: palette.steel, round: true })
+    kit.box(0.72, 0.72, 0.72, { color: palette.woodDark, top: palette.wood, at: [cx - 0.5, TOP + 2.1, cz + 3.4], rot: [0, 0.4, 0], r: 0.06 })
+    kit.box(0.78, 0.1, 0.78, { color: palette.wood, top: palette.woodLight, at: [cx - 0.5, TOP + 2.34, cz + 3.4], rot: [0, 0.4, 0], r: 0.03 })
+
+    // ---- life on the quay: stacked cargo, barrels, a coil of rope, a lamp, a lifebuoy
+    const crate = (x: number, y: number, z: number, s: number, r: number, lid: string = palette.woodLight) => {
+      kit.box(s, s, s, { color: palette.woodDark, top: palette.wood, at: [x, TOP + y + s / 2, z], rot: [0, r, 0], r: 0.05 })
+      kit.box(s * 1.06, s * 0.14, s * 1.06, { color: palette.wood, top: lid, at: [x, TOP + y + s * 0.8, z], rot: [0, r, 0], r: 0.02 })
+    }
+    crate(4.9, 0, -2.4, 0.95, 0.15)
+    crate(5.75, 0, -2.0, 0.8, -0.3)
+    crate(5.2, 0.95, -2.3, 0.7, 0.5, palette.yellow)
+    crate(4.2, 0, -1.0, 0.7, 0.7)
+    crate(5.6, 0, 1.4, 0.85, 0.2, palette.teal)
+    for (const [x, z, a, b] of [
+      [3.4, -2.7, palette.blueDark, palette.blue],
+      [5.9, 0.2, palette.redDark, palette.red],
+      [4.6, 2.3, palette.tealDark, palette.teal],
+    ] as const) {
+      kit.cyl(0.32, 0.32, 0.82, { color: a, top: b, at: [x, TOP + 0.41, z], bevel: 0.07, seg: 14 })
+      kit.torus(0.325, 0.03, { color: palette.metalLight, at: [x, TOP + 0.6, z], tube: 6, seg: 14 })
+    }
+    for (let i = 0; i < 3; i++) kit.torus(0.42 - i * 0.03, 0.075, { color: palette.rope, top: palette.ropeLight, at: [-5.6, TOP + 0.08 + i * 0.13, 2.7], tube: 6, seg: 16 })
+    kit.cyl(0.08, 0.1, 3.0, { color: palette.navyDark, top: palette.navy, at: [-W / 2 + 0.5, TOP + 1.5, -D / 2 + 0.6], bevel: 0.02, seg: 8 })
+    kit.box(0.5, 0.14, 0.5, { color: palette.navyDark, top: palette.navy, at: [-W / 2 + 0.5, TOP + 3.2, -D / 2 + 0.6], r: 0.05 })
+    kit.sphere(0.26, { color: palette.lampWarm, top: palette.lampHot, at: [-W / 2 + 0.5, TOP + 2.96, -D / 2 + 0.6], seg: 10, mat: 'glow', shade: 0 })
+    kit.torus(0.34, 0.11, { color: palette.red, top: palette.white, at: [W / 2 + 0.06, TOP + 0.62, 0.6], rot: [0, 0, Math.PI / 2], tube: 8, seg: 16 })
     return kit.build('dock')
   }, [])
-  return <primitive object={object} />
+  return (
+    <group position={[DOCK_CENTER[0], 0, DOCK_CENTER[1]]} rotation-y={DOCK_YAW}>
+      <primitive object={object} />
+    </group>
+  )
 }
 
-/** Where the delivery boat ties up, and which way it faces when moored. */
-const MOOR = new THREE.Vector3((JETTY.i + JETTY.len / 2) * CELL, -1.02, (JETTY.j + JETTY.wide) * CELL + 1.35)
-
 const SAIL_IN_MS = 8000
-const WAIT_MS = 1600
+const WAIT_MS = 1800
 const SAIL_OUT_MS = 6000
+const WATER_LINE = -1.02
 
-/** The delivery boat: sails in so it reaches the jetty just as an order is due, then heads back out. */
+/** The delivery boat: sails in along the shore to tie up under the crane just as an order is due. */
 export function DeliveryBoat() {
   const boat = useMemo(() => createModel('boat', {}), [])
   useEffect(() => () => disposeModel(boat), [boat])
-  // from out at sea (down-left of the dock), curving in alongside the jetty
   const path = useMemo(() => {
-    const out = (right: number, down: number) => new THREE.Vector3(MOOR.x + ISLAND_V.x * right + ISLAND_U.x * down, MOOR.y, MOOR.z + ISLAND_V.y * right + ISLAND_U.y * down)
-    return new THREE.CatmullRomCurve3([out(-46, 26), out(-24, 15), out(-9, 5), new THREE.Vector3(MOOR.x - 3.5, MOOR.y, MOOR.z + 0.4), MOOR.clone()], false, 'catmullrom', 0.5)
+    const at = (lx: number, lz: number) => {
+      const [x, z] = dockWorld(lx, lz)
+      return new THREE.Vector3(x, WATER_LINE, z)
+    }
+    const berth = DECK.d / 2 + 1.55
+    return new THREE.CatmullRomCurve3([at(-52, 17), at(-30, 11.5), at(-14, berth + 2.2), at(-5.5, berth + 0.3), at(-1.2, berth)], false, 'catmullrom', 0.5)
   }, [])
   const st = useRef({ arrivedAt: 0, lastCount: 0 })
   const tmp = useMemo(() => new THREE.Vector3(), [])
@@ -122,11 +171,11 @@ export function DeliveryBoat() {
     }
     boat.visible = k >= 0
     if (k < 0) return
-    // glide to a stop rather than ram the jetty
+    // glide to a stop rather than ram the quay; back out the way it came
     const e = forward ? 1 - Math.pow(1 - k, 2.2) : k * k
     path.getPoint(Math.min(1, e), boat.position)
-    path.getTangent(Math.min(0.999, e), tmp)
-    const yaw = Math.atan2(tmp.x, tmp.z) + (forward ? 0 : Math.PI)
+    path.getTangent(Math.min(0.999, Math.max(0.001, e)), tmp)
+    const yaw = Math.atan2(tmp.x, tmp.z)
     let d = yaw - boat.rotation.y
     while (d > Math.PI) d -= Math.PI * 2
     while (d < -Math.PI) d += Math.PI * 2
