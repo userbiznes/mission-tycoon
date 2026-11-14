@@ -57,7 +57,7 @@ button {
   color: inherit;
 }
 
-/* The stage fills the window; the "phone" is the 9:16-ish portrait game surface. */
+/* The stage fills the window; the game surface is landscape. */
 .stage {
   position: fixed;
   inset: 0;
@@ -65,6 +65,7 @@ button {
   place-items: center;
 }
 
+/* (The class is still called .phone: it is the game surface the UI scales against.) */
 .phone {
   position: relative;
   width: 100%;
@@ -74,19 +75,57 @@ button {
   container-type: size;
 }
 
-/* On anything wider than a phone, show the game in a centred phone-shaped frame. */
-@media (min-width: 620px) and (min-height: 480px) {
+/* Ultra-wide windows: keep the game at 21:9 and letterbox the rest. */
+@media (min-aspect-ratio: 21/9) {
   .phone {
-    height: min(100dvh - 36px, 932px);
-    width: auto;
-    aspect-ratio: 9 / 19;
-    max-width: calc(100vw - 36px);
-    border-radius: 44px;
-    border: 9px solid #101b2b;
-    box-shadow:
-      0 0 0 2px #31455f,
-      0 30px 80px rgba(0, 0, 0, 0.55),
-      0 4px 18px rgba(0, 0, 0, 0.4);
+    width: calc(100dvh * 21 / 9);
+  }
+}
+
+/* Tall, narrow desktop windows: a landscape band across the middle. */
+@media (orientation: portrait) and (min-width: 701px) {
+  .phone {
+    height: calc(100vw / 1.6);
+  }
+}
+
+/* A phone held upright: ask for a quarter turn. */
+.rotate-hint {
+  display: none;
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 2em;
+    background: radial-gradient(120% 90% at 50% 20%, var(--backdrop-a), var(--backdrop-b));
+    color: #fff;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .rotate-hint svg {
+    width: 120px;
+    height: 120px;
+    animation: turn 2.4s ease-in-out infinite;
+  }
+  .rotate-hint b {
+    display: block;
+    margin-top: 0.6em;
+    font-size: 1.5em;
+  }
+}
+@keyframes turn {
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
   }
 }
 

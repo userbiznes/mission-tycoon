@@ -971,3 +971,7 @@
 .opt.station small {
   display: block;
 }
+.opt.station b,
+.opt.station small {
+  display: block;
+}

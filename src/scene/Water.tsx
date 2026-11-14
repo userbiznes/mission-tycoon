@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { palette } from '../art/palette'
-import { FWD, RIGHT, SDF_REGION, WATER_Y, coastUv } from './world'
+import { ISLAND_U, ISLAND_V, SDF_REGION, WATER_Y, coastUv } from './world'
 
 /** Bake the coast distance into a texture so the water shader can draw foam and shallows. */
 function bakeCoastTexture(): THREE.DataTexture {
@@ -117,8 +117,8 @@ export function Water() {
       uTime: { value: 0 },
       uCoast: { value: bakeCoastTexture() },
       uRegion: { value: new THREE.Vector4(SDF_REGION.u0, SDF_REGION.v0, SDF_REGION.w, SDF_REGION.h) },
-      uRight: { value: RIGHT.clone() },
-      uFwd: { value: FWD.clone() },
+      uRight: { value: ISLAND_U.clone() },
+      uFwd: { value: ISLAND_V.clone() },
       uDeep: { value: new THREE.Color(palette.oceanDeep) },
       uMid: { value: new THREE.Color(palette.oceanMid) },
       uShallow: { value: new THREE.Color(palette.oceanShallow) },

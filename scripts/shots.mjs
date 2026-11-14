@@ -17,8 +17,8 @@ const out = opt('out', 'shots')
 const wait = Number(opt('wait', 1800))
 const query = opt('query', '')
 const evalJs = opt('eval', '')
-const width = Number(opt('w', 390))
-const height = Number(opt('h', 844))
+const width = Number(opt('w', 844))
+const height = Number(opt('h', 390))
 const scale = Number(opt('scale', 2))
 const shots = args.length ? args : ['home']
 

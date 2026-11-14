@@ -57,7 +57,8 @@ export function LaunchPrep() {
           <small>{contract.title}: pick the orbit, the ride and who listens</small>
         </div>
       </header>
-      <div className="flow-body">
+      <div className="flow-body cols3">
+        <section>
         <p className="eyebrow">Orbit</p>
         <div className="opts">
           {contract.allowedOrbits.map((id) => {
@@ -112,6 +113,8 @@ export function LaunchPrep() {
           </div>
         </div>
 
+        </section>
+        <section>
         <p className="eyebrow">Ground stations</p>
         <div className="opts">
           {STATIONS.filter((s) => s.passes[draft.orbitId] > 0 || s.id === 'home').map((s) => {
@@ -139,6 +142,8 @@ export function LaunchPrep() {
           })}
         </div>
 
+        </section>
+        <section>
         <p className="eyebrow">Go / no-go poll</p>
         <div className="poll">
           {calls.map((c) => (
@@ -149,6 +154,7 @@ export function LaunchPrep() {
             </div>
           ))}
         </div>
+        </section>
       </div>
       <footer className="flow-foot">
         <div className="bill">

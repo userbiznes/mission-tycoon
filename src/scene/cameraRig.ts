@@ -44,15 +44,15 @@ class CameraRig {
   private velU = 0
   private velV = 0
   private coasting = false
-  aspect = 0.46
-  viewportH = 800
+  aspect = 1.9
+  viewportH = 400
   /** set when user input moved the camera this frame (cancels fly-to) */
   userMoved = false
 
-  /** Distance from target for the current width. */
+  /** Distance from target for the current width. Very wide windows are framed as 2:1 so nothing gets cropped top and bottom. */
   distanceFor(width: number, aspect = this.aspect): number {
     const vfov = THREE.MathUtils.degToRad(CAMERA_FOV)
-    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect)
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * Math.min(aspect, 2.05))
     return width / 2 / Math.tan(hfov / 2)
   }
 
@@ -73,8 +73,8 @@ class CameraRig {
   panPixels(dx: number, dy: number) {
     if (this.locked) return
     const upp = this.unitsPerPixel()
-    const du = -dx * upp
-    const dv = (dy * upp) / Math.sin(CAMERA_TILT)
+    // screen-space ground motion, then into the island frame the target lives in
+    const [du, dv] = screenToIsland(-dx * upp, (dy * upp) / Math.sin(CAMERA_TILT))
     this.goalU += du
     this.goalV += dv
     this.velU = du
@@ -199,6 +199,11 @@ class CameraRig {
     const [x, z] = uvToWorld(this.u, this.v)
     return out.set(x, 0, z)
   }
+}
+
+/** Ground motion given as (screen-right, screen-up) world units → island-frame (du, dv). */
+export function screenToIsland(right: number, up: number): [number, number] {
+  return worldToUv(RIGHT.x * right + FWD.x * up, RIGHT.y * right + FWD.y * up)
 }
 
 const _pos = new THREE.Vector3()

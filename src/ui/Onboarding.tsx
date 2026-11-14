@@ -79,7 +79,8 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           </div>
         </div>
       ) : (
-        <div className="panel" key="logo">
+        <div className="panel logo-panel" key="logo">
+          <div className="logo-side">
           <div className="logo-preview">
             <LogoBadge spec={logo} />
             <div>
@@ -87,6 +88,24 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               <span>Your logo goes on the HQ sign, the flag and every rocket.</span>
             </div>
           </div>
+          <div className="actions">
+            <Btn
+              tone="cream"
+              sound="pop"
+              onClick={() => {
+                const spec = randomLogo()
+                setLogo(spec)
+                finish(spec)
+              }}
+            >
+              Skip
+            </Btn>
+            <Btn sound="success" onClick={() => finish(logo)}>
+              Looks great!
+            </Btn>
+          </div>
+          </div>
+          <div className="pickers">
           <div className="picker-label">Shape</div>
           <div className="picker shapes">
             {LOGO_SHAPES.map((shape) => (
@@ -115,21 +134,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               <button key={c} type="button" className={`swatch${logo.colorB === c ? ' on' : ''}`} style={{ background: c }} onClick={() => update({ colorB: c })} aria-label="colour" />
             ))}
           </div>
-          <div className="actions">
-            <Btn
-              tone="cream"
-              sound="pop"
-              onClick={() => {
-                const spec = randomLogo()
-                setLogo(spec)
-                finish(spec)
-              }}
-            >
-              Skip
-            </Btn>
-            <Btn sound="success" onClick={() => finish(logo)}>
-              Looks great!
-            </Btn>
           </div>
         </div>
       )}

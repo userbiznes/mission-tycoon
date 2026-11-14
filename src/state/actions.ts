@@ -1,6 +1,6 @@
 import { BUILDINGS } from '../data/buildings'
 import { PLOTS, type BuildingId } from '../data/layout'
-import { rig } from '../scene/cameraRig'
+import { rig, screenToIsland } from '../scene/cameraRig'
 import { juice } from '../scene/juice'
 import { CAMERA_TILT } from '../scene/world'
 import { sfx } from '../ui/sound'
@@ -11,22 +11,24 @@ import { useUi } from './ui'
 /** Game actions: the verbs the UI calls. They touch the save, the camera and the juice together. */
 
 /**
- * Fly the camera to a plot. `raise` is how far above the screen centre the
- * building should sit (0–0.4), so it stays visible above a bottom sheet.
+ * Fly the camera to a plot. `left` slides the building towards the left of the
+ * screen (0–0.3 of the view width) so it stays visible beside the side drawer;
+ * `up` lifts it a little above centre (to clear Rocco's bubble).
  */
-export function focusPlot(id: BuildingId, raise = 0, width?: number) {
+export function focusPlot(id: BuildingId, left = 0, width?: number, up = 0) {
   const plot = PLOTS[id]
   const w = width ?? plot.focusWidth
-  const screenH = w / rig.aspect
-  const dv = (raise * screenH) / Math.sin(CAMERA_TILT)
-  rig.flyTo(plot.u, plot.v - dv, w)
+  // `w` is the view width up to 2.05:1; wider windows simply see more to the sides
+  const shown = w * Math.max(1, rig.aspect / 2.05)
+  const [du, dv] = screenToIsland(left * shown, (-up * (shown / rig.aspect)) / Math.sin(CAMERA_TILT))
+  rig.flyTo(plot.u + du, plot.v + dv, w)
 }
 
 export function tapBuilding(id: BuildingId) {
   const b = useGame.getState().buildings[id]
   sfx('pop')
   juice(id, 'wobble')
-  focusPlot(id, 0.24)
+  focusPlot(id, 0.22)
   if (b.level === 0 && !b.buildEnd) useUi.getState().open({ kind: 'build', id })
   else useUi.getState().open({ kind: 'building', id })
 }

@@ -5,9 +5,9 @@ import * as THREE from 'three'
  * function, and ground heights. Pure math, shared by terrain, water, props
  * and the camera.
  *
- * Island frame: `u` runs screen-right, `v` runs screen-up (away from camera).
- * Level design is done in (u, v) so the base fills a portrait screen, while
- * buildings stay axis-aligned in world space and show two faces to the camera.
+ * Level design is done in an island frame (u, v) so the base fills a landscape
+ * screen, while buildings stay axis-aligned in world space and show two faces
+ * to the camera.
  */
 
 export const CAMERA_YAW = THREE.MathUtils.degToRad(38)
@@ -23,9 +23,18 @@ export const FWD = new THREE.Vector2(-Math.sin(CAMERA_YAW), -Math.cos(CAMERA_YAW
 export const GROUND_Y = 0
 export const WATER_Y = -1.32
 
+/**
+ * Island frame axes in world space. The game is landscape: the island's long
+ * axis (v, with the launch pad at +v) runs screen-right, and its short axis (u)
+ * runs towards the camera. Level design stays in (u, v); only this basis knows
+ * how the island sits on screen.
+ */
+export const ISLAND_U = new THREE.Vector2(-FWD.x, -FWD.y)
+export const ISLAND_V = new THREE.Vector2(RIGHT.x, RIGHT.y)
+
 /** Island frame (u, v) → world (x, z). */
 export function uvToWorld(u: number, v: number): [number, number] {
-  return [RIGHT.x * u + FWD.x * v, RIGHT.y * u + FWD.y * v]
+  return [ISLAND_U.x * u + ISLAND_V.x * v, ISLAND_U.y * u + ISLAND_V.y * v]
 }
 export function uvToVec3(u: number, v: number, y = 0): THREE.Vector3 {
   const [x, z] = uvToWorld(u, v)
@@ -33,7 +42,7 @@ export function uvToVec3(u: number, v: number, y = 0): THREE.Vector3 {
 }
 /** World (x, z) → island frame (u, v). */
 export function worldToUv(x: number, z: number): [number, number] {
-  return [RIGHT.x * x + RIGHT.y * z, FWD.x * x + FWD.y * z]
+  return [ISLAND_U.x * x + ISLAND_U.y * z, ISLAND_V.x * x + ISLAND_V.y * z]
 }
 
 // ---------- noise ----------

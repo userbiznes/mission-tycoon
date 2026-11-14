@@ -126,9 +126,9 @@ export function Clouds() {
     const list: CloudSpec[] = []
     for (let i = 0; i < 7; i++) {
       list.push({
-        u: -60 + rnd() * 120,
+        u: -80 + rnd() * 160,
         // rows are kept clear of the base so clouds never hide buildings
-        v: i < 5 ? 15 + i * 7 + rnd() * 4 : -62 - (i - 5) * 9,
+        v: i < 5 ? 4 + i * 4.5 + rnd() * 3 : -36 - (i - 5) * 8,
         y: 13 + rnd() * 5,
         scale: 0.85 + rnd() * 0.7,
         speed: 0.35 + rnd() * 0.3,
@@ -142,7 +142,7 @@ export function Clouds() {
   useFrame((_, dt) => {
     specs.forEach((s, i) => {
       s.u += s.speed * dt
-      if (s.u > 62) s.u = -62
+      if (s.u > 82) s.u = -82
       const c = clouds[i]
       c.position.set(RIGHT.x * s.u + FWD.x * s.v, s.y, RIGHT.y * s.u + FWD.y * s.v)
     })

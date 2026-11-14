@@ -1,0 +1,344 @@
+/* ------------------------------------------------------------------
+   Landscape layout. The game is played wide: sheets are side drawers,
+   full-screen flows are split into columns.
+   ------------------------------------------------------------------ */
+
+/* ---------- drawers (were bottom sheets) ---------- */
+.sheet,
+.sheet.tall {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(47%, 31em);
+  height: auto;
+  max-height: none;
+  padding: var(--safe-top) 0 calc(0.4em + var(--safe-bottom));
+  border: var(--outline) solid var(--ink);
+  border-right: none;
+  border-radius: 1.5em 0 0 1.5em;
+  box-shadow:
+    inset 0.2em 0.2em 0 rgba(255, 255, 255, 0.85),
+    -0.5em 0 1.6em rgba(40, 20, 5, 0.28);
+  animation: drawer-in 0.42s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+.sheet.tall {
+  width: min(52%, 34em);
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(105%);
+  }
+}
+.sheet-head {
+  padding-top: 0.6em;
+}
+
+/* ---------- HUD, toasts, Rocco ---------- */
+.rocco {
+  right: auto;
+  width: min(64%, 40em);
+}
+.modal {
+  max-width: 31em;
+}
+.tip-pop {
+  justify-content: flex-start;
+}
+.tip-pop .panel {
+  max-width: 34em;
+}
+
+/* ---------- title and onboarding ---------- */
+.title {
+  padding-top: calc(1.4em + var(--safe-top));
+  padding-bottom: calc(1.2em + var(--safe-bottom));
+  background: linear-gradient(180deg, rgba(20, 60, 110, 0.16) 0%, rgba(20, 60, 110, 0) 40%, rgba(30, 20, 10, 0) 70%, rgba(30, 20, 10, 0.32) 100%);
+}
+.wordmark .a {
+  font-size: 3.2em;
+  display: inline-block;
+  margin-right: 0.18em;
+}
+.wordmark .b {
+  font-size: 3.7em;
+  display: inline-block;
+}
+.title .tagline {
+  margin-top: 0.5em;
+}
+.onboard {
+  align-items: center;
+  justify-content: center;
+  padding: calc(0.8em + var(--safe-top)) 1em 0.8em;
+}
+.onboard .steps {
+  margin-bottom: 0.4em;
+}
+.onboard .panel {
+  width: min(100%, 30em);
+}
+.onboard .panel.logo-panel {
+  width: min(100%, 46em);
+  display: grid;
+  grid-template-columns: 15em 1fr;
+  gap: 0 1.1em;
+  align-items: center;
+}
+.logo-side .logo-preview {
+  flex-direction: column;
+  text-align: center;
+  gap: 0.4em;
+}
+.logo-side .logo-preview svg {
+  width: 7em;
+  height: 7em;
+}
+.pickers .picker-label:first-child {
+  margin-top: 0;
+}
+.picker.shapes {
+  grid-template-columns: repeat(4, 3.6em);
+}
+.picker.icons {
+  grid-template-columns: repeat(6, 3.6em);
+}
+.picker.colors {
+  grid-template-columns: repeat(10, 2em);
+  gap: 0.38em;
+}
+
+/* ---------- builder: satellite on the left, bars and parts on the right ---------- */
+.builder {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  grid-template-rows: auto auto auto 1fr;
+  grid-template-areas:
+    'head head'
+    'stage bars'
+    'stage issue'
+    'stage tray';
+  background: linear-gradient(110deg, #bfe6ff 0%, #e9f6ff 45%, #fff3d6 100%);
+}
+.builder .b-head {
+  grid-area: head;
+}
+.builder .bars {
+  grid-area: bars;
+  padding: 0 0.6em 0 0;
+}
+.builder .issue {
+  grid-area: issue;
+  margin: 0.35em 0.6em 0.35em 0;
+}
+.builder .stage3d {
+  grid-area: stage;
+}
+.builder .tray {
+  grid-area: tray;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: var(--outline) solid var(--ink);
+  border-right: none;
+  border-bottom: none;
+  border-radius: 1.2em 0 0 0;
+  padding: 0.5em 0 calc(0.5em + var(--safe-bottom));
+}
+.builder .tray-cards {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+.builder .tray-card {
+  flex-basis: 7.4em;
+}
+
+/* ---------- column flows ---------- */
+.flow-body.cols3 {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr 1fr;
+  gap: 0 0.9em;
+  align-content: start;
+}
+.flow-body.cols2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1em;
+  align-content: start;
+}
+.flow-body section {
+  min-width: 0;
+}
+.flow-foot {
+  justify-content: flex-end;
+}
+.flow-foot .btn {
+  flex: 0 1 18em;
+}
+.flow-foot .bill {
+  margin-right: auto;
+}
+.prep .eyebrow:first-child,
+.debrief .eyebrow:first-child {
+  margin-top: 0.2em;
+}
+.headline {
+  font-size: 1.8em;
+}
+.stars.big svg {
+  width: 3.1em;
+  height: 3.1em;
+}
+
+/* ---------- launch ---------- */
+.launch {
+  display: grid;
+  grid-template-columns: 17em 1fr 17em;
+  grid-template-rows: 1fr auto;
+}
+.launch-top {
+  grid-column: 1;
+  grid-row: 1;
+  align-items: stretch;
+  align-self: start;
+}
+.launch-fact {
+  max-width: none;
+}
+.launch-mid {
+  grid-column: 2;
+  grid-row: 1;
+}
+.launch-bottom {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  min-height: 6.8em;
+  justify-content: flex-end;
+}
+.launch-bottom .gauge {
+  width: min(52%, 30em);
+  margin-bottom: 0.6em;
+}
+.launch-bottom .arc-gauge {
+  width: min(40%, 22em);
+}
+.launch-controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.launch-controls > * {
+  pointer-events: auto;
+}
+.count {
+  font-size: 6.5em;
+}
+
+/* ---------- operations: globe on the left, numbers on the right ---------- */
+.ops-globe {
+  inset: 0 45% 0 0;
+}
+.ops-top,
+.ops-bottom {
+  margin-left: 55%;
+}
+.ops-top {
+  padding: 0.6em 0.6em 0 0;
+}
+.ops-bottom {
+  padding: 0 0.6em calc(0.7em + var(--safe-bottom)) 0;
+}
+.counters {
+  justify-content: flex-start;
+}
+.event-card {
+  max-width: 36em;
+}
+
+/* builder, compact for short landscape screens */
+.builder .b-head {
+  padding: 0.35em 0.6em 0.25em;
+}
+.builder .bars {
+  gap: 0.25em;
+}
+.builder .bar-tile {
+  padding: 0.22em 0.4em 0.24em 0.3em;
+}
+.builder .bar-tile small {
+  -webkit-line-clamp: 1;
+  font-size: 0.62em;
+}
+.builder .issue {
+  margin: 0.28em 0.6em 0.28em 0;
+  padding: 0.16em 0.7em 0.22em;
+  font-size: 0.8em;
+}
+.builder .tray {
+  padding-top: 0.4em;
+}
+.builder .tray .stalls {
+  padding: 0 0.5em 0.35em;
+}
+.builder .stall {
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.3em;
+  padding: 0.18em 0.3em;
+  font-size: 0.62em;
+}
+.builder .stall svg {
+  width: 1.9em;
+  height: 1.9em;
+}
+.builder .tray-cards {
+  padding-bottom: 0.4em;
+}
+.builder .tray-card {
+  flex: 0 0 11.2em;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto 1fr;
+  column-gap: 0.45em;
+  align-items: start;
+  justify-items: start;
+  text-align: left;
+  padding: 0.4em 0.45em;
+}
+.builder .tray-card .part-icon {
+  grid-row: 1 / span 3;
+  align-self: center;
+}
+.builder .tray-card b {
+  font-size: 0.8em;
+}
+.builder .tray-card .have,
+.builder .tray-card .cost,
+.builder .tray-card .lock {
+  margin-top: 0.15em;
+  align-self: end;
+}
+.builder .b-foot .btn {
+  min-height: 2.4em;
+  font-size: 0.98em;
+  padding-block: 0.3em 0.42em;
+}
+.builder > * {
+  min-width: 0;
+}
+.builder .bars {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.builder .bar-tile small {
+  -webkit-line-clamp: 2;
+}
+.ui .headline {
+  font-size: 1.9em;
+  margin: 0 0 0.5em;
+}
+.stars.big svg:nth-child(2) {
+  transform: translateY(-0.22em) scale(1.1);
+}

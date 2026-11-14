@@ -124,7 +124,7 @@ export function acceptContract(contractId: string) {
   useGame.setState({ draft })
   useLaunch.getState().setKind(draft.rocketId as RocketKind)
   sfx('success')
-  focusPlot('integrationBay', 0.05, 14)
+  focusPlot('integrationBay', 0, 22)
   useUi.getState().setScreen('builder')
 }
 
@@ -230,7 +230,7 @@ export function endMission(keepDesign: boolean) {
   rig.locked = false
   useMission.getState().set({ plan: null, input: null, result: null, choices: {} })
   if (keepDesign && useGame.getState().draft) {
-    focusPlot('integrationBay', 0.05, 14)
+    focusPlot('integrationBay', 0, 22)
     ui.setScreen('builder')
   } else {
     useGame.setState({ draft: null })

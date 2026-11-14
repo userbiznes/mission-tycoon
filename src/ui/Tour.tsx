@@ -61,8 +61,8 @@ export function Tour() {
   useEffect(() => {
     if (!def) return
     rig.locked = true
-    if (!def.focus || def.focus === 'home') rig.flyTo(0, 3.5, 25)
-    else focusPlot(def.focus, 0.1, 15)
+    if (!def.focus || def.focus === 'home') rig.home()
+    else focusPlot(def.focus, 0, 26, 0.16)
     return () => {
       rig.locked = false
     }

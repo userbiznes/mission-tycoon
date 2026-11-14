@@ -103,6 +103,16 @@ export function App() {
 
   return (
     <div className="stage">
+      <div className="rotate-hint">
+        <div>
+          <svg viewBox="0 0 64 64" fill="none" stroke="#fff" strokeWidth="3.500" strokeLinejoin="round">
+            <rect x="20" y="6" width="24" height="52" rx="5" fill="#2d4a6b" />
+            <circle cx="32" cy="50" r="2.500" fill="#fff" stroke="none" />
+          </svg>
+          <b>Turn your phone sideways</b>
+          Mission Tycoon plays in landscape.
+        </div>
+      </div>
       <div className="phone">
         <div className="world">
           <Scene />

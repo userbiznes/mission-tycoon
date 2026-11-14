@@ -44,7 +44,8 @@ export function Debrief() {
 
   return (
     <div className="flow debrief">
-      <div className="flow-body">
+      <div className="flow-body cols2">
+        <section>
         <p className="eyebrow center">{result.evaluation.contract.title} · debrief</p>
         <h1 className="headline">{HEADLINE[result.stars]}</h1>
         <Stars n={result.stars} big />
@@ -59,6 +60,8 @@ export function Debrief() {
         <p className="eyebrow">Why it went this way</p>
         <ReasonList result={result} />
 
+        </section>
+        <section>
         <p className="eyebrow">The money</p>
         <div className="payout card">
           {rows.map(([label, v]) => (
@@ -109,6 +112,7 @@ export function Debrief() {
             )}
           </div>
         </div>
+        </section>
       </div>
       <footer className="flow-foot">
         <Btn tone="blue" onClick={() => endMission(true)}>
