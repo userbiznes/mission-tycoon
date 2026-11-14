@@ -1,18 +1,16 @@
 import { registerModel } from '../registry'
-import {
-  createCommsCenter,
-  createCrewQuarters,
-  createEngineeringLab,
-  createIntegrationBay,
-  createMissionControl,
-  createPartsMarket,
-  createScienceLab,
-} from './buildings'
+import { createCommsCenter } from './commsCenter'
 import { createConstruction } from './construction'
 import { createCrew } from './crew'
+import { createCrewQuarters } from './crewQuarters'
+import { createEngineeringLab } from './engineeringLab'
+import { createIntegrationBay } from './integrationBay'
 import { createLaunchPad } from './launchPad'
+import { createMissionControl } from './missionControl'
+import { createPartsMarket } from './partsMarket'
 import { createPlot } from './plot'
 import { createRocket } from './rocket'
+import { createScienceLab } from './scienceLab'
 import { createTruck } from './truck'
 
 /** Every model the game can show. Swap a factory here to replace a model. */
