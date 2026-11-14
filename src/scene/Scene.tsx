@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CameraControls } from './CameraControls'
@@ -10,9 +10,13 @@ import { Clouds, SkyDome } from './Sky'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
 import { CAMERA_FOV, uvToWorld } from './world'
-import { PLOTS, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import { PLOTS, type BuildingId } from '../data/layout'
 import { Base } from './Base'
 import { useSettings } from '../state/settings'
+import { useGame } from '../state/game'
+import { tapBuilding } from '../state/actions'
+import { tourHooks } from '../ui/Tour'
+import { PinProjector } from './pins'
 
 const query = new URLSearchParams(window.location.search)
 /** `?model=<id>&level=2` shows one model alone on the grass: the art preview bench. */
@@ -29,6 +33,31 @@ function PreviewBench() {
     <group position={[x, 0, z]}>
       <Model model={PREVIEW_MODEL!} options={{ level: PREVIEW_LEVEL, kind: query.get('kind') ?? undefined }} />
     </group>
+  )
+}
+
+/** The base as the saved game describes it. */
+function GameBase() {
+  const buildings = useGame((s) => s.buildings)
+  const phase = useGame((s) => s.phase)
+  const list = useMemo(
+    () =>
+      ALL_IDS.map((id) => {
+        if (SHOW_ALL) return { id, level: Number(query.get('level') ?? 1) }
+        const b = buildings[id]
+        return { id, level: b.level, constructing: b.level === 0 && !!b.buildEnd }
+      }),
+    [buildings],
+  )
+  return (
+    <Base
+      buildings={list}
+      onTap={(id) => {
+        if (phase !== 'play') return
+        if (tourHooks.onBuildingTap?.(id)) return
+        tapBuilding(id)
+      }}
+    />
   )
 }
 
@@ -58,15 +87,11 @@ export function Scene() {
         {PREVIEW_MODEL ? (
           <PreviewBench />
         ) : (
-          <Base
-            buildings={ALL_IDS.map((id) => ({
-              id,
-              level: SHOW_ALL || STARTING_BUILDINGS.includes(id) ? Number(query.get('level') ?? 1) : 0,
-            }))}
-          />
+          <GameBase />
         )}
       </Suspense>
       <CameraControls />
+      <PinProjector />
       {!low && <Effects />}
     </Canvas>
   )

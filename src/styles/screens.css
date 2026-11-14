@@ -1,0 +1,513 @@
+/* ---------- title ---------- */
+.title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(3.6em + var(--safe-top)) 1.2em calc(2.2em + var(--safe-bottom));
+  background: linear-gradient(180deg, rgba(20, 60, 110, 0.18) 0%, rgba(20, 60, 110, 0) 34%, rgba(30, 20, 10, 0) 62%, rgba(30, 20, 10, 0.38) 100%);
+  animation: fade-in 0.6s ease both;
+}
+.wordmark {
+  text-align: center;
+  line-height: 0.92;
+  animation: pop-in 0.7s cubic-bezier(0.2, 1.3, 0.4, 1) 0.15s both;
+}
+.wordmark .a {
+  display: block;
+  font-size: 3.5em;
+  font-weight: 700;
+  color: #fff;
+  -webkit-text-stroke: 0.17em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 0.1em 0 var(--ink), 0 0.2em 0.25em rgba(40, 20, 5, 0.35);
+  letter-spacing: 0.01em;
+}
+.wordmark .b {
+  display: block;
+  font-size: 4.1em;
+  font-weight: 700;
+  color: #ffd75a;
+  -webkit-text-stroke: 0.15em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 0.09em 0 var(--ink), 0 0.2em 0.25em rgba(40, 20, 5, 0.35);
+  transform: rotate(-3deg);
+  margin-top: 0.02em;
+}
+.title .tagline {
+  margin-top: 1.1em;
+  padding: 0.4em 1em 0.5em;
+  border-radius: 2em;
+  background: rgba(255, 250, 236, 0.92);
+  border: 0.15em solid var(--ink);
+  font-weight: 600;
+  font-size: 0.98em;
+  text-align: center;
+  box-shadow: 0 0.2em 0 rgba(60, 30, 10, 0.3);
+  animation: pop-in 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) 0.45s both;
+}
+.title .spacer {
+  flex: 1;
+}
+.title .start {
+  animation:
+    pop-in 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) 0.8s both,
+    pulse 1.8s ease-in-out 1.6s infinite;
+}
+.title .foot {
+  margin-top: 1.1em;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 0.08em 0.2em rgba(0, 0, 0, 0.6);
+  text-align: center;
+  opacity: 0.95;
+}
+
+/* ---------- onboarding ---------- */
+.onboard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: calc(1.6em + var(--safe-top)) 1em 1em;
+  background: rgba(30, 20, 10, 0.22);
+  animation: fade-in 0.25s ease both;
+  overflow-y: auto;
+}
+.onboard .panel {
+  padding: 1em 1em 1.1em;
+  animation: pop-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.onboard h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.onboard .sub {
+  margin: 0.25em 0 0.8em;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.onboard .row {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-end;
+}
+.onboard .row .field {
+  flex: 1;
+  margin-bottom: 0;
+}
+.onboard .actions {
+  display: flex;
+  gap: 0.6em;
+  margin-top: 1em;
+}
+.onboard .actions .btn {
+  flex: 1;
+}
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 0.4em;
+  margin-bottom: 0.7em;
+}
+.steps i {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  border: 0.13em solid var(--ink);
+  background: #f3dca9;
+}
+.steps i.on {
+  background: #f9b92f;
+}
+
+.logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  margin-bottom: 0.7em;
+}
+.logo-preview svg {
+  width: 6.6em;
+  height: 6.6em;
+  flex: none;
+  filter: drop-shadow(0 0.3em 0 rgba(60, 30, 10, 0.25));
+  animation: float 3s ease-in-out infinite;
+}
+.logo-preview b {
+  display: block;
+  font-size: 1.25em;
+  line-height: 1.1;
+  word-break: break-word;
+}
+.logo-preview span {
+  font-size: 0.86em;
+  color: var(--ink-soft);
+}
+.picker-label {
+  margin: 0.55em 0 0.25em 0.2em;
+  font-size: 0.86em;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.picker {
+  display: grid;
+  gap: 0.4em;
+}
+.picker.shapes {
+  grid-template-columns: repeat(4, 1fr);
+}
+.picker.icons {
+  grid-template-columns: repeat(6, 1fr);
+}
+.picker.colors {
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.28em;
+}
+.pick {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0.14em solid #dcbb7c;
+  border-radius: 0.75em;
+  background: #fff7e2;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.pick svg {
+  width: 74%;
+  height: 74%;
+}
+.pick:active {
+  transform: scale(0.9);
+}
+.pick.on {
+  border-color: var(--ink);
+  background: #ffe69a;
+  box-shadow: 0 0.16em 0 rgba(60, 30, 10, 0.3);
+  transform: translateY(-0.1em);
+}
+.swatch {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0.14em solid rgba(75, 47, 28, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.swatch.on {
+  border-color: var(--ink);
+  transform: scale(1.22);
+  box-shadow: 0 0.14em 0 rgba(60, 30, 10, 0.35);
+}
+
+/* ---------- Chief Rocco ---------- */
+.rocco-catch {
+  position: absolute;
+  inset: 0;
+  z-index: 29;
+}
+.rocco {
+  position: absolute;
+  left: 0.5em;
+  right: 0.5em;
+  bottom: calc(0.6em + var(--safe-bottom));
+  display: flex;
+  align-items: flex-end;
+  z-index: 30;
+  cursor: pointer;
+  animation: rise-in 0.5s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+.rocco-portrait {
+  width: 7.2em;
+  flex: none;
+  margin-right: -1.1em;
+  margin-bottom: -0.25em;
+  z-index: 2;
+  filter: drop-shadow(0 0.2em 0 rgba(60, 30, 10, 0.3));
+}
+.rocco-bust {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.rocco-bust .rocco-head {
+  transform-origin: 60px 86px;
+  animation: rocco-idle 3.4s ease-in-out infinite;
+}
+.rocco-bust.talking .rocco-head {
+  animation: rocco-talk 0.34s ease-in-out infinite;
+}
+.rocco-bust .rocco-mouth {
+  transform-origin: 60px 77px;
+  transform: scaleY(0);
+}
+.rocco-bust.talking .rocco-mouth {
+  animation: rocco-mouth 0.22s ease-in-out infinite;
+}
+.rocco-bust .rocco-eyes {
+  transform-origin: 60px 62px;
+  animation: blink 4.2s infinite;
+}
+.rocco-bubble {
+  position: relative;
+  flex: 1;
+  min-height: 5.6em;
+  padding: 0.85em 0.95em 0.95em 1.6em;
+  border-radius: 1.2em;
+}
+.rocco-bubble p {
+  font-size: 1.02em;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.rocco-bubble .ghost {
+  visibility: hidden;
+}
+.rocco-name {
+  position: absolute;
+  top: -0.95em;
+  left: 1.5em;
+  padding: 0.05em 0.7em 0.14em;
+  border: 0.15em solid var(--ink);
+  border-radius: 1em;
+  background: linear-gradient(180deg, #7fd0ff, #3e9fe8);
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: 700;
+  text-shadow: 0 0.08em 0 rgba(30, 60, 100, 0.6);
+}
+.rocco-next {
+  position: absolute;
+  right: 0.8em;
+  bottom: 0.45em;
+  width: 0;
+  height: 0;
+  border: 0.42em solid transparent;
+  border-top: 0.6em solid var(--ink);
+  border-bottom: none;
+  animation: float 0.9s ease-in-out infinite;
+}
+.rocco-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  margin-top: 0.45em;
+  padding: 0.14em 0.7em 0.2em;
+  border-radius: 1em;
+  background: #ffe069;
+  border: 0.13em solid var(--ink);
+  font-size: 0.86em;
+  font-weight: 700;
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes rocco-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1.6deg) translateY(-0.6px);
+  }
+}
+@keyframes rocco-talk {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-1.6px) rotate(1deg);
+  }
+}
+@keyframes rocco-mouth {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1.25);
+  }
+}
+@keyframes blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+/* ---------- world markers (HTML pinned over 3D things) ---------- */
+.pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 3;
+}
+.pin > * {
+  transform: translate(-50%, -100%);
+}
+.pointer-arrow {
+  width: 2.6em;
+  height: 3em;
+  animation: float 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 0.2em 0 rgba(60, 30, 10, 0.3));
+}
+.bubble-pin {
+  display: grid;
+  place-items: center;
+  min-width: 2.5em;
+  height: 2.5em;
+  padding: 0 0.4em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.3em;
+  background: linear-gradient(180deg, #fffaec, #ffe9bd);
+  box-shadow: 0 0.2em 0 rgba(60, 30, 10, 0.3);
+  font-weight: 700;
+  font-size: 0.9em;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: float 1.6s ease-in-out infinite;
+}
+.bubble-pin svg {
+  width: 1.5em;
+  height: 1.5em;
+}
+.bubble-pin.ready {
+  background: linear-gradient(180deg, #e7f9d8, #bfeaa2);
+}
+.timer-pin {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.12em 0.6em 0.18em 0.3em;
+  border: 0.14em solid var(--ink);
+  border-radius: 1em;
+  background: rgba(255, 250, 236, 0.96);
+  font-weight: 700;
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0.16em 0 rgba(60, 30, 10, 0.3);
+}
+.timer-pin svg {
+  width: 1.3em;
+  height: 1.3em;
+}
+
+/* ---------- building sheet ---------- */
+.b-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding-bottom: 0.3em;
+}
+.b-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.55em 0.7em;
+}
+.b-row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.b-row b {
+  display: block;
+  font-size: 0.98em;
+  line-height: 1.15;
+}
+.b-row small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.84em;
+  line-height: 1.2;
+}
+.b-row .ic {
+  width: 2.1em;
+  height: 2.1em;
+  flex: none;
+}
+.b-blurb {
+  padding: 0.1em 0.2em 0.5em;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.price svg {
+  width: 1.15em;
+  height: 1.15em;
+}
+.price.short {
+  color: var(--red-dark);
+}
+.empty-note {
+  padding: 1.2em 0.6em;
+  text-align: center;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* ---------- settings ---------- */
+.setting {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.6em 0.7em;
+  margin-bottom: 0.5em;
+}
+.setting .grow {
+  flex: 1;
+}
+.setting b {
+  display: block;
+}
+.setting small {
+  color: var(--ink-soft);
+  font-size: 0.84em;
+}
+.toggle {
+  position: relative;
+  width: 3.3em;
+  height: 1.9em;
+  flex: none;
+  padding: 0;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1em;
+  background: #d9c595;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 0.14em;
+  left: 0.14em;
+  width: 1.28em;
+  height: 1.28em;
+  border-radius: 50%;
+  background: #fffdf5;
+  border: 0.12em solid var(--ink);
+  transition: transform 0.22s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.toggle.on {
+  background: #6fd04d;
+}
+.toggle.on::after {
+  transform: translateX(1.4em);
+}

@@ -41,7 +41,10 @@ page.on('pageerror', (e) => errors.push(`[pageerror] ${e.message}`))
 await page.goto(url + (query ? `?${query}` : ''), { waitUntil: 'networkidle' })
 await page.waitForSelector('canvas')
 await page.waitForTimeout(wait)
-if (evalJs) await page.evaluate(evalJs)
+if (evalJs) {
+  await page.evaluate(evalJs)
+  await page.waitForTimeout(Number(opt('after', 1200)))
+}
 
 for (const spec of shots) {
   const [name, u, v, w, lift] = spec.split(':')

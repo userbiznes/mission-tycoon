@@ -35,6 +35,12 @@ class CameraRig {
   shake = 0
   cinematic: CinematicFn | null = null
   private cinematicT = 0
+  /** blend from a cinematic pose back to the diorama pose */
+  private blendT = 1
+  private blendDur = 0
+  private fromPos = new THREE.Vector3()
+  private fromQuat = new THREE.Quaternion()
+  private lastCamera: THREE.PerspectiveCamera | null = null
   private velU = 0
   private velV = 0
   private coasting = false
@@ -101,7 +107,8 @@ class CameraRig {
     this.stiffness = 3.2
     this.coasting = false
     this.velU = this.velV = 0
-    this.clampGoal()
+    // scripted moves may leave the roaming bounds (e.g. to frame a building above a sheet)
+    this.goalWidth = THREE.MathUtils.clamp(this.goalWidth, 6, CAMERA_BOUNDS.widthMax)
   }
   flyToWorld(x: number, z: number, width?: number, lift = 0) {
     const [u, v] = worldToUv(x, z)
@@ -122,12 +129,23 @@ class CameraRig {
     this.cinematic = fn
     this.cinematicT = 0
   }
-  stopCinematic() {
+  /** End a cinematic; with `blendSeconds` the camera glides back to the diorama view. */
+  stopCinematic(blendSeconds = 0) {
+    if (this.cinematic && blendSeconds > 0 && this.lastCamera) {
+      this.fromPos.copy(this.lastCamera.position)
+      this.fromQuat.copy(this.lastCamera.quaternion)
+      this.blendT = 0
+      this.blendDur = blendSeconds
+    }
     this.cinematic = null
+  }
+  get blending(): boolean {
+    return this.blendT < 1
   }
 
   update(camera: THREE.PerspectiveCamera, dt: number) {
     dt = Math.min(dt, 0.05)
+    this.lastCamera = camera
     if (this.cinematic) {
       this.cinematicT += dt
       this.cinematic(camera, dt, this.cinematicT)
@@ -154,6 +172,15 @@ class CameraRig {
     const dist = this.distanceFor(this.width)
     camera.position.set(x + TO_CAMERA.x * dist, this.lift + TO_CAMERA.y * dist, z + TO_CAMERA.z * dist)
     camera.lookAt(x, this.lift, z)
+    if (this.blendT < 1) {
+      this.blendT = Math.min(1, this.blendT + dt / this.blendDur)
+      const k = this.blendT
+      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2
+      _pos.copy(camera.position)
+      _quat.copy(camera.quaternion)
+      camera.position.lerpVectors(this.fromPos, _pos, e)
+      camera.quaternion.slerpQuaternions(this.fromQuat, _quat, e)
+    }
     this.applyShake(camera, dt)
   }
 
@@ -173,6 +200,9 @@ class CameraRig {
     return out.set(x, 0, z)
   }
 }
+
+const _pos = new THREE.Vector3()
+const _quat = new THREE.Quaternion()
 
 export const rig = new CameraRig()
 export { RIGHT, FWD, TO_CAMERA }

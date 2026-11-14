@@ -1,10 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, type ReactNode } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { hasModel } from '../art/registry'
 import '../art/models'
 import { palette } from '../art/palette'
 import { PAD_TABLE_Y } from '../art/models/launchPad'
 import { PLOTS, type BuildingId } from '../data/layout'
+import { sampleJuice } from './juice'
 import { Model } from './Model'
 import { uvToWorld } from './world'
 
@@ -12,6 +14,8 @@ export interface BaseBuilding {
   id: BuildingId
   /** 0 = empty plot, 1+ = built at that level */
   level: number
+  /** a first build is under way on this plot */
+  constructing?: boolean
 }
 
 /** Soft stand-in box for a building whose model isn't registered yet. */
@@ -25,6 +29,27 @@ function Placeholder({ id }: { id: BuildingId }) {
   )
 }
 
+/** Plays pop / wobble animations requested through `juice(id, kind)`. */
+export function Juicy({ id, children }: { id: string; children: ReactNode }) {
+  const ref = useRef<THREE.Group>(null)
+  const st = useRef({ sx: 1, sy: 1, rot: 0, active: false })
+  useFrame(() => {
+    const g = ref.current
+    if (!g) return
+    const s = st.current
+    if (sampleJuice(id, s)) {
+      g.scale.set(s.sx, s.sy, s.sx)
+      g.rotation.z = s.rot
+      s.active = true
+    } else if (s.active) {
+      g.scale.set(1, 1, 1)
+      g.rotation.z = 0
+      s.active = false
+    }
+  })
+  return <group ref={ref}>{children}</group>
+}
+
 /**
  * Every plot on the plateau: a building model when built, the "Build here"
  * plot marker when empty. Purely visual; taps are reported through `onTap`.
@@ -33,8 +58,11 @@ export function Base({
   buildings,
   rocketKind = 'small',
   showRocket = true,
+  modelOptions,
   onTap,
 }: {
+  /** extra options passed to every building model (agency colours…) */
+  modelOptions?: Record<string, unknown>
   buildings: BaseBuilding[]
   rocketKind?: string
   showRocket?: boolean
@@ -59,14 +87,18 @@ export function Base({
               onTap?.(b.id)
             }}
           >
-            {hasModel(modelId) ? (
-              <Model model={modelId} options={{ level: Math.max(1, b.level), building: b.id }} />
-            ) : built ? (
-              <Placeholder id={b.id} />
-            ) : null}
-            {b.id === 'launchPad' && built && showRocket && (
-              <Model model="rocket" options={{ kind: rocketKind }} position={[0, PAD_TABLE_Y + 0.06, 0]} />
-            )}
+            <Juicy id={b.id}>
+              {b.constructing && hasModel('construction') ? (
+                <Model model="construction" options={{ level: 1, building: b.id }} />
+              ) : hasModel(modelId) ? (
+                <Model model={modelId} options={{ level: Math.max(1, b.level), building: b.id, ...modelOptions }} />
+              ) : built ? (
+                <Placeholder id={b.id} />
+              ) : null}
+              {b.id === 'launchPad' && built && showRocket && (
+                <Model model="rocket" options={{ kind: rocketKind }} position={[0, PAD_TABLE_Y + 0.06, 0]} />
+              )}
+            </Juicy>
           </group>
         )
       })}

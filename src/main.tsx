@@ -1,10 +1,14 @@
 import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/fredoka'
 import './styles/base.css'
+import './styles/ui.css'
+import './styles/screens.css'
 import { App } from './App'
 import { rig } from './scene/cameraRig'
+import { useGame } from './state/game'
+import { useUi } from './state/ui'
 
 createRoot(document.getElementById('root')!).render(<App />)
 
 // handy for screenshots and debugging
-;(window as unknown as { __rig: typeof rig }).__rig = rig
+;Object.assign(window, { __rig: rig, __game: useGame, __ui: useUi })
