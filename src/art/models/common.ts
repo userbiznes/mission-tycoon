@@ -306,7 +306,7 @@ export function foundation(kit: Kit, w: number, d: number, o: { old?: boolean; s
   kit.slab(w, d, h, o.r ?? 0.5, { color: c0, top: c1, at: [o.x ?? 0, 0, o.z ?? 0], bevel: 0.05 })
   kit.slab(w - 0.34, d - 0.34, 0.025, Math.max(0.1, (o.r ?? 0.5) - 0.15), {
     color: c1,
-    top: palette.concreteLight,
+    top: o.color ? mix(c1, palette.white, 0.18) : palette.concreteLight,
     at: [o.x ?? 0, h - 0.005, o.z ?? 0],
     bevel: 0.01,
     shade: 0.02,
@@ -556,4 +556,84 @@ export function dishBowl(
   kit.cyl(0.11, 0.15, 0.24, { color: o.feed ?? palette.red, at: [0, focus - 0.02, 0], bevel: 0.04, seg: 12 })
   kit.sphere(0.085, { color: palette.metalLight, at: [0, focus - 0.17, 0], seg: 8, mat: 'metal' })
   return focus
+}
+
+/**
+ * Barrel-vault roof made of chunky curved-plank panels, ridge along Z.
+ * Origin: centre of the wall top. `a` and `b` are the half-width and height of the arch.
+ * `colors(i)` picks each panel's [base, top] colours so old roofs can have odd panels.
+ */
+export function vaultRoof(
+  kit: Kit,
+  a: number,
+  b: number,
+  depth: number,
+  colors: (i: number, n: number) => [string, string],
+  o: { panels?: number; thick?: number; lift?: (i: number) => number } = {},
+): void {
+  const n = o.panels ?? 9
+  const thick = o.thick ?? 0.16
+  const P = (t: number): [number, number] => [a * Math.cos(t), b * Math.sin(t)]
+  for (let i = 0; i < n; i++) {
+    const t0 = (i / n) * Math.PI
+    const t1 = ((i + 1) / n) * Math.PI
+    const tm = (t0 + t1) / 2
+    const [x0, y0] = P(t0)
+    const [x1, y1] = P(t1)
+    const len = Math.hypot(x1 - x0, y1 - y0)
+    const ang = Math.atan2(y1 - y0, x1 - x0)
+    // outward normal of the chord
+    const nx = (y1 - y0) / len
+    const ny = -(x1 - x0) / len
+    const [mx, my] = P(tm)
+    const lift = o.lift?.(i) ?? 0
+    const [c0, c1] = colors(i, n)
+    kit.box(len + thick * 0.55, thick, depth, {
+      color: c0,
+      top: c1,
+      at: [mx * 0.985 + nx * (thick * 0.42 + lift), my * 0.985 + ny * (thick * 0.42 + lift), 0],
+      rot: [0, 0, ang + lift * 0.8],
+      r: thick * 0.4,
+      shade: 0.1,
+    })
+  }
+}
+
+/** Mushroom-cap roof vent. Base on the origin. */
+export function roofVent(kit: Kit, s = 1): void {
+  kit.cyl(0.1 * s, 0.12 * s, 0.26 * s, { color: palette.metalDark, top: palette.metalLight, at: [0, 0.13 * s, 0], bevel: 0.03, seg: 10, mat: 'metal' })
+  kit.lathe(
+    [
+      [0, 0],
+      [0.2 * s, 0.0],
+      [0.22 * s, 0.04 * s],
+      [0.14 * s, 0.13 * s],
+      [0, 0.16 * s],
+    ],
+    { color: palette.steel, top: palette.metalLight, at: [0, 0.25 * s, 0], seg: 12, mat: 'metal' },
+  )
+}
+
+/** A tiny boxed-up satellite: gold foil body, blue solar wings, a dish. Bottom on the origin. */
+export function miniSatellite(kit: Kit, s = 1): void {
+  kit.box(0.34 * s, 0.4 * s, 0.34 * s, { color: palette.yellowDark, top: palette.yellow, at: [0, 0.2 * s, 0], r: 0.05 * s, mat: 'gloss' })
+  for (const side of [-1, 1]) {
+    kit.box(0.42 * s, 0.26 * s, 0.03 * s, { color: palette.blueDark, top: palette.blue, at: [side * 0.4 * s, 0.22 * s, 0], r: 0.012, mat: 'gloss' })
+    kit.box(0.02 * s, 0.26 * s, 0.035 * s, { color: palette.white, at: [side * 0.4 * s, 0.22 * s, 0], r: 0.006, shade: 0 })
+  }
+  kit.cyl(0.11 * s, 0.03 * s, 0.07 * s, { color: palette.creamShade, top: palette.white, at: [0, 0.45 * s, 0], bevel: 0.01, seg: 10 })
+  kit.sphere(0.03 * s, { color: palette.red, at: [0, 0.5 * s, 0], seg: 6 })
+}
+
+/** Low hand cart / dolly: a deck on four small wheels. Bottom on the origin, long side along Z. */
+export function dolly(kit: Kit, w: number, len: number): void {
+  kit.box(w, 0.09, len, { color: palette.yellowDark, top: palette.yellow, at: [0, 0.2, 0], r: 0.035 })
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1]) {
+      kit.cyl(0.085, 0.085, 0.07, { color: palette.rubber, at: [sx * (w / 2 - 0.03), 0.09, sz * (len / 2 - 0.14)], rot: [0, 0, Math.PI / 2], bevel: 0.025, seg: 12 })
+    }
+  // push handle
+  kit.beam([-w / 2 + 0.06, 0.22, len / 2 - 0.03], [-w / 2 + 0.06, 0.62, len / 2 + 0.07], 0.04, { color: palette.steel, round: true })
+  kit.beam([w / 2 - 0.06, 0.22, len / 2 - 0.03], [w / 2 - 0.06, 0.62, len / 2 + 0.07], 0.04, { color: palette.steel, round: true })
+  kit.beam([-w / 2 + 0.06, 0.62, len / 2 + 0.07], [w / 2 - 0.06, 0.62, len / 2 + 0.07], 0.045, { color: palette.steel, round: true })
 }
