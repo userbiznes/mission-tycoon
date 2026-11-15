@@ -318,6 +318,79 @@ export const Icon = {
       <path d="M12 3.500l7.500 8h-4.500v9h-6v-9H4.500z" fill="#8be05f" />
     </Svg>
   ),
+  box: (p: P) => (
+    <Svg {...p}>
+      <path d="M3.500 8.200 12 4l8.500 4.200v8.600L12 21l-8.500-4.200z" fill="#e0a868" />
+      <path d="M3.500 8.200 12 12.400l8.500-4.200M12 12.400V21" />
+      <path d="M7.700 6.100l8.500 4.200v3" stroke="#fff1d6" strokeWidth={1.4} />
+    </Svg>
+  ),
+  map: (p: P) => (
+    <Svg {...p}>
+      <path d="M3.500 6.500 9 4.500l6 2 5.500-2v13L15 19.500l-6-2-5.500 2z" fill="#fff1d6" />
+      <path d="M9 4.500v13M15 6.500v13" />
+      <path d="M5.500 12.500c1.200-1.300 1.800.6 3 0" stroke="#3e9fe8" strokeWidth={1.4} />
+      <path d="M16.800 10.200l2 2M18.800 10.200l-2 2" stroke="#e9523b" strokeWidth={1.5} />
+    </Svg>
+  ),
+  image: (p: P) => (
+    <Svg {...p}>
+      <rect x="3.500" y="5" width="17" height="14" rx="2.500" fill="#d5edff" />
+      <circle cx="8.500" cy="9.500" r="1.600" fill="#fcc840" />
+      <path d="M4 16.800l4.500-4 3.500 3 3-2.600 5 4.200V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="#8be05f" />
+    </Svg>
+  ),
+  thermo: (p: P) => (
+    <Svg {...p}>
+      <path d="M10 14.200V5.500a2 2 0 0 1 4 0v8.700a4 4 0 1 1-4 0z" fill="#fff" />
+      <circle cx="12" cy="17.500" r="2" fill="#e9523b" stroke="none" />
+      <path d="M12 16V9.500" stroke="#e9523b" strokeWidth={2} />
+    </Svg>
+  ),
+  question: (p: P) => (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="9.200" fill="#7fd0ff" />
+      <path d="M9.300 9.600a2.800 2.800 0 1 1 4.200 2.400c-.9.500-1.500 1.100-1.500 2.100" stroke="#fff" strokeWidth={2.2} />
+      <circle cx="12" cy="17.300" r="1.250" fill="#fff" stroke="none" />
+    </Svg>
+  ),
+  alert: (p: P) => (
+    <Svg {...p}>
+      <path d="M12 3.500 21.500 20h-19z" fill="#fcc840" />
+      <path d="M12 9.500v5" strokeWidth={2.2} />
+      <circle cx="12" cy="17.300" r="1.100" fill={INK} stroke="none" />
+    </Svg>
+  ),
+  orbit: (p: P) => (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="4.200" fill="#6fc7ff" />
+      <ellipse cx="12" cy="12" rx="9.500" ry="4.200" transform="rotate(-24 12 12)" />
+      <circle cx="19.700" cy="8.200" r="1.600" fill="#fcc840" />
+    </Svg>
+  ),
+  zzz: (p: P) => (
+    <Svg {...p}>
+      <path d="M4.500 9.500h5.500l-5.500 7h5.500" strokeWidth={2} />
+      <path d="M13 5h4.500L13 10.500h4.500" />
+      <path d="M16 14.500h3.500L16 19h3.500" strokeWidth={1.5} />
+    </Svg>
+  ),
+  wind: (p: P) => (
+    <Svg {...p}>
+      <path d="M3.500 9.500h10a2.500 2.500 0 1 0-2.500-2.500M3.500 13.500h14a2.500 2.500 0 1 1-2.500 2.500M3.500 17.500h6" strokeWidth={2} />
+    </Svg>
+  ),
+  home: (p: P) => (
+    <Svg {...p}>
+      <path d="M4 11.500 12 4.500l8 7v8h-5v-5h-6v5H4z" fill="#fff1d6" />
+      <path d="M3 12l9-8 9 8" stroke="#e9523b" strokeWidth={2} />
+    </Svg>
+  ),
+  move: (p: P) => (
+    <Svg {...p}>
+      <path d="M12 3v18M3 12h18M12 3l-2.500 2.500M12 3l2.500 2.500M12 21l-2.500-2.500M12 21l2.500-2.500M3 12l2.500-2.500M3 12l2.500 2.500M21 12l-2.500-2.500M21 12l-2.500 2.500" strokeWidth={2} />
+    </Svg>
+  ),
 }
 
 export type IconName = keyof typeof Icon

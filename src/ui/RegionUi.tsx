@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { palette } from '../art/palette'
 import { MATERIAL_BY_ID, REGIONS, REGION_IDS, REGION_STATE_WORDS, type RegionId } from '../data/regions'
@@ -11,10 +11,10 @@ import { useGame } from '../state/game'
 import { usePlacement } from '../state/placement'
 import { focusRegion, missingMaterials, startClearing, startRestoring } from '../state/regions'
 import { useUi } from '../state/ui'
-import { Price, TimerRow } from './BuildingSheet'
 import { Icon, type IconName } from './icons'
-import { Btn, Sheet, formatTime, useNow } from './kit'
+import { Btn, LockBadge, PayBtn, Ring, TimerRow, Win, formatTime, useNow } from './kit'
 import { marketStart } from './MarketSheet'
+import { Thumb } from './thumbs'
 import { RoccoSays } from './Rocco'
 import { sfx } from './sound'
 
@@ -32,13 +32,19 @@ function open(id: RegionId) {
   useUi.getState().openRegion(id)
 }
 
-/** Countdown text for a badge. */
-function Countdown({ end }: { end: number }) {
+/** Countdown for a badge: the ring fills as the work goes on. */
+function Countdown({ start, end, icon }: { start?: number; end: number; icon: React.ReactNode }) {
   const now = useNow(250)
-  return <>{formatTime(end - now)}</>
+  const k = start ? (now - start) / Math.max(1, end - start) : 0.5
+  return (
+    <>
+      <Ring p={k}>{icon}</Ring>
+      <span>{formatTime(end - now)}</span>
+    </>
+  )
 }
 
-/** The floating badges: padlock and level on a locked signpost (only while the pointer is on it), "!" when it can be explored, timers and "Restore" over the site. */
+/** The floating badges: padlock and level over a locked ruin (only while the pointer is on it), "!" when it can be explored, timers and "Restore" over the site. */
 export function RegionPins() {
   const regions = useGame((s) => s.regions)
   const tour = useGame((s) => s.tourStep)
@@ -46,9 +52,6 @@ export function RegionPins() {
   const sheet = useUi((s) => s.sheet)
   const card = useUi((s) => s.regionCard)
   const hover = useUi((s) => s.hoverRegion)
-  // where each locked badge last showed, so it fades out in place instead of jumping back to the signpost
-  const lastAt = useRef<Partial<Record<RegionId, 'sign' | 'site'>>>({})
-  if (hover) lastAt.current[hover.id] = hover.at
   if (tour >= 0 || placing || sheet) return null
   return (
     <>
@@ -56,38 +59,36 @@ export function RegionPins() {
         const def = REGIONS[id]
         const rec = regions[id]
         if (rec.state === 'active' || card === id) return null
-        const shown = hover?.id === id
-        // a locked region's level floats over whichever part the pointer is on
-        const atSign = rec.state === 'available' || (rec.state === 'locked' && lastAt.current[id] !== 'site')
+        const shown = hover === id
+        // "Explore" sits on the signpost; a locked region's level floats over its ruin, where the pointer is
+        const atSign = rec.state === 'available'
         const [u, v] = atSign ? def.sign : def.site
         const [x, z] = uvToWorld(u, v)
         const y = atSign ? terrainHeightUv(u, v) + 3.7 : terrainHeightUv(u, v) + def.height * 0.45 + 0.8
         return (
           <Pin key={id} at={[x, y, z]}>
             {rec.state === 'locked' && (
-              <div className={`region-badge locked${shown ? ' shown' : ''}`} role="tooltip" aria-hidden={!shown}>
+              <div className={`wbadge locked${shown ? ' shown' : ''}`} role="tooltip" aria-hidden={!shown}>
                 <Icon.lock />
-                <span>Level {def.needsLevel}</span>
+                <span>Level</span>
+                <b>{def.needsLevel}</b>
               </div>
             )}
             {rec.state === 'available' && (
-              <button type="button" className="region-badge ready" onClick={() => open(id)} aria-label={`${def.name}: ready to explore`}>
+              <button type="button" className="wbadge ready" data-ui={`world.region.${id}`} onClick={() => open(id)} aria-label={`${def.name}: ready to explore`}>
                 <i>!</i>
                 <span>Explore</span>
               </button>
             )}
             {rec.state === 'ruins' && (
-              <button type="button" className="region-badge restore" onClick={() => open(id)} aria-label={`Restore the ${def.name}`}>
+              <button type="button" className="wbadge act" data-ui={`world.region.${id}`} onClick={() => open(id)} aria-label={`Restore the ${def.name}`}>
                 <Icon.wrench />
                 <span>Restore</span>
               </button>
             )}
             {(rec.state === 'clearing' || rec.state === 'restoring') && rec.end && (
-              <button type="button" className="region-badge timer" onClick={() => open(id)}>
-                {rec.state === 'clearing' ? <Icon.hammer /> : <Icon.wrench />}
-                <span>
-                  <Countdown end={rec.end} />
-                </span>
+              <button type="button" className="wbadge timer" data-ui={`world.region.${id}`} onClick={() => open(id)} aria-label={`${def.name}: work in progress`}>
+                <Countdown start={rec.start} end={rec.end} icon={rec.state === 'clearing' ? <Icon.hammer /> : <Icon.wrench />} />
               </button>
             )}
           </Pin>
@@ -138,6 +139,8 @@ function TeaserStage({ id, restored }: { id: RegionId; restored: boolean }) {
 function Teaser({ id, restored, veiled }: { id: RegionId; restored: boolean; veiled: boolean }) {
   return (
     <div className={`region-teaser${veiled ? ' veiled' : ''}`}>
+      <i className="tape l" aria-hidden />
+      <i className="tape r" aria-hidden />
       <Canvas dpr={[1, 2]} gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }} camera={{ fov: 26, position: [12, 10, 14], near: 1, far: 90 }}>
         <TeaserStage id={id} restored={restored} />
       </Canvas>
@@ -152,21 +155,22 @@ function WhyBox({ id }: { id: RegionId }) {
   const [shown, setShown] = useState(false)
   if (!why) return null
   return (
-    <div className="region-why card">
-      <button type="button" className="why-toggle" onClick={() => setShown(!shown)}>
-        <Icon.info /> <b>{why.title}</b>
+    <div className="card region-why">
+      <button type="button" className="why-btn wide" data-ui={`region.${id}.why`} aria-expanded={shown} onClick={() => setShown(!shown)}>
+        <Icon.question /> <b>{why.title}</b>
       </button>
       {shown && (
         <>
-          <p className="rule">{why.rule}</p>
-          <p>{why.basis}</p>
-          <small>{why.source}</small>
+          <p className="t-body rule">{why.rule}</p>
+          <p className="t-body">{why.basis}</p>
+          <small className="t-small">{why.source}</small>
         </>
       )}
     </div>
   )
 }
 
+/** A lost region's card: a weathered expedition map with a picture of the ruin, what it takes, and what it gives back. */
 export function RegionCard() {
   const id = useUi((s) => s.regionCard)
   const close = () => useUi.getState().openRegion(null)
@@ -191,15 +195,15 @@ export function RegionCard() {
   let foot: React.ReactNode = undefined
   if (rec.state === 'locked') {
     foot = (
-      <Btn size="lg" disabled>
+      <Btn disabled ui={`region.${id}.locked`}>
         <Icon.lock /> Reach agency level {def.needsLevel}
       </Btn>
     )
   } else if (rec.state === 'available') {
     foot = (
-      <Btn size="lg" sound={null} disabled={coins < def.clearCost} onClick={() => run(() => startClearing(id))}>
-        Clear the way <Price amount={def.clearCost} />
-      </Btn>
+      <PayBtn tone="green" price={def.clearCost} ui={`region.${id}.clear`} onPay={() => run(() => startClearing(id))}>
+        Clear the way
+      </PayBtn>
     )
   } else if (rec.state === 'ruins') {
     foot = (
@@ -207,7 +211,8 @@ export function RegionCard() {
         {missing.length > 0 && (
           <Btn
             tone="blue"
-            style={{ flex: '0 0 auto' }}
+            className="fit"
+            ui={`region.${id}.materials`}
             onClick={() => {
               marketStart.tab = 'material'
               useUi.getState().open({ kind: 'market' })
@@ -216,39 +221,42 @@ export function RegionCard() {
             <Icon.market /> Materials
           </Btn>
         )}
-        <Btn size={missing.length > 0 ? 'md' : 'lg'} sound={null} disabled={missing.length > 0 || coins < def.restoreCost} onClick={() => run(() => startRestoring(id))}>
-          Restore <Price amount={def.restoreCost} />
-        </Btn>
+        <PayBtn tone="green" price={def.restoreCost} disabled={missing.length > 0} ui={`region.${id}.restore`} onPay={() => run(() => startRestoring(id))}>
+          Restore
+        </PayBtn>
       </>
     )
   }
 
   return (
-    <Sheet title={def.name} subtitle={`${REGION_STATE_WORDS[rec.state]} · ${def.place}`} icon={<I />} onClose={close} clearScrim foot={foot}>
+    <Win id={`region.${id}`} title={def.name} subtitle={`${REGION_STATE_WORDS[rec.state]} · ${def.place}`} icon={<I />} onClose={close} clearScrim coins variant="side" theme="map" foot={foot}>
       <div className="region-card">
-        <Teaser id={id} restored={rec.state === 'active'} veiled={rec.state === 'locked' || rec.state === 'available'} />
-        <p className="b-blurb">{rec.state === 'active' ? def.memory : def.teaser}</p>
+        <div className="map-top">
+          <Teaser id={id} restored={rec.state === 'active'} veiled={rec.state === 'locked' || rec.state === 'available'} />
+          <span className={`stamp map-stamp ${rec.state === 'active' ? 'go' : rec.state === 'locked' ? '' : 'amber'}`}>{REGION_STATE_WORDS[rec.state]}</span>
+        </div>
+        <small className="t-small place">
+          <Icon.map /> {def.place}
+        </small>
+        <p className="t-body">{rec.state === 'active' ? def.memory : def.teaser}</p>
 
-        <div className="region-reward card">
-          <span className="part-icon">
-            <I />
-          </span>
+        <div className="card lrow region-reward">
+          <Thumb model={`region:${id}:1`} icon={REGION_ICON[id]} tint="#ffe69a" />
           <div className="grow">
-            <small>{rec.state === 'active' ? 'Working again' : 'Restore it to unlock'}</small>
-            <b>{def.reward}</b>
-            <small>{def.rewardDetail}</small>
+            <small className="t-small">{rec.state === 'active' ? 'Working again' : 'Restore it to unlock'}</small>
+            <b className="t-label">{def.reward}</b>
+            <small className="t-small">{def.rewardDetail}</small>
           </div>
         </div>
 
         {rec.state === 'locked' && (
-          <div className="stats">
-            <span className={`chip ${level >= def.needsLevel ? 'good' : 'warn'}`}>
-              <Icon.lock /> Agency level {def.needsLevel} (you are level {level})
-            </span>
+          <div className="chips needs">
+            <LockBadge level={def.needsLevel} text="Needs agency level" />
+            <span className="chip">You are level {level}</span>
           </div>
         )}
         {rec.state === 'available' && (
-          <div className="stats">
+          <div className="chips needs">
             <span className="chip good">
               <Icon.check /> Level {def.needsLevel} reached
             </span>
@@ -260,30 +268,39 @@ export function RegionCard() {
             </span>
           </div>
         )}
-        {rec.state === 'clearing' && rec.start && rec.end && <TimerRow label="The crew is clearing a way in" start={rec.start} end={rec.end} icon={<Icon.hammer className="ic" />} />}
+        {rec.state === 'clearing' && rec.start && rec.end && <TimerRow label="The crew is clearing a way in" start={rec.start} end={rec.end} icon={<Icon.hammer />} />}
         {rec.state === 'ruins' && (
           <>
             <p className="eyebrow">What the restoration needs</p>
-            <div className="stats">
+            <div className="mat-list">
               {def.materials.map((m) => {
                 const have = inventory[m.id] ?? 0
+                const ok = have >= m.qty
                 return (
-                  <span key={m.id} className={`chip ${have >= m.qty ? 'good' : 'warn'}`}>
-                    {have >= m.qty ? <Icon.check /> : <Icon.bag />} {Math.min(have, m.qty)}/{m.qty} {MATERIAL_BY_ID[m.id].name}
+                  <span key={m.id} className={`mat${ok ? ' ok' : ''}`}>
+                    <Thumb model={`material:${m.id}`} icon="hammer" size="sm" />
+                    <b className="t-num">
+                      {Math.min(have, m.qty)}/{m.qty}
+                    </b>
+                    <small className="t-small">{MATERIAL_BY_ID[m.id].name}</small>
+                    {ok && <Icon.check className="tick" />}
                   </span>
                 )
               })}
+            </div>
+            <div className="chips needs">
               <span className="chip blue">
                 <Icon.clock /> {def.restoreSeconds}s to rebuild
               </span>
+              {coins < def.restoreCost && <span className="chip bad">Short of coins</span>}
             </div>
-            {missing.length > 0 && <small className="muted">Cable spools, steel beams and control panels are sold at the Parts Market, under Materials.</small>}
+            {missing.length > 0 && <small className="t-small">Cable spools, steel beams and control panels are sold at the Parts Market, under Materials.</small>}
           </>
         )}
-        {rec.state === 'restoring' && rec.start && rec.end && <TimerRow label="Scaffolding is up: restoring" start={rec.start} end={rec.end} icon={<Icon.wrench className="ic" />} />}
+        {rec.state === 'restoring' && rec.start && rec.end && <TimerRow label="Scaffolding is up: restoring" start={rec.start} end={rec.end} icon={<Icon.wrench />} />}
         <WhyBox id={id} />
       </div>
-    </Sheet>
+    </Win>
   )
 }
 

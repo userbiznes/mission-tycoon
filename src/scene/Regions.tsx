@@ -491,17 +491,17 @@ function tapRegion(e: ThreeEvent<MouseEvent>, id: RegionId) {
 
 /**
  * The level badge over a locked region stays out of sight until the pointer
- * rests on its signpost or its landmark. A finger has no hover: there a tap
- * opens the card, which says what the region needs.
+ * rests on its ruin. The signpost that points the way shows nothing on hover.
+ * A finger has no hover: there a tap opens the card, which says what the
+ * region needs.
  */
-function hoverIn(e: ThreeEvent<PointerEvent>, id: RegionId, at: 'sign' | 'site') {
+function hoverIn(e: ThreeEvent<PointerEvent>, id: RegionId) {
   if (e.nativeEvent.pointerType === 'touch') return
-  useUi.getState().setHoverRegion({ id, at })
+  useUi.getState().setHoverRegion(id)
 }
-function hoverOut(id: RegionId, at?: 'sign' | 'site') {
+function hoverOut(id: RegionId) {
   const ui = useUi.getState()
-  const now = ui.hoverRegion
-  if (now?.id === id && (!at || now.at === at)) ui.setHoverRegion(null)
+  if (ui.hoverRegion === id) ui.setHoverRegion(null)
 }
 
 function Site({ id }: { id: RegionId }) {
@@ -544,7 +544,7 @@ function Site({ id }: { id: RegionId }) {
   })
   return (
     <group name={`region-${id}`}>
-      <group position={[x, y, z]} rotation-y={def.yaw} onClick={(e) => tapRegion(e, id)} onPointerOver={(e) => hoverIn(e, id, 'site')} onPointerOut={() => hoverOut(id, 'site')}>
+      <group position={[x, y, z]} rotation-y={def.yaw} onClick={(e) => tapRegion(e, id)} onPointerOver={(e) => hoverIn(e, id)} onPointerOut={() => hoverOut(id)}>
         <Juicy id={`region:${id}`}>
           <Model model={def.model} options={{ level: state === 'active' ? 1 : 0 }} />
         </Juicy>
@@ -557,8 +557,6 @@ function Site({ id }: { id: RegionId }) {
           position={[sx, terrainHeightUv(def.sign[0], def.sign[1]), sz]}
           rotation-y={SIGN_YAW}
           onClick={(e) => tapRegion(e, id)}
-          onPointerOver={(e) => hoverIn(e, id, 'sign')}
-          onPointerOut={() => hoverOut(id, 'sign')}
         >
           <group ref={signRef}>
             <primitive object={sign} />

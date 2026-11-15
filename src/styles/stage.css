@@ -1,3 +1,8 @@
+/* ------------------------------------------------------------------
+   Stage pieces carried over from the first build, which already matched
+   the HUD: the title, Chief Rocco's dialogue and hint bar, the character
+   portraits and the launch flight screen.
+   ------------------------------------------------------------------ */
 /* ---------- title ---------- */
 .title {
   position: absolute;
@@ -65,148 +70,24 @@
   opacity: 0.95;
 }
 
-/* ---------- onboarding ---------- */
-.onboard {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: calc(1.6em + var(--safe-top)) 1em 1em;
-  background: rgba(30, 20, 10, 0.22);
-  animation: fade-in 0.25s ease both;
-  overflow-y: auto;
+/* ---------- title and onboarding ---------- */
+.title {
+  padding-top: calc(1.4em + var(--safe-top));
+  padding-bottom: calc(1.2em + var(--safe-bottom));
+  background: linear-gradient(180deg, rgba(20, 60, 110, 0.16) 0%, rgba(20, 60, 110, 0) 40%, rgba(30, 20, 10, 0) 70%, rgba(30, 20, 10, 0.32) 100%);
 }
-.onboard .panel {
-  padding: 1em 1em 1.1em;
-  animation: pop-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+.wordmark .a {
+  font-size: 3.2em;
+  display: inline-block;
+  margin-right: 0.18em;
 }
-.onboard h2 {
-  font-size: 1.5em;
-  font-weight: 700;
-  line-height: 1.1;
+.wordmark .b {
+  font-size: 3.7em;
+  display: inline-block;
 }
-.onboard .sub {
-  margin: 0.25em 0 0.8em;
-  color: var(--ink-soft);
-  font-weight: 500;
+.title .tagline {
+  margin-top: 0.5em;
 }
-.onboard .row {
-  display: flex;
-  gap: 0.5em;
-  align-items: flex-end;
-}
-.onboard .row .field {
-  flex: 1;
-  margin-bottom: 0;
-}
-.onboard .actions {
-  display: flex;
-  gap: 0.6em;
-  margin-top: 1em;
-}
-.onboard .actions .btn {
-  flex: 1;
-}
-.steps {
-  display: flex;
-  justify-content: center;
-  gap: 0.4em;
-  margin-bottom: 0.7em;
-}
-.steps i {
-  width: 0.7em;
-  height: 0.7em;
-  border-radius: 50%;
-  border: 0.13em solid var(--ink);
-  background: #f3dca9;
-}
-.steps i.on {
-  background: #f9b92f;
-}
-
-.logo-preview {
-  display: flex;
-  align-items: center;
-  gap: 0.9em;
-  margin-bottom: 0.7em;
-}
-.logo-preview svg {
-  width: 6.6em;
-  height: 6.6em;
-  flex: none;
-  filter: drop-shadow(0 0.3em 0 rgba(60, 30, 10, 0.25));
-  animation: float 3s ease-in-out infinite;
-}
-.logo-preview b {
-  display: block;
-  font-size: 1.25em;
-  line-height: 1.1;
-  word-break: break-word;
-}
-.logo-preview span {
-  font-size: 0.86em;
-  color: var(--ink-soft);
-}
-.picker-label {
-  margin: 0.55em 0 0.25em 0.2em;
-  font-size: 0.86em;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-.picker {
-  display: grid;
-  gap: 0.4em;
-}
-.picker.shapes {
-  grid-template-columns: repeat(4, 1fr);
-}
-.picker.icons {
-  grid-template-columns: repeat(6, 1fr);
-}
-.picker.colors {
-  grid-template-columns: repeat(10, 1fr);
-  gap: 0.28em;
-}
-.pick {
-  position: relative;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0.14em solid #dcbb7c;
-  border-radius: 0.75em;
-  background: #fff7e2;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.pick svg {
-  width: 74%;
-  height: 74%;
-}
-.pick:active {
-  transform: scale(0.9);
-}
-.pick.on {
-  border-color: var(--ink);
-  background: #ffe69a;
-  box-shadow: 0 0.16em 0 rgba(60, 30, 10, 0.3);
-  transform: translateY(-0.1em);
-}
-.swatch {
-  aspect-ratio: 1;
-  padding: 0;
-  border: 0.14em solid rgba(75, 47, 28, 0.35);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.swatch.on {
-  border-color: var(--ink);
-  transform: scale(1.22);
-  box-shadow: 0 0.14em 0 rgba(60, 30, 10, 0.35);
-}
-
 /* ---------- Chief Rocco ---------- */
 .rocco-catch {
   position: absolute;
@@ -345,173 +226,208 @@
   }
 }
 
-/* ---------- world markers (HTML pinned over 3D things) ---------- */
-.pin {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  will-change: transform;
-  z-index: 3;
+/* ---------- character portraits (generated artwork) ---------- */
+.portrait {
+  position: relative;
+  display: block;
+  flex: none;
 }
-.pin > * {
-  transform: translate(-50%, -100%);
-}
-.pointer-arrow {
-  width: 2.6em;
-  height: 3em;
-  animation: float 0.8s ease-in-out infinite;
+.portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
   filter: drop-shadow(0 0.2em 0 rgba(60, 30, 10, 0.3));
 }
-.bubble-pin {
-  display: grid;
-  place-items: center;
-  min-width: 2.5em;
-  height: 2.5em;
-  padding: 0 0.4em;
-  border: var(--outline) solid var(--ink);
-  border-radius: 1.3em;
-  background: linear-gradient(180deg, #fffaec, #ffe9bd);
-  box-shadow: 0 0.2em 0 rgba(60, 30, 10, 0.3);
-  font-weight: 700;
-  font-size: 0.9em;
-  pointer-events: auto;
-  cursor: pointer;
-  animation: float 1.6s ease-in-out infinite;
+.portrait.talking img {
+  animation: rocco-talk 0.34s ease-in-out infinite;
 }
-.bubble-pin svg {
-  width: 1.5em;
-  height: 1.5em;
+.portrait .ai-tag {
+  position: absolute;
+  left: 50%;
+  bottom: 0.1em;
+  transform: translateX(-50%);
+  padding: 0 0.4em 0.08em;
+  border-radius: 0.5em;
+  background: rgba(75, 47, 28, 0.82);
+  color: #fff;
+  font-style: normal;
+  font-size: 0.5em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
 }
-.bubble-pin.ready {
-  background: linear-gradient(180deg, #e7f9d8, #bfeaa2);
+.tip-pop .portrait {
+  width: 5em;
 }
-.timer-pin {
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-  padding: 0.12em 0.6em 0.18em 0.3em;
-  border: 0.14em solid var(--ink);
-  border-radius: 1em;
-  background: rgba(255, 250, 236, 0.96);
-  font-weight: 700;
-  font-size: 0.8em;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 0.16em 0 rgba(60, 30, 10, 0.3);
+.crew-face {
+  width: 3.4em;
 }
-.timer-pin svg {
-  width: 1.3em;
-  height: 1.3em;
+.crew-face .ai-tag {
+  font-size: 0.42em;
 }
 
-/* ---------- building sheet ---------- */
-.b-status {
+/* ---------- dialogue: big character on the left, big bubble on the right ---------- */
+.dialog {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 3% 0 0;
+  background: rgba(18, 26, 20, 0.58);
+  z-index: 95;
+  cursor: pointer;
+  animation: fade-in 0.25s ease both;
+}
+.dialog-char {
+  flex: 0 0 32%;
+  height: 94%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: char-in 0.5s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+.dialog-char .portrait,
+.dialog-char .rocco-figure {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 0.4em 0.6em rgba(0, 0, 0, 0.35));
+}
+.dialog-char .portrait img {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  filter: none;
+}
+.dialog-char .portrait .ai-tag {
+  font-size: 0.6em;
+  bottom: 0.6em;
+}
+.rocco-figure .rocco-head {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: rocco-idle 3.4s ease-in-out infinite;
+}
+.rocco-figure.talking .rocco-head {
+  animation: rocco-talk 0.34s ease-in-out infinite;
+}
+.rocco-figure .rocco-mouth {
+  transform-box: fill-box;
+  transform-origin: 50% 20%;
+  transform: scaleY(0);
+}
+.rocco-figure.talking .rocco-mouth {
+  animation: rocco-mouth 0.22s ease-in-out infinite;
+}
+.rocco-figure .rocco-eyes {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: blink 4.2s infinite;
+}
+.dialog-bubble {
+  position: relative;
+  flex: 1;
+  align-self: center;
+  min-height: 52%;
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
-  padding-bottom: 0.3em;
+  justify-content: center;
+  padding: 1.4em 2em 1.6em;
+  border: 0.14em solid #c9ab77;
+  border-radius: 1.3em;
+  background: linear-gradient(180deg, #fff6df 0%, #f6e3b8 100%);
+  box-shadow:
+    inset 0 0.2em 0 rgba(255, 255, 255, 0.85),
+    0 0.6em 1.4em rgba(0, 0, 0, 0.35);
+  animation: pop-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
 }
-.b-row {
+/* the tail, pointing at the speaker */
+.dialog-bubble::before {
+  content: '';
+  position: absolute;
+  left: -1.5em;
+  top: 58%;
+  width: 0;
+  height: 0;
+  border: 0.9em solid transparent;
+  border-right: 1.7em solid #f9e9c4;
+  border-left: none;
+  filter: drop-shadow(-0.1em 0 0 #c9ab77);
+}
+.dialog-bubble p {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1.32;
+  text-align: center;
+  color: #6b4426;
+}
+.dialog-bubble .ghost {
+  visibility: hidden;
+}
+.dialog-bubble .rocco-name {
+  top: -0.85em;
+  left: 1.6em;
+  font-size: 0.95em;
+}
+.dialog-bubble .rocco-next {
+  right: 1.2em;
+  bottom: 0.9em;
+}
+@keyframes char-in {
+  from {
+    transform: translateX(-60%);
+    opacity: 0;
+  }
+}
+/* the prompt while the player acts in the world */
+.hint-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  bottom: calc(1em + var(--safe-bottom));
   display: flex;
   align-items: center;
   gap: 0.6em;
-  padding: 0.55em 0.7em;
-}
-.b-row .grow {
-  flex: 1;
-  min-width: 0;
-}
-.b-row b {
-  display: block;
-  font-size: 0.98em;
-  line-height: 1.15;
-}
-.b-row small {
-  display: block;
-  color: var(--ink-soft);
-  font-size: 0.84em;
-  line-height: 1.2;
-}
-.b-row .ic {
-  width: 2.1em;
-  height: 2.1em;
-  flex: none;
-}
-.b-blurb {
-  padding: 0.1em 0.2em 0.5em;
-  color: var(--ink-soft);
-  font-weight: 500;
-}
-.price {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2em;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.price svg {
-  width: 1.15em;
-  height: 1.15em;
-}
-.price.short {
-  color: var(--red-dark);
-}
-.empty-note {
-  padding: 1.2em 0.6em;
-  text-align: center;
-  color: var(--ink-soft);
-  font-weight: 500;
-}
-
-/* ---------- settings ---------- */
-.setting {
-  display: flex;
-  align-items: center;
-  gap: 0.7em;
-  padding: 0.6em 0.7em;
-  margin-bottom: 0.5em;
-}
-.setting .grow {
-  flex: 1;
-}
-.setting b {
-  display: block;
-}
-.setting small {
-  color: var(--ink-soft);
-  font-size: 0.84em;
-}
-.toggle {
-  position: relative;
-  width: 3.3em;
-  height: 1.9em;
-  flex: none;
-  padding: 0;
+  padding: 0.35em 1.3em 0.4em 0.4em;
   border: var(--outline) solid var(--ink);
-  border-radius: 1em;
-  background: #d9c595;
+  border-radius: 2.4em;
+  background: linear-gradient(180deg, #ffe069, #f9b92f);
+  box-shadow: 0 0.3em 0 rgba(60, 30, 10, 0.3);
+  z-index: 30;
   cursor: pointer;
-  transition: background 0.2s;
+  animation: rise-in 0.45s cubic-bezier(0.2, 1.25, 0.4, 1) both, pulse 1.1s ease-in-out 0.6s infinite;
 }
-.toggle::after {
-  content: '';
-  position: absolute;
-  top: 0.14em;
-  left: 0.14em;
-  width: 1.28em;
-  height: 1.28em;
+.hint-bar .face {
+  width: 2.9em;
+  height: 2.9em;
+  overflow: hidden;
   border-radius: 50%;
-  background: #fffdf5;
-  border: 0.12em solid var(--ink);
-  transition: transform 0.22s cubic-bezier(0.2, 1.4, 0.4, 1);
+  border: 0.13em solid var(--ink);
+  background: #bfe6ff;
 }
-.toggle.on {
-  background: #6fd04d;
+.hint-bar .face svg {
+  width: 130%;
+  margin: 6% 0 0 -15%;
 }
-.toggle.on::after {
-  transform: translateX(1.4em);
+/* the generated close-up: cap to chin fills the round frame */
+.hint-bar .face .portrait {
+  width: 118%;
+  margin: -2% 0 0 -9%;
 }
-
+.hint-bar .face .portrait img {
+  filter: none;
+}
+.hint-bar .face .ai-tag {
+  display: none;
+}
+.hint-bar b {
+  font-size: 1.15em;
+}
 /* ---------- launch ---------- */
 .launch {
   position: absolute;
@@ -774,138 +690,77 @@
   }
 }
 
-/* ---------- market ---------- */
-.stalls {
-  display: flex;
-  gap: 0.25em;
-  padding: 0 0.7em 0.5em;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.stalls::-webkit-scrollbar {
-  display: none;
-}
-.stall {
-  flex: 1 0 auto;
-  min-width: 3.3em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.05em;
-  padding: 0.3em 0.3em 0.25em;
-  border: 0.13em solid #dcbb7c;
-  border-radius: 0.8em;
-  background: #f8e2b0;
-  color: var(--ink-soft);
-  font: inherit;
-  font-size: 0.68em;
-  font-weight: 600;
-  cursor: pointer;
-}
-.stall svg {
-  width: 2em;
-  height: 2em;
-}
-.stall.on {
-  border-color: var(--ink);
-  background: linear-gradient(180deg, #ffe069, #f9b92f);
-  color: var(--ink);
-  box-shadow: 0 0.16em 0 rgba(60, 30, 10, 0.25);
-}
-.part-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  padding-bottom: 0.4em;
-}
-.deliveries {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4em;
-  margin-bottom: 0.5em;
-}
-.part-card {
-  display: flex;
-  gap: 0.6em;
-  padding: 0.6em;
-}
-.part-card.locked {
-  opacity: 0.72;
-}
-.part-card .grow {
-  flex: 1;
-  min-width: 0;
-}
-.part-card b {
-  display: block;
-  font-size: 1em;
-  line-height: 1.15;
-}
-.part-card small {
-  display: block;
-  margin: 0.1em 0 0.3em;
-  color: var(--ink-soft);
-  font-size: 0.82em;
-  line-height: 1.2;
-}
-.part-card .owned {
-  margin-left: 0.4em;
-  padding: 0 0.4em;
-  border-radius: 1em;
-  background: #63bf4f;
-  color: #fff;
-  font-size: 0.8em;
-}
-.part-icon {
-  width: 2.7em;
-  height: 2.7em;
-  flex: none;
+/* ---------- launch ---------- */
+.launch {
   display: grid;
-  place-items: center;
-  border: 0.13em solid var(--ink);
-  border-radius: 0.75em;
+  grid-template-columns: 17em 1fr 17em;
+  grid-template-rows: 1fr auto;
 }
-.part-icon svg {
-  width: 1.8em;
-  height: 1.8em;
+.launch-top {
+  grid-column: 1;
+  grid-row: 1;
+  align-items: stretch;
+  align-self: start;
 }
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25em;
-  margin-bottom: 0.45em;
+.launch-fact {
+  max-width: none;
 }
-.buy-row {
-  display: flex;
-  gap: 0.45em;
+.launch-mid {
+  grid-column: 2;
+  grid-row: 1;
 }
-.buy-row .btn {
-  flex: 1;
-  padding-inline: 0.4em;
-  gap: 0.3em;
+.launch-bottom {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  min-height: 6.8em;
+  justify-content: flex-end;
 }
-.buy-row .wait {
-  font-style: normal;
-  font-size: 0.78em;
-  opacity: 0.9;
+.launch-bottom .gauge {
+  width: min(52%, 30em);
+  margin-bottom: 0.6em;
 }
-.btn .price {
-  color: inherit;
+.launch-bottom .arc-gauge {
+  width: min(40%, 22em);
 }
-.btn .price.short {
-  color: #ffe1d9;
+.launch-controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  align-items: flex-end;
+  pointer-events: none;
 }
-.nudge {
-  animation: pulse 0.8s ease-in-out infinite;
-  outline: 0.2em solid #ffd75a;
-  outline-offset: 0.12em;
+.launch-controls > * {
+  pointer-events: auto;
 }
-.guide-note {
-  margin-bottom: 0.5em;
-  padding: 0.45em 0.8em 0.5em;
-  border: 0.13em solid var(--ink);
-  border-radius: 0.9em;
-  background: linear-gradient(180deg, #d3ecff, #b6ddfb);
-  font-weight: 600;
-  font-size: 0.92em;
+.count {
+  font-size: 6.5em;
+}
+
+
+/* ---------- type floor: nothing on these carried-over screens under 14 px ---------- */
+.title .foot {
+  font-size: var(--fs-xs);
+}
+.readout small {
+  font-size: var(--fs-xs);
+}
+.readout .speed-track {
+  height: 1.5em;
+}
+.readout .speed-track i {
+  font-size: var(--fs-xs);
+}
+.launch-fact {
+  font-size: var(--fs-sm);
+}
+
+/* the "AI-generated" label is real text: 14 px like everything else */
+.portrait .ai-tag,
+.dialog-char .portrait .ai-tag {
+  font-size: var(--fs-xs);
+  padding: 0.05em 0.5em 0.1em;
+}
+/* a crew portrait is too small to carry it: the roster says it once, underneath */
+.crew-face .ai-tag {
+  display: none;
 }

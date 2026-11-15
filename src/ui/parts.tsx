@@ -1,5 +1,6 @@
-import type { PartCategory, PartDef } from '../data/types'
-import { Icon, type IconName } from './icons'
+import type { ItemId, PartCategory, PartDef } from '../data/types'
+import { type IconName } from './icons'
+import { Thumb } from './thumbs'
 
 export const CATEGORY_ICON: Record<PartCategory, IconName> = {
   bus: 'satellite',
@@ -21,13 +22,22 @@ export const CATEGORY_TINT: Record<PartCategory, string> = {
   propulsion: '#ffe0bd',
 }
 
-export function PartIcon({ part, className }: { part: PartDef; className?: string }) {
-  const I = Icon[CATEGORY_ICON[part.category]]
-  return (
-    <span className={`part-icon ${className ?? ''}`} style={{ background: CATEGORY_TINT[part.category] }}>
-      <I />
-    </span>
-  )
+/** Raw data and lab products: the picture each one goes by. */
+export const ITEM_ICON: Record<ItemId, IconName> = {
+  rawImage: 'image',
+  rawHiRes: 'camera',
+  rawThermal: 'thermo',
+  calImage: 'image',
+  landMap: 'map',
+  calThermal: 'thermo',
+  fireMap: 'flame',
+  sharpImage: 'target',
+  cloudMap: 'globe',
+}
+
+/** A part's picture, drawn from its 3D model. */
+export function PartIcon({ part, className, size }: { part: PartDef; className?: string; size?: 'sm' | 'big' }) {
+  return <Thumb model={`part:${part.id}`} icon={CATEGORY_ICON[part.category]} tint={CATEGORY_TINT[part.category]} size={size} className={className} />
 }
 
 const mb = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n % 1000 ? 1 : 0)} GB` : `${n} MB`)

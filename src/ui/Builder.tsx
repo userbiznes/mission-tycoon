@@ -10,7 +10,7 @@ import { evalInputFor, setDraft } from '../state/mission'
 import { useUi } from '../state/ui'
 import { addPart, evaluateDesign, partLock, removePart, testRun, type MissionResult, type ResourceBar } from '../sim'
 import { Icon, type IconName } from './icons'
-import { Btn, Meter, Modal } from './kit'
+import { Bar, Btn, LockBadge, Modal, Tabs, Tip, useEsc } from './kit'
 import { CATEGORY_ICON, PartIcon, partStats } from './parts'
 import { RoccoSays } from './Rocco'
 import { sfx } from './sound'
@@ -25,22 +25,35 @@ export const BAR_ICON: Record<ResourceKey, IconName> = {
   time: 'time',
 }
 
+/** Each resource has its own colour as well as its own icon. */
+const BAR_TINT: Record<ResourceKey, string> = {
+  mass: '#e6dcc8',
+  power: '#ffe27a',
+  budget: '#c9efb0',
+  data: '#e0d3ff',
+  comms: '#c5e4fb',
+  time: '#ffd9b0',
+}
+
+/** One of the six resource bars: icon, name, the bar itself, the numbers, and a "Why?" button. Red when the design breaks it. */
 function BarTile({ bar, onWhy }: { bar: ResourceBar; onWhy: () => void }) {
-  const I = Icon[BAR_ICON[bar.key as ResourceKey]]
+  const key = bar.key as ResourceKey
+  const I = Icon[BAR_ICON[key]]
   const subs = bar.sub?.length ? bar.sub : [bar]
   return (
-    <button type="button" className={`bar-tile ${bar.status}`} onClick={onWhy}>
-      <I className="ic" />
-      <div className="grow">
-        <b>
-          {bar.label}
-          <span className="why">Why?</span>
-        </b>
-        {subs.map((s) => (
-          <Meter key={s.key} value={s.fill} tone={s.status} />
-        ))}
-        <small>{bar.detail}</small>
-      </div>
+    <button type="button" className={`rbar ${bar.status}`} data-ui={`builder.bar.${key}`} onClick={onWhy} aria-label={`${bar.label}: ${bar.detail}. Why?`}>
+      <span className="rbar-top">
+        <span className="rbar-ico" style={{ background: BAR_TINT[key] }}>
+          <I />
+        </span>
+        <b>{bar.label}</b>
+        {bar.status === 'bad' && <i className="rbar-alert">!</i>}
+        <span className="rbar-why">Why?</span>
+      </span>
+      {subs.map((s) => (
+        <Bar key={s.key} value={s.fill} tone={s.status} />
+      ))}
+      <small>{bar.detail}</small>
     </button>
   )
 }
@@ -49,29 +62,33 @@ export function WhyModal({ bar, onClose }: { bar: ResourceBar; onClose: () => vo
   const why = WHY[bar.key as ResourceKey]
   const I = Icon[BAR_ICON[bar.key as ResourceKey]]
   return (
-    <Modal onClose={onClose}>
-      <div className="why-head">
-        <I />
-        <h2>{why.title}</h2>
-      </div>
-      <p className="why-now">
+    <Modal
+      id="why"
+      title={why.title}
+      icon={<I />}
+      onClose={onClose}
+      foot={
+        <Btn ui="why.ok" onClick={onClose}>
+          Got it
+        </Btn>
+      }
+    >
+      <p className={`why-now ${bar.status}`}>
         <b>Right now:</b> {bar.detail}
         {bar.reason ? `. ${bar.reason}.` : '.'}
       </p>
-      <p className="why-rule">{why.rule}</p>
-      <p>{why.basis}</p>
-      <p className="muted why-src">{why.source}</p>
-      <Btn block onClick={onClose}>
-        Got it
-      </Btn>
+      <p className="t-label why-rule">{why.rule}</p>
+      <p className="t-body">{why.basis}</p>
+      <p className="t-small why-src">{why.source}</p>
     </Modal>
   )
 }
 
-export function Stars({ n, big }: { n: number; big?: boolean }) {
+/** Up to three stars. With `stamp` they land one by one. */
+export function Stars({ n, big, stamp }: { n: number; big?: boolean; stamp?: boolean }) {
   return (
-    <div className={`stars${big ? ' big' : ''}`}>
-      {[0, 1, 2].map((i) => (i < n ? <Icon.star key={i} style={{ animationDelay: `${i * 0.18}s` }} className="on" /> : <Icon.starEmpty key={i} />))}
+    <div className={`stars${big ? ' big' : ''}${stamp ? ' stamp-in' : ''}`} role="img" aria-label={`${n} of 3 stars`}>
+      {[0, 1, 2].map((i) => (i < n ? <Icon.star key={i} style={{ animationDelay: `${0.25 + i * 0.42}s` }} className="on" /> : <Icon.starEmpty key={i} style={{ animationDelay: `${0.25 + i * 0.42}s` }} />))}
     </div>
   )
 }
@@ -83,8 +100,8 @@ export function ReasonList({ result }: { result: MissionResult }) {
         <div key={r.id + i} className={`reason ${r.tone}`}>
           <span className="n">{i + 1}</span>
           <div>
-            <p>{r.text}</p>
-            {r.fix && <small>{r.fix}</small>}
+            <p className="t-body">{r.text}</p>
+            {r.fix && <small className="t-small">{r.fix}</small>}
           </div>
         </div>
       ))}
@@ -95,11 +112,26 @@ export function ReasonList({ result }: { result: MissionResult }) {
 function TestRunModal({ result, onClose, onPad }: { result: MissionResult; onClose: () => void; onPad: () => void }) {
   const blocked = !result.evaluation.canLaunch
   return (
-    <Modal onClose={onClose}>
-      <p className="eyebrow">Test run · free · nothing is spent</p>
-      <h2>Predicted result</h2>
-      <Stars n={result.stars} big />
-      <div className="star-notes">
+    <Modal
+      id="testrun"
+      title="Test run"
+      icon={<Icon.play />}
+      onClose={onClose}
+      className="testrun"
+      foot={
+        <>
+          <Btn tone="cream" ui="testrun.back" onClick={onClose}>
+            Keep building
+          </Btn>
+          <Btn tone="yellow" ui="testrun.pad" onClick={onPad} disabled={blocked}>
+            To the pad <Icon.rocket />
+          </Btn>
+        </>
+      }
+    >
+      <p className="eyebrow center">Free · nothing is spent · predicted result</p>
+      <Stars n={result.stars} big stamp />
+      <div className="chips star-notes">
         {result.starList.map((s) => (
           <span key={s.id} className={`chip ${s.earned ? 'good' : 'bad'}`}>
             {s.earned ? <Icon.star /> : <Icon.starEmpty />} {s.label}
@@ -108,15 +140,11 @@ function TestRunModal({ result, onClose, onPad }: { result: MissionResult; onClo
       </div>
       <p className="eyebrow">Why</p>
       <ReasonList result={result} />
-      {blocked && <p className="blocker">Can't launch yet: {result.evaluation.blockers[0]}</p>}
-      <div className="modal-actions">
-        <Btn tone="cream" onClick={onClose}>
-          Keep building
-        </Btn>
-        <Btn onClick={onPad} disabled={blocked}>
-          To the pad
-        </Btn>
-      </div>
+      {blocked && (
+        <p className="blocker">
+          <Icon.alert /> Can't launch yet: {result.evaluation.blockers[0]}
+        </p>
+      )}
     </Modal>
   )
 }
@@ -222,56 +250,68 @@ export function Builder() {
   const counts: Record<string, number> = {}
   for (const id of draft.design.parts) counts[id] = (counts[id] ?? 0) + 1
 
+  // Esc steps back to the base (a modal or a tip on top takes the key first)
+  useEsc(() => setScreen(null))
+  const slotCount = Math.max(ev.slots.total, draft.design.parts.length)
+  const lockView = (lock: string) => {
+    const m = /level (\d+)/i.exec(lock)
+    return m ? <LockBadge level={Number(m[1])} /> : <span className="chip warn lock-why">{lock}</span>
+  }
+
   return (
-    <div className="builder" ref={rootRef}>
-      <header className="b-head">
-        <Btn tone="cream" round sound="close" onClick={() => setScreen(null)} aria-label="Back to base">
-          <Icon.back style={{ filter: 'invert(0.75)' }} />
-        </Btn>
-        <div className="grow">
-          <b>{contract.title}</b>
-          <small>{contract.objective}</small>
-        </div>
-        <span className="chip blue">
-          <Icon.target /> {contract.scienceTarget.toLocaleString('en-US')}
-        </span>
-      </header>
-
-      <div className="bars">
-        {ev.barList.map((b) => (
-          <BarTile key={b.key} bar={b} onWhy={() => setWhy(b.key as ResourceKey)} />
-        ))}
-      </div>
-      <p className={`issue ${worst ? worst.status : 'ok'}`}>{worst ? worst.text : draft.design.parts.length ? 'Every bar is green. Try a test run!' : 'Drag parts onto the satellite. Start with power.'}</p>
-
-      <div className="stage3d" ref={stageRef}>
-        <Turntable design={draft.design} />
-        <span className="slots chip">
-          {ev.slots.used}/{ev.slots.total} slots
-        </span>
-        <div className="installed">
-          {Object.keys(counts).map((id) => (
-            <button key={id} type="button" className="chip" onClick={() => remove(id)}>
-              {PART_BY_ID[id].name}
-              {counts[id] > 1 ? ` ×${counts[id]}` : ''} <i>×</i>
-            </button>
+    <div className="builder" ref={rootRef} data-ui="builder">
+      <div className="bench-top">
+        <div className="rbars">
+          {ev.barList.map((b) => (
+            <BarTile key={b.key} bar={b} onWhy={() => setWhy(b.key as ResourceKey)} />
           ))}
         </div>
       </div>
 
-      <div className="tray">
-        <nav className="stalls">
-          {PART_CATEGORIES.map((c) => {
-            const CI = Icon[CATEGORY_ICON[c.id]]
-            return (
-              <button key={c.id} type="button" className={`stall${cat === c.id ? ' on' : ''}`} onClick={() => { sfx('tap'); setCat(c.id) }} aria-label={c.name}>
-                <CI />
-                <span>{c.name}</span>
-              </button>
-            )
-          })}
-        </nav>
-        <div className="tray-cards">
+      <div className="stage3d" ref={stageRef}>
+        <Turntable design={draft.design} />
+        <Btn tone="cream" round sound="close" className="back" ui="builder.back" onClick={() => setScreen(null)} aria-label="Back to base">
+          <Icon.back style={{ filter: 'invert(0.75)' }} />
+        </Btn>
+        <div className="blueprint-label">
+          <b className="t-label">{contract.title}</b>
+          <small className="t-small">{contract.objective}</small>
+          <span className="chip blue">
+            <Icon.target /> {contract.scienceTarget.toLocaleString('en-US')} science
+          </span>
+        </div>
+        <div className="stage-bottom">
+          <p className={`issue ${worst ? worst.status : 'ok'}`} role="status">
+            {worst ? <Icon.alert /> : <Icon.check />}
+            {worst ? worst.text : draft.design.parts.length ? 'Every bar is green. Try a test run!' : 'Drag parts onto the satellite. Start with power.'}
+          </p>
+          <div className={`slots${slotCount > 6 ? ' many' : ''}`} aria-label={`${ev.slots.used} of ${ev.slots.total} slots used`}>
+            {Array.from({ length: slotCount }, (_, n) => {
+              const id = draft.design.parts[n]
+              if (!id) return <span key={n} className="slot empty" />
+              const part = PART_BY_ID[id]
+              return (
+                <Tip key={n} text={`${part.name}: tap to take it off`}>
+                  <button type="button" className={`slot${n >= ev.slots.total ? ' over' : ''}`} data-ui={`builder.slot.${n}`} onClick={() => remove(id)} aria-label={`Remove ${part.name}`}>
+                    <PartIcon part={part} size="sm" />
+                    <i className="x">×</i>
+                  </button>
+                </Tip>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="bench">
+        <Tabs<PartCategory>
+          ui="builder.tab"
+          icons
+          value={cat}
+          onChange={setCat}
+          tabs={PART_CATEGORIES.map((c) => ({ id: c.id, label: c.name, icon: CATEGORY_ICON[c.id] }))}
+        />
+        <div className="page tray-cards stagger" key={cat}>
           {partsInCategory(cat).map((p) => {
             const lock = lockOf(p)
             const owned = (inventory[p.id] ?? 0) - (counts[p.id] ?? 0) - (draft.design.busId === p.id ? 1 : 0)
@@ -279,35 +319,39 @@ export function Builder() {
             return (
               <div
                 key={p.id}
-                className={`tray-card${lock ? ' locked' : ''}${isBus ? ' current' : ''}`}
+                role="button"
+                tabIndex={0}
+                className={`card tray-card${lock ? ' locked' : ''}${isBus ? ' on' : ''}`}
+                data-ui={`builder.part.${p.id}`}
                 onPointerDown={(e) => onCardDown(e, p)}
                 onPointerMove={onCardMove}
                 onPointerUp={onCardUp}
                 onPointerCancel={() => { drag.current = null; setGhost(null) }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') add(p) }}
               >
                 <PartIcon part={p} />
-                <b>{p.name}</b>
-                <small>{partStats(p).slice(1, 3).join(' · ') || partStats(p)[0]}</small>
-                {lock ? (
-                  <span className="lock">
-                    <Icon.lock /> {lock}
-                  </span>
-                ) : owned > 0 ? (
-                  <span className="have">In stock ×{owned}</span>
-                ) : (
-                  <span className="cost">
-                    <Icon.coin /> {stockPrice(p.id)}
-                  </span>
-                )}
+                <span className="words">
+                  <b className="t-label">{p.name}</b>
+                  <small className="t-small">{partStats(p).slice(1, 3).join(' · ') || partStats(p)[0]}</small>
+                  {lock ? (
+                    lockView(lock)
+                  ) : owned > 0 ? (
+                    <span className="chip good">In stock ×{owned}</span>
+                  ) : (
+                    <span className="tag">
+                      <Icon.coin /> {stockPrice(p.id)}
+                    </span>
+                  )}
+                </span>
               </div>
             )
           })}
         </div>
-        <div className="b-foot">
-          <Btn tone="blue" onClick={() => { setTest(testRun(evalInputFor(draft))); if (markTip('testrun')) setTip('testrun') }}>
+        <div className="bench-foot">
+          <Btn tone="blue" ui="builder.test" onClick={() => { setTest(testRun(evalInputFor(draft))); if (markTip('testrun')) setTip('testrun') }}>
             <Icon.play /> Test run
           </Btn>
-          <Btn onClick={() => setScreen('launchPrep')}>
+          <Btn tone="yellow" ui="builder.pad" onClick={() => setScreen('launchPrep')}>
             To the pad <Icon.rocket />
           </Btn>
         </div>

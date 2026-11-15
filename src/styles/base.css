@@ -1,33 +1,4 @@
-/* Colours mirror src/art/palette.ts (the single source of truth for the 3D world). */
-:root {
-  --ink: #4b2f1c;
-  --ink-soft: #7a5638;
-  --panel: #fff6e0;
-  --panel-edge: #f3d9a4;
-  --panel-deep: #e9c583;
-  --cream: #fff1d6;
-  --red: #e9523b;
-  --red-dark: #c23d2c;
-  --orange: #f6963a;
-  --orange-dark: #d97722;
-  --yellow: #fcc840;
-  --yellow-dark: #e0a524;
-  --teal: #2fb7aa;
-  --teal-dark: #1f938b;
-  --blue: #4ba4e3;
-  --blue-dark: #2f7fc0;
-  --navy: #2d4a6b;
-  --navy-dark: #1f3550;
-  --green: #63bf4f;
-  --green-dark: #47a038;
-  --sky: #8fd3f7;
-  --backdrop-a: #27405e;
-  --backdrop-b: #13233a;
-  --font: 'Fredoka Variable', 'Fredoka', ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
-
+/* The page and the game surface. Colours, sizes and type live in tokens.css. */
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

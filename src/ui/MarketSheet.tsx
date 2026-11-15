@@ -4,13 +4,13 @@ import { MATERIALS, REGIONS, REGION_IDS, type MaterialDef } from '../data/region
 import { TOUR } from '../data/tutorial'
 import type { PartCategory, PartDef } from '../data/types'
 import { buyNow, goodInfo, orderPart, stockPrice } from '../state/actions'
-import { useGame } from '../state/game'
+import { useGame, type Delivery } from '../state/game'
 import { useUi } from '../state/ui'
-import { BUILDING_ICON, Price, TimerRow } from './BuildingSheet'
-import { Icon } from './icons'
-import { Btn, Sheet } from './kit'
-import { CATEGORY_ICON, PartIcon, partStats } from './parts'
-import { PART_BY_ID } from '../data/parts'
+import { BUILDING_ICON } from './BuildingSheet'
+import { Icon, type IconName } from './icons'
+import { LockBadge, PayBtn, Tabs, Tag, Win, formatTime, useNow } from './kit'
+import { CATEGORY_ICON, CATEGORY_TINT, partStats } from './parts'
+import { Thumb } from './thumbs'
 import { tourHooks } from './Tour'
 
 /** Set before opening the market to land on a particular stall (the region card sends players to Materials). */
@@ -19,82 +19,141 @@ export const marketStart: { tab: PartCategory | 'material' | null } = { tab: nul
 const TOUR_BUY = 'camWide'
 const TOUR_ORDER = 'batterySmall'
 
-function PartCard({ part, guided }: { part: PartDef; guided: 'buy' | 'order' | null }) {
-  const level = useGame((s) => s.level)
-  const coins = useGame((s) => s.coins)
-  const owned = useGame((s) => s.inventory[part.id] ?? 0)
-  const locked = level < part.unlockLevel
+type Stall = PartCategory | 'material'
+
+/** One thing on a shelf: its picture, what it does, and the two ways to get it. */
+function ShelfItem({
+  id,
+  model,
+  icon,
+  tint,
+  name,
+  blurb,
+  chips,
+  owned,
+  lockLevel,
+  cost,
+  deliverySec,
+  guided,
+  orderSeconds,
+}: {
+  id: string
+  model: string
+  icon: IconName
+  tint: string
+  name: string
+  blurb: string
+  chips: React.ReactNode
+  owned: number
+  lockLevel: number | null
+  cost: number
+  deliverySec: number
+  guided?: 'buy' | 'order' | null
+  orderSeconds?: number
+}) {
   return (
-    <div className={`part-card card${locked ? ' locked' : ''}`}>
-      <PartIcon part={part} />
-      <div className="grow">
-        <b>
-          {part.name}
-          {owned > 0 && <span className="owned">×{owned}</span>}
-        </b>
-        <small>{part.blurb}</small>
-        <div className="stats">
-          {partStats(part).map((s) => (
-            <span key={s} className="chip">
-              {s}
-            </span>
-          ))}
-        </div>
-        {locked ? (
-          <span className="chip warn">
-            <Icon.lock /> Unlocks at agency level {part.unlockLevel}
-          </span>
-        ) : (
-          <div className="buy-row">
-            <Btn tone="yellow" size="sm" sound={null} className={guided === 'buy' ? 'nudge' : ''} disabled={coins < stockPrice(part.id)} onClick={() => buyNow(part.id)}>
-              Buy now <Price amount={stockPrice(part.id)} />
-            </Btn>
-            <Btn tone="blue" size="sm" sound={null} className={guided === 'order' ? 'nudge' : ''} disabled={coins < part.cost} onClick={() => orderPart(part.id, guided === 'order' ? 14 : undefined)}>
-              <Icon.boat /> Order <Price amount={part.cost} />
-              <i className="wait">{part.deliverySec}s</i>
-            </Btn>
-          </div>
-        )}
+    <div className={`card shelf-item${lockLevel ? ' locked' : ''}`} data-ui={`market.item.${id}`}>
+      <span className="on-shelf">
+        <Thumb model={model} icon={icon} tint={tint} />
+        {owned > 0 && <i className="nbadge">×{owned}</i>}
+        {!lockLevel && <Tag amount={cost} twine />}
+      </span>
+      <div className="words">
+        <b className="t-label">{name}</b>
+        <p className="t-small">{blurb}</p>
+        <div className="chips">{chips}</div>
       </div>
+      {lockLevel ? (
+        <div className="buy">
+          <LockBadge level={lockLevel} text="Unlocks at level" />
+        </div>
+      ) : (
+        <div className="buy">
+          <PayBtn price={stockPrice(id)} className={guided === 'buy' ? 'nudge' : ''} ui={`market.buy.${id}`} onPay={() => buyNow(id)}>
+            Buy now
+          </PayBtn>
+          <PayBtn tone="blue" price={cost} className={guided === 'order' ? 'nudge' : ''} ui={`market.order.${id}`} onPay={() => orderPart(id, orderSeconds)}>
+            <Icon.boat /> Order
+            <i className="wait">{deliverySec}s</i>
+          </PayBtn>
+        </div>
+      )}
     </div>
   )
 }
 
+function PartItem({ part, guided }: { part: PartDef; guided: 'buy' | 'order' | null }) {
+  const level = useGame((s) => s.level)
+  const owned = useGame((s) => s.inventory[part.id] ?? 0)
+  return (
+    <ShelfItem
+      id={part.id}
+      model={`part:${part.id}`}
+      icon={CATEGORY_ICON[part.category]}
+      tint={CATEGORY_TINT[part.category]}
+      name={part.name}
+      blurb={part.blurb}
+      chips={partStats(part)
+        .slice(0, 3)
+        .map((s) => (
+          <span key={s} className="chip">
+            {s}
+          </span>
+        ))}
+      owned={owned}
+      lockLevel={level < part.unlockLevel ? part.unlockLevel : null}
+      cost={part.cost}
+      deliverySec={part.deliverySec}
+      guided={guided}
+      orderSeconds={guided === 'order' ? 14 : undefined}
+    />
+  )
+}
+
 /** A building material: cable, steel, consoles. Restorations are made of these. */
-function MaterialCard({ m }: { m: MaterialDef }) {
-  const coins = useGame((s) => s.coins)
+function MaterialItem({ m }: { m: MaterialDef }) {
   const owned = useGame((s) => s.inventory[m.id] ?? 0)
   const regions = useGame((s) => s.regions)
   // how many the ruins waiting to be restored still call for
   const wanted = REGION_IDS.filter((id) => regions[id].state === 'ruins').reduce((n, id) => n + (REGIONS[id].materials.find((x) => x.id === m.id)?.qty ?? 0), 0)
   return (
-    <div className="part-card card">
-      <span className="part-icon" style={{ background: '#ffe69a' }}>
-        {m.id === 'cableSpool' ? <Icon.turn /> : m.id === 'steelBeam' ? <Icon.hammer /> : <Icon.cpu />}
+    <ShelfItem
+      id={m.id}
+      model={`material:${m.id}`}
+      icon="hammer"
+      tint="#ffe69a"
+      name={m.name}
+      blurb={m.blurb}
+      chips={
+        wanted > 0 ? (
+          <span className={`chip ${owned >= wanted ? 'good' : 'warn'}`}>
+            {owned >= wanted ? <Icon.check /> : <Icon.wrench />} Restoration needs {wanted}
+          </span>
+        ) : (
+          <span className="chip">For restoring ruins</span>
+        )
+      }
+      owned={owned}
+      lockLevel={null}
+      cost={m.cost}
+      deliverySec={m.deliverySec}
+    />
+  )
+}
+
+/** The boat on its way in: it sails along the track as the order comes due. */
+function DeliveryTrack({ d }: { d: Delivery }) {
+  const now = useNow(200)
+  const k = Math.max(0, Math.min(1, (now - d.start) / Math.max(1, d.end - d.start)))
+  return (
+    <div className="delivery" data-ui={`market.delivery.${d.id}`}>
+      <b className="t-small">{goodInfo(d.partId).name}</b>
+      <span className="sea">
+        <i className="boat" style={{ left: `${k * 100}%` }}>
+          <Icon.boat />
+        </i>
       </span>
-      <div className="grow">
-        <b>
-          {m.name}
-          {owned > 0 && <span className="owned">×{owned}</span>}
-        </b>
-        <small>{m.blurb}</small>
-        {wanted > 0 && (
-          <div className="stats">
-            <span className={`chip ${owned >= wanted ? 'good' : 'warn'}`}>
-              {owned >= wanted ? <Icon.check /> : <Icon.wrench />} Restoration needs {wanted}
-            </span>
-          </div>
-        )}
-        <div className="buy-row">
-          <Btn tone="yellow" size="sm" sound={null} disabled={coins < stockPrice(m.id)} onClick={() => buyNow(m.id)}>
-            Buy now <Price amount={stockPrice(m.id)} />
-          </Btn>
-          <Btn tone="blue" size="sm" sound={null} disabled={coins < m.cost} onClick={() => orderPart(m.id)}>
-            <Icon.boat /> Order <Price amount={m.cost} />
-            <i className="wait">{m.deliverySec}s</i>
-          </Btn>
-        </div>
-      </div>
+      <span className="t-num">{formatTime(d.end - now)}</span>
     </div>
   )
 }
@@ -106,7 +165,7 @@ export function MarketSheet() {
   const inventory = useGame((s) => s.inventory)
   const tourStep = useGame((s) => s.tourStep)
   const guidedTour = tourStep >= 0 && TOUR[tourStep]?.do === 'shop'
-  const [cat, setCat] = useState<PartCategory | 'material'>(() => {
+  const [cat, setCat] = useState<Stall>(() => {
     const start = marketStart.tab
     marketStart.tab = null
     return guidedTour ? 'instrument' : (start ?? 'power')
@@ -128,58 +187,48 @@ export function MarketSheet() {
     }
   }, [guidedTour, hasCamera, hasBattery, close])
 
-  const guidedFor = (p: PartDef): 'buy' | 'order' | null =>
-    !guidedTour ? null : !hasCamera && p.id === TOUR_BUY ? 'buy' : hasCamera && !hasBattery && p.id === TOUR_ORDER ? 'order' : null
+  const guidedFor = (p: PartDef): 'buy' | 'order' | null => (!guidedTour ? null : !hasCamera && p.id === TOUR_BUY ? 'buy' : hasCamera && !hasBattery && p.id === TOUR_ORDER ? 'order' : null)
 
   return (
-    <Sheet
+    <Win
+      id="market"
       title="Parts Market"
-      subtitle="Buy now, or order for less and wait"
       icon={<I />}
       onClose={close}
-      tall
+      variant="wide"
+      theme="market"
+      coins
       tabs={
-        <nav className="stalls">
-          {PART_CATEGORIES.map((c) => {
-            const CI = Icon[CATEGORY_ICON[c.id]]
-            return (
-              <button key={c.id} type="button" className={`stall${cat === c.id ? ' on' : ''}`} onClick={() => setCat(c.id)} aria-label={c.name}>
-                <CI />
-                <span>{c.name}</span>
-              </button>
-            )
-          })}
-          <button type="button" className={`stall${cat === 'material' ? ' on' : ''}`} onClick={() => setCat('material')} aria-label="Materials">
-            <Icon.hammer />
-            <span>Materials</span>
-          </button>
-        </nav>
+        <>
+          <span className="awning" aria-hidden />
+          <Tabs<Stall>
+          ui="market.tab"
+          icons
+          value={cat}
+          onChange={setCat}
+          tabs={[...PART_CATEGORIES.map((c) => ({ id: c.id as Stall, label: c.name, icon: CATEGORY_ICON[c.id] })), { id: 'material' as Stall, label: 'Materials', icon: 'hammer' as IconName }]}
+          />
+        </>
       }
     >
-      {guidedTour && (
-        <p className="guide-note">
-          {!hasCamera ? 'Buy the Wide camera now. It costs a bit more, but it is yours right away.' : !hasBattery ? 'Now order a Small battery. Cheaper, and the boat brings it.' : 'Nice shopping!'}
-        </p>
-      )}
+      {guidedTour && <p className="hint-strip">{!hasCamera ? 'Buy the Wide camera now. It costs a bit more, but it is yours right away.' : !hasBattery ? 'Now order a Small battery. Cheaper, and the boat brings it.' : 'Nice shopping!'}</p>}
       {deliveries.length > 0 && (
         <div className="deliveries">
+          <span className="eyebrow">
+            <Icon.boat /> On the way
+          </span>
           {deliveries.map((d) => (
-            <TimerRow key={d.id} label={`On the way: ${goodInfo(d.partId).name}`} start={d.start} end={d.end} icon={<Icon.boat className="ic" />} />
+            <DeliveryTrack key={d.id} d={d} />
           ))}
         </div>
       )}
-      <div className="part-list">
-        {cat === 'material' ? (
-          <>
-            <p className="guide-note">Building materials for restoring the old spaceport's ruins. They are not satellite parts.</p>
-            {MATERIALS.map((m) => (
-              <MaterialCard key={m.id} m={m} />
-            ))}
-          </>
-        ) : (
-          partsInCategory(cat).map((p) => <PartCard key={p.id} part={p} guided={guidedFor(p)} />)
-        )}
+      {cat === 'material' && <p className="hint-strip plain">Building materials for restoring the old spaceport's ruins. They are not satellite parts.</p>}
+      <div className="shelves stagger" key={cat}>
+        {cat === 'material' ? MATERIALS.map((m) => <MaterialItem key={m.id} m={m} />) : partsInCategory(cat).map((p) => <PartItem key={p.id} part={p} guided={guidedFor(p)} />)}
       </div>
-    </Sheet>
+      <p className="t-small center shelf-foot">
+        <b>Buy now</b> takes it off the shelf today. <b>Order</b> costs less, and the boat brings it.
+      </p>
+    </Win>
   )
 }

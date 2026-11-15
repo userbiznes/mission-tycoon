@@ -3,7 +3,6 @@ import { Scene } from './scene/Scene'
 import { arriveAtBase, startTitleShot } from './scene/cinematics'
 import { processTimers } from './state/actions'
 import { onLevelUp, useGame } from './state/game'
-import { sfx } from './ui/sound'
 import { useUi } from './state/ui'
 import { BuildingSheet } from './ui/BuildingSheet'
 import { BuildButton, ClearPopup, PlacementBar } from './ui/PlacementUi'
@@ -28,6 +27,10 @@ import { SettingsSheet } from './ui/SettingsSheet'
 import { Title } from './ui/Title'
 import { Tour } from './ui/Tour'
 import { RegionCard, RegionPins, RoccoLines } from './ui/RegionUi'
+import { LevelUp } from './ui/LevelUp'
+import { WorldBubbles } from './ui/WorldBubbles'
+import { UiBoundary } from './ui/UiBoundary'
+import { useSettings } from './state/settings'
 
 /** The big button in each building's sheet. */
 function buildingAction(id: BuildingId) {
@@ -68,11 +71,10 @@ function buildingAction(id: BuildingId) {
   }
 }
 
+// level up: the ribbon banner. After a mission it waits for the debrief's stars, reasons and payout to play out.
 onLevelUp((level, unlocks) => {
-  setTimeout(() => {
-    sfx('success')
-    useUi.getState().toast(`Agency level ${level}! Unlocked: ${unlocks.slice(0, 3).join(', ')}`, 'good')
-  }, 900)
+  const wait = useUi.getState().screen === 'debrief' ? 4600 : 900
+  setTimeout(() => useUi.getState().showLevelUp(level, unlocks), wait)
 })
 
 tourHooks.openShop = () => useUi.getState().open({ kind: 'market' })
@@ -114,6 +116,7 @@ export function App() {
   const launching = useLaunch((s) => s.active)
   const screen = useUi((s) => s.screen)
   const placing = usePlacement((s) => s.id)
+  const still = useSettings((s) => s.reduceMotion)
 
   // title and onboarding play over a slow beauty shot of the spaceport
   useEffect(() => {
@@ -150,7 +153,8 @@ export function App() {
         <div className="world">
           <Scene />
         </div>
-        <div className="ui">
+        <div className={`ui${still ? ' reduce-motion' : ''}`}>
+          <UiBoundary>
           {phase === 'title' && <Title />}
           {phase === 'onboarding' && (
             <Onboarding
@@ -167,6 +171,7 @@ export function App() {
           {phase === 'play' && !screen && <PlacementBar />}
           {phase === 'play' && !screen && !placing && <ClearPopup />}
           {phase === 'play' && !screen && <RegionPins />}
+          {phase === 'play' && !screen && <WorldBubbles />}
           {phase === 'play' && !screen && !placing && <RegionCard />}
           {phase === 'play' && !screen && !placing && <RoccoLines />}
           {screen === 'builder' && <Builder />}
@@ -175,6 +180,8 @@ export function App() {
           {screen === 'ops' && <Ops />}
           {screen === 'debrief' && <Debrief />}
           <TipHost />
+          {phase === 'play' && <LevelUp />}
+          </UiBoundary>
           <Toasts />
           <Flyers />
         </div>

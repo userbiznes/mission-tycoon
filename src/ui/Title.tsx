@@ -13,7 +13,7 @@ export function Title() {
       </h1>
       <p className="tagline">Run a tiny space agency. Learn how real missions are designed.</p>
       <div className="spacer" />
-      <Btn size="lg" className="start" sound="success" onClick={() => setPhase('onboarding')}>
+      <Btn size="lg" className="start" sound="success" ui="title.start" onClick={() => setPhase('onboarding')}>
         <Icon.play /> Start
       </Btn>
       <p className="foot">Made for the 2026 Space Apps Challenge · Space Mission Design Game</p>

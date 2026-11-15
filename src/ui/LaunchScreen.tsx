@@ -83,7 +83,7 @@ export function LaunchScreen() {
   }
 
   return (
-    <div className="launch" onPointerUp={release} onPointerCancel={release}>
+    <div className="launch" data-ui="launch" onPointerUp={release} onPointerCancel={release}>
       <div className="launch-top">
         <div className="readout panel">
           <div>
@@ -165,7 +165,7 @@ export function LaunchScreen() {
         <div className="launch-controls">
           <Btn
             tone={autopilot ? 'teal' : 'cream'}
-            size="sm"
+            ui="launch.autopilot"
             onClick={() => setAutopilot(!autopilot)}
             disabled={phase === 'orbit' || phase === 'done' || phase === 'insert'}
           >
@@ -174,6 +174,7 @@ export function LaunchScreen() {
           <button
             type="button"
             className={`fire${prompt && !autopilot ? ' live' : ''}`}
+            data-ui="launch.fire"
             disabled={!prompt || autopilot}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture?.(e.pointerId)

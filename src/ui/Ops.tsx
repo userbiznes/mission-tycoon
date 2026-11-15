@@ -8,34 +8,25 @@ import type { PlannedEvent, StageId } from '../sim'
 import { BAR_ICON } from './Builder'
 import { Globe, type GlobeClock } from './Globe'
 import { Icon } from './icons'
-import { Btn } from './kit'
+import { Bar, Btn, Win } from './kit'
+import { Flip } from './LaunchPrep'
 import { sfx } from './sound'
 
 const STAGE_ICON: Record<StageId, keyof typeof Icon> = { instruments: 'camera', storage: 'data', radio: 'comms', ground: 'dish' }
 const fmt = (n: number) => (n >= 10000 ? `${(n / 1000).toFixed(1)}k` : Math.round(n).toLocaleString('en-US'))
 
-/** A decision card: two clear choices, each showing how it will move the bars. */
+/** A decision: two clear choices, each showing how it will move the bars. */
 function EventCard({ event, onChoose }: { event: PlannedEvent; onChoose: (c: 'a' | 'b') => void }) {
   return (
-    <div className="event-wrap">
-      <div className="event-card panel">
-        <span className="eyebrow">Day {event.day} · decision</span>
-        <h2>{event.title}</h2>
-        <p>{event.text}</p>
+    <div className="modal-wrap">
+      <Win id="event" title={event.title} icon={<Icon.alert />} subtitle={`Day ${event.day} · your call`} variant="mid" className="event-card">
+        <p className="t-body">{event.text}</p>
         <div className="event-sides">
           {event.choices.map((c, i) => (
-            <button
-              key={c.id}
-              type="button"
-              className="side"
-              onClick={() => {
-                sfx('snap')
-                onChoose(i === 0 ? 'a' : 'b')
-              }}
-            >
-              <b>{c.label}</b>
-              <small>{c.blurb}</small>
-              <div className="fx">
+            <div key={c.id} className="card side">
+              <b className="t-label">{c.label}</b>
+              <small className="t-small">{c.blurb}</small>
+              <div className="chips">
                 {c.previews.length === 0 && <span className="chip">No change</span>}
                 {c.previews.map((p, j) => {
                   const BI = Icon[BAR_ICON[p.bar as ResourceKey]]
@@ -46,12 +37,23 @@ function EventCard({ event, onChoose }: { event: PlannedEvent; onChoose: (c: 'a'
                   )
                 })}
               </div>
-              <span className="pick-btn">Choose this</span>
-            </button>
+              <Btn
+                tone={i === 0 ? 'blue' : 'yellow'}
+                block
+                sound={null}
+                ui={`event.choose.${i === 0 ? 'a' : 'b'}`}
+                onClick={() => {
+                  sfx('snap')
+                  onChoose(i === 0 ? 'a' : 'b')
+                }}
+              >
+                Choose this
+              </Btn>
+            </div>
           ))}
         </div>
-        <small className="basis">{event.basis}</small>
-      </div>
+        <small className="t-small basis">{event.basis}</small>
+      </Win>
     </div>
   )
 }
@@ -126,40 +128,62 @@ export function Ops() {
   const p = result.evaluation.pipeline
   const target = result.science.target
 
+  const dayShown = Math.min(nDays, day + (done ? 0 : 1))
   return (
-    <div className="flow ops">
-      <div className="ops-globe">
-        <Globe orbitId={draft?.orbitId ?? 'leo'} stationIds={draft?.stationIds ?? ['home']} clock={clock} />
-      </div>
-      <header className="ops-top">
-        <div className="panel ops-day">
-          <small>{result.evaluation.contract.title}</small>
-          <b>
-            Day {Math.min(nDays, day + (done ? 0 : 1))} <i>of {nDays}</i>
-          </b>
+    <div className="flow ops" data-ui="ops">
+      {/* the globe, on a mission-control monitor */}
+      <div className="monitor">
+        <div className="screen">
+          <Globe orbitId={draft?.orbitId ?? 'leo'} stationIds={draft?.stationIds ?? ['home']} clock={clock} />
+          <span className="scan" aria-hidden />
         </div>
-        <div className="panel ops-sci">
-          <small>
-            Science <b>{fmt(science)}</b> / {fmt(target)}
-          </small>
-          <div className={`meter${science >= target ? '' : ' blue'}`}>
-            <i style={{ width: `${Math.min(100, (science / target) * 100)}%` }} />
+        <span className="monitor-label">
+          <i className={`lamp${done ? ' green' : ' live'}`} aria-hidden /> {result.evaluation.contract.title} · orbit track
+        </span>
+      </div>
+
+      {/* the gauges along the edge */}
+      <div className="ops-side">
+        <div className="ops-row">
+          <div className="module day" data-ui="ops.day">
+            <small>Mission day</small>
+            <span className="day-flip">
+              <Flip text={String(dayShown).padStart(2, '0')} className="big" />
+              <i>of {nDays}</i>
+            </span>
+          </div>
+          <div className="module sci" data-ui="ops.science">
+            <small>
+              Science <b>{fmt(science)}</b> / {fmt(target)}
+            </small>
+            <Bar value={science / target} tone={science >= target ? 'ok' : 'blue'} className="thick" />
           </div>
         </div>
-      </header>
-
-      <div className="ops-bottom">
-        <div className="counters">
-          <span className="chip">
-            <Icon.camera /> Made {fmt(made)} MB
-          </span>
-          <span className="chip good">
-            <Icon.dish /> Home {fmt(home)} MB
-          </span>
-          <span className="chip bad">Lost {fmt(Math.max(0, made - home))} MB</span>
+        <div className="ops-row leds">
+          <div className="module led" data-ui="ops.made">
+            <small>
+              <Icon.camera /> Made
+            </small>
+            <b>{fmt(made)}</b>
+            <i>MB</i>
+          </div>
+          <div className="module led good" data-ui="ops.home">
+            <small>
+              <Icon.dish /> Home
+            </small>
+            <b>{fmt(home)}</b>
+            <i>MB</i>
+          </div>
+          <div className="module led bad" data-ui="ops.lost">
+            <small>
+              <Icon.alert /> Lost
+            </small>
+            <b>{fmt(Math.max(0, made - home))}</b>
+            <i>MB</i>
+          </div>
         </div>
-        <div className="pipeline panel">
-          <small className="eyebrow">Data pipeline · MB per day</small>
+        <div className="module pipeline" data-ui="ops.pipeline">
+          <small>Data pipeline · MB a day</small>
           <div className="stages">
             {p.stages.map((s, i) => {
               const SI = Icon[STAGE_ICON[s.id]]
@@ -168,26 +192,24 @@ export function Ops() {
                 <div key={s.id} className={`pstage${slow ? ' slow' : ''}`}>
                   <SI />
                   <b>{fmt(s.mbPerDay)}</b>
-                  <small>{s.label}</small>
+                  <span>{s.label}</span>
                   {i < p.stages.length - 1 && <i className="arrow">›</i>}
                 </div>
               )
             })}
           </div>
-          <p className="pipe-note">
-            {p.losing ? `The slowest link sets the pace: ${fmt(p.deliveredPerDay)} of ${fmt(p.madeIdealPerDay)} MB a day reaches the ground.` : 'Every link keeps up: all the data reaches the ground.'}
-          </p>
+          <p className="pipe-note">{p.losing ? `The slowest link sets the pace: ${fmt(p.deliveredPerDay)} of ${fmt(p.madeIdealPerDay)} MB a day reaches the ground.` : 'Every link keeps up: all the data reaches the ground.'}</p>
         </div>
         {done ? (
-          <Btn block size="lg" sound="success" onClick={() => setScreen('debrief')}>
+          <Btn block size="lg" sound="success" ui="ops.debrief" onClick={() => setScreen('debrief')}>
             Mission complete: debrief
           </Btn>
         ) : (
           <Btn
             tone="cream"
             block
-            size="sm"
             disabled={!!card}
+            ui="ops.skip"
             onClick={() => {
               const next = plan.events.find((e) => !answered.current.has(e.id))
               clock.days = next ? next.day - 1 : nDays

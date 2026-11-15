@@ -54,9 +54,9 @@ interface UiState {
   /** the lost region whose signpost was tapped */
   regionCard: RegionId | null
   openRegion: (id: RegionId | null) => void
-  /** the lost region the pointer is resting on, and which part of it: its signpost or its landmark */
-  hoverRegion: { id: RegionId; at: 'sign' | 'site' } | null
-  setHoverRegion: (hover: { id: RegionId; at: 'sign' | 'site' } | null) => void
+  /** the lost region whose ruin the pointer is resting on (its level badge shows while it does) */
+  hoverRegion: RegionId | null
+  setHoverRegion: (id: RegionId | null) => void
   /** lines Chief Rocco is waiting to say, oldest first */
   lines: { id: number; text: string; mood?: 'happy' | 'worried' | 'proud'; region?: RegionId }[]
   speak: (text: string, mood?: 'happy' | 'worried' | 'proud', region?: RegionId) => void
@@ -64,6 +64,10 @@ interface UiState {
   /** the region that has just been restored: confetti flies there */
   party: { id: RegionId; at: number } | null
   celebrate: (id: RegionId) => void
+  /** the agency has just levelled up: the banner is showing */
+  levelUp: { level: number; unlocks: string[] } | null
+  showLevelUp: (level: number, unlocks: string[]) => void
+  closeLevelUp: () => void
   /** a Rocco tip waiting to be read */
   tip: string | null
   /** show a contextual tip once per save */
@@ -107,14 +111,16 @@ export const useUi = create<UiState>((set, get) => ({
   openRegion: (regionCard) => set({ regionCard, sheet: null, clearTarget: null }),
   hoverRegion: null,
   setHoverRegion: (hoverRegion) => {
-    const was = get().hoverRegion
-    if (was?.id !== hoverRegion?.id || was?.at !== hoverRegion?.at) set({ hoverRegion })
+    if (get().hoverRegion !== hoverRegion) set({ hoverRegion })
   },
   lines: [],
   speak: (text, mood, region) => set({ lines: [...get().lines, { id: nextId++, text, mood, region }] }),
   nextLine: () => set({ lines: get().lines.slice(1) }),
   party: null,
   celebrate: (id) => set({ party: { id, at: performance.now() } }),
+  levelUp: null,
+  showLevelUp: (level, unlocks) => set({ levelUp: { level, unlocks } }),
+  closeLevelUp: () => set({ levelUp: null }),
   tip: null,
   showTip: (id) => {
     if (tipGate?.(id)) set({ tip: id })

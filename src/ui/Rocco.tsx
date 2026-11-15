@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEsc } from './kit'
 import { Portrait } from './Portrait'
 import { sfx } from './sound'
 
@@ -194,8 +195,9 @@ export function RoccoSays({
       onNext()
     }
   }
+  useEsc(tap)
   return (
-    <div className="dialog" onClick={tap}>
+    <div className="dialog" onClick={tap} data-ui="rocco.dialog">
       <div className="dialog-char">
         <Portrait id="rocco" className={!done ? 'talking' : ''} fallback={<RoccoFigure talking={!done} mood={mood} />} />
       </div>
@@ -215,7 +217,7 @@ export function RoccoSays({
 /** A small prompt bar used while the player is asked to do something in the world. */
 export function RoccoHint({ text, onSkip }: { text: string; onSkip?: () => void }) {
   return (
-    <div className="hint-bar" onClick={onSkip}>
+    <div className="hint-bar" onClick={onSkip} data-ui="rocco.hint">
       <span className="face">
         <Portrait id="rocco-face" fallback={<RoccoBust />} />
       </span>

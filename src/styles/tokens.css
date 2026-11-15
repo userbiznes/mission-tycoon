@@ -1,0 +1,171 @@
+/* ------------------------------------------------------------------
+   Design tokens. One place for every colour, size and shadow the
+   interface uses. Colours mirror src/art/palette.ts (the 3D world), and
+   the HUD (shield badge, coin counter, gear, Build button) is the
+   reference for outlines, fonts and the cream / ink pairing.
+   ------------------------------------------------------------------ */
+:root {
+  /* ink and paper */
+  --ink: #4b2f1c;
+  --ink-soft: #7a5638;
+  --ink-faint: #a58763;
+  --paper: #fffaec;
+  --paper-2: #ffeecb;
+  --paper-3: #fbe3ac;
+  --paper-line: #e6c88c;
+  --paper-edge: #e0b871;
+  --panel: #fff6e0;
+  --panel-edge: #f3d9a4;
+  --panel-deep: #e9c583;
+  --cream: #fff1d6;
+
+  /* trim: wood and brass */
+  --wood-1: #dba066;
+  --wood-2: #c08046;
+  --wood-3: #9a5f31;
+  --wood-4: #6f4120;
+  --brass-1: #fff0b0;
+  --brass-2: #f6c64f;
+  --brass-3: #c98f22;
+
+  /* action colours (top, bottom, pressed edge) */
+  --yellow: #fcc840;
+  --yellow-dark: #e0a524;
+  --green: #63bf4f;
+  --green-dark: #47a038;
+  --blue: #4ba4e3;
+  --blue-dark: #2f7fc0;
+  --red: #e9523b;
+  --red-dark: #c23d2c;
+  --orange: #f6963a;
+  --orange-dark: #d97722;
+  --teal: #2fb7aa;
+  --teal-dark: #1f938b;
+  --navy: #2d4a6b;
+  --navy-dark: #1f3550;
+  --sky: #8fd3f7;
+
+  /* state tints (surface, edge, text) */
+  --good-bg: #d9f4c6;
+  --good-edge: #93cf76;
+  --good-ink: #2a6620;
+  --warn-bg: #ffe3b5;
+  --warn-edge: #f0af5c;
+  --warn-ink: #8a4706;
+  --bad-bg: #ffd5cb;
+  --bad-edge: #ee917c;
+  --bad-ink: #9a2718;
+  --info-bg: #d5edff;
+  --info-edge: #8fc6f1;
+  --info-ink: #1d5c93;
+
+  --backdrop-a: #27405e;
+  --backdrop-b: #13233a;
+  --font: 'Fredoka Variable', 'Fredoka', ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --spring: cubic-bezier(0.2, 1.35, 0.4, 1);
+  --spring-soft: cubic-bezier(0.22, 1.18, 0.36, 1);
+  --ease-out: cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+/*
+ * Everything is sized off one unit, --u, which follows the game surface:
+ * about 15 px on a landscape phone, 24 px on a laptop, 32 px on a 1080p screen,
+ * so a menu takes up the same share of the screen everywhere.
+ * Text sizes are absolute multiples of it with a 14 px floor, so nothing on a
+ * phone is ever smaller than 14 px however deeply it is nested.
+ */
+.ui {
+  --u: clamp(12px, min(1.78cqw, 3.85cqh), 32px);
+  font-size: var(--u);
+  line-height: 1.25;
+  --outline: 0.17em;
+  --r: 1.15em;
+
+  --fs-xs: max(14px, calc(var(--u) * 0.78));
+  --fs-sm: max(14px, calc(var(--u) * 0.88));
+  --fs-md: max(14px, calc(var(--u) * 1));
+  --fs-lg: calc(var(--u) * 1.18);
+  --fs-xl: calc(var(--u) * 1.42);
+  --fs-xxl: calc(var(--u) * 1.9);
+  --fs-num: calc(var(--u) * 1.24);
+
+  /* the smallest thing a finger is asked to hit */
+  --tap: max(48px, calc(var(--u) * 2.6));
+
+  --shadow-drop: 0 0.9em 1.5em rgba(40, 20, 5, 0.32);
+  --shadow-soft: 0 0.35em 0.7em rgba(40, 20, 5, 0.22);
+  --edge: 0.3em;
+}
+
+.ui h1,
+.ui h2,
+.ui h3,
+.ui p {
+  margin: 0;
+}
+.ui h1,
+.ui h2,
+.ui h3 {
+  font-size: inherit;
+  font-weight: 700;
+}
+
+/* ---------- text roles ---------- */
+.t-title {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.t-label {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.15;
+}
+.t-body {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.t-small {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink-soft);
+}
+.t-num {
+  font-size: var(--fs-num);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.eyebrow {
+  margin: 0.7em 0 0.35em;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.stroke-text {
+  color: #fff;
+  -webkit-text-stroke: 0.22em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 0.12em 0 var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.muted {
+  color: var(--ink-soft);
+}
+.center {
+  text-align: center;
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
