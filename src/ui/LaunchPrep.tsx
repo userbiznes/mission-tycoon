@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { RocketKind } from '../art/models/rocket'
 import { CONTRACT_BY_ID } from '../data/contracts'
 import { ORBIT_BY_ID } from '../data/orbits'
+import { REGIONS } from '../data/regions'
 import { ROCKETS } from '../data/rockets'
 import { STATIONS } from '../data/stations'
 import type { OrbitId } from '../data/types'
@@ -20,12 +21,13 @@ export function LaunchPrep() {
   const coins = useGame((s) => s.coins)
   const level = useGame((s) => s.level)
   const inventory = useGame((s) => s.inventory)
+  const regions = useGame((s) => s.regions)
   const setScreen = useUi((s) => s.setScreen)
   const toast = useUi((s) => s.toast)
   const [confirm, setConfirm] = useState(false)
   const contract = CONTRACT_BY_ID[draft.contractId]
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const ev = useMemo(() => evaluateDesign(evalInputFor(draft)), [draft, coins, inventory, level])
+  const ev = useMemo(() => evaluateDesign(evalInputFor(draft)), [draft, coins, inventory, level, regions])
   const calls = goNoGo(ev)
   const noGo = calls.filter((c) => !c.go)
 
@@ -79,7 +81,8 @@ export function LaunchPrep() {
         <div className="opts row">
           {ROCKETS.map((r) => {
             const reach = r.orbits.includes(draft.orbitId)
-            const locked = level < r.unlockLevel
+            const gate = level < r.unlockLevel ? `Level ${r.unlockLevel}` : r.needsRegion && regions[r.needsRegion].state !== 'active' ? `Restore the ${REGIONS[r.needsRegion].name}` : null
+            const locked = !!gate
             return (
               <button
                 key={r.id}
@@ -94,7 +97,7 @@ export function LaunchPrep() {
               >
                 <b>{r.name}</b>
                 <small>
-                  {locked ? `Level ${r.unlockLevel}` : !reach ? "Can't reach this orbit" : `${Math.round(r.capacityKg * ORBIT_BY_ID[draft.orbitId].capacityFactor)} kg here`}
+                  {locked ? gate : !reach ? "Can't reach this orbit" : `${Math.round(r.capacityKg * ORBIT_BY_ID[draft.orbitId].capacityFactor)} kg here`}
                 </small>
                 <span className="price">
                   <Icon.coin /> {r.price.toLocaleString('en-US')}
@@ -134,7 +137,11 @@ export function LaunchPrep() {
                 <Icon.dish className="ic" />
                 <div className="grow">
                   <b>{s.name}</b>
-                  <small>{locked ? `Unlocks at agency level ${s.unlockLevel}` : `${s.passes[draft.orbitId]} passes a day · ${s.region}`}</small>
+                  <small>
+                    {locked
+                      ? `Unlocks at agency level ${s.unlockLevel}`
+                      : `${ev.links.find((l) => l.station.id === s.id)?.passesPerDay ?? s.passes[draft.orbitId]} passes a day · ${s.id === 'home' && regions.tracking.state === 'active' ? 'two dishes, with the Tracking Station' : s.region}`}
+                  </small>
                 </div>
                 <span className="price">{s.rent ? <><Icon.coin /> {s.rent}</> : 'Yours'}</span>
               </button>

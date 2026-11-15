@@ -677,10 +677,17 @@
   border: 0.13em solid var(--ink);
   background: #bfe6ff;
 }
-.hint-bar .face svg,
-.hint-bar .face .portrait {
+.hint-bar .face svg {
   width: 130%;
   margin: 6% 0 0 -15%;
+}
+/* the generated close-up: cap to chin fills the round frame */
+.hint-bar .face .portrait {
+  width: 118%;
+  margin: -2% 0 0 -9%;
+}
+.hint-bar .face .portrait img {
+  filter: none;
 }
 .hint-bar .face .ai-tag {
   display: none;

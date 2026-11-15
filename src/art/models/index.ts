@@ -29,3 +29,7 @@ registerModel('truck', createTruck)
 registerModel('crew', createCrew)
 import { createBoat } from './boat'
 registerModel('boat', createBoat)
+import { createHeavyLaunch, createScienceAnnex, createTrackingStation } from './landmarks'
+registerModel('trackingStation', createTrackingStation)
+registerModel('scienceAnnex', createScienceAnnex)
+registerModel('heavyLaunch', createHeavyLaunch)

@@ -74,23 +74,6 @@ export const START_FACING: Partial<Record<BuildingId, number>> = {
 /** Centre of the dock on the south shore. The Parts Market stands on it and deliveries arrive by boat. */
 export const DOCK_SPOT: [number, number] = [22.2, -27.5]
 
-/**
- * The island opens up from west to east. Land beyond a boundary is fenced off
- * and wild until the agency is big enough to take it on.
- */
-export interface ZoneDef {
-  name: string
-  /** land with island-frame v at or beyond this belongs to the zone */
-  fromV: number
-  needsLevel: number
-  cost: number
-}
-export const ZONES: ZoneDef[] = [
-  { name: 'Old Spaceport', fromV: -100, needsLevel: 1, cost: 0 },
-  { name: 'East Meadow', fromV: -3.5, needsLevel: 2, cost: 600 },
-  { name: 'Far Point', fromV: 20, needsLevel: 3, cost: 1500 },
-]
-
 /** Where the camera rests by default, and how far it may roam (island frame). */
-export const CAMERA_HOME = { u: 9.5, v: -24, width: 60 }
-export const CAMERA_BOUNDS = { uMin: -17, uMax: 24, vMin: -40, vMax: 40, widthMin: 14, widthMax: 96 }
+export const CAMERA_HOME = { u: 7.5, v: -22.8, width: 68 }
+export const CAMERA_BOUNDS = { uMin: -17, uMax: 24, vMin: -40, vMax: 46, widthMin: 14, widthMax: 96 }

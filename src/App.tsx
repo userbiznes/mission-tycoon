@@ -6,7 +6,7 @@ import { onLevelUp, useGame } from './state/game'
 import { sfx } from './ui/sound'
 import { useUi } from './state/ui'
 import { BuildingSheet } from './ui/BuildingSheet'
-import { BuildButton, ClearPopup, PlacementBar, ZonePopup } from './ui/PlacementUi'
+import { BuildButton, ClearPopup, PlacementBar } from './ui/PlacementUi'
 import { usePlacement } from './state/placement'
 import { Hud } from './ui/Hud'
 import { MarketSheet } from './ui/MarketSheet'
@@ -27,6 +27,7 @@ import { Flyers, Toasts } from './ui/Overlays'
 import { SettingsSheet } from './ui/SettingsSheet'
 import { Title } from './ui/Title'
 import { Tour } from './ui/Tour'
+import { RegionCard, RegionPins, RoccoLines } from './ui/RegionUi'
 
 /** The big button in each building's sheet. */
 function buildingAction(id: BuildingId) {
@@ -165,7 +166,9 @@ export function App() {
           {phase === 'play' && !screen && <BuildButton />}
           {phase === 'play' && !screen && <PlacementBar />}
           {phase === 'play' && !screen && !placing && <ClearPopup />}
-          {phase === 'play' && !screen && !placing && <ZonePopup />}
+          {phase === 'play' && !screen && <RegionPins />}
+          {phase === 'play' && !screen && !placing && <RegionCard />}
+          {phase === 'play' && !screen && !placing && <RoccoLines />}
           {screen === 'builder' && <Builder />}
           {screen === 'launchPrep' && <LaunchPrep />}
           {screen === 'launch' && launching && <LaunchScreen />}

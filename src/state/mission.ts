@@ -1,3 +1,4 @@
+import { isRegionActive, regionLock } from './regionGate'
 import { create } from 'zustand'
 import type { RocketKind } from '../art/models/rocket'
 import { CAMPAIGN, CONTRACT_BY_ID } from '../data/contracts'
@@ -76,6 +77,7 @@ export function evalInputFor(draft: Draft): EvalInput {
     ownedParts: g.inventory,
     crew: seatedCrew(),
     commsLevel: g.buildings.commsCenter.level,
+    secondDish: isRegionActive('tracking'),
     level: g.level,
   }
 }
@@ -87,19 +89,19 @@ export function evaluateDraft(draft: Draft): Evaluation {
 /** Rockets the pad can fly at its current level. */
 export function rocketsAvailable(): RocketId[] {
   const g = useGame.getState()
-  return ROCKETS.filter((r) => g.level >= r.unlockLevel).map((r) => r.id)
+  return ROCKETS.filter((r) => g.level >= r.unlockLevel && !regionLock(r.needsRegion)).map((r) => r.id)
 }
 
 function cheapestRocketFor(orbitId: OrbitId): RocketId {
   const ok = ROCKETS.filter((r) => r.orbits.includes(orbitId))
-  const unlocked = ok.filter((r) => useGame.getState().level >= r.unlockLevel)
+  const unlocked = ok.filter((r) => useGame.getState().level >= r.unlockLevel && !regionLock(r.needsRegion))
   return (unlocked[0] ?? ok[0] ?? ROCKETS[0]).id
 }
 
 /** Contracts on the board: the next unfinished campaign missions plus replays. */
 export function boardContracts() {
   const g = useGame.getState()
-  return CAMPAIGN.map((c) => ({ contract: c, stars: g.bestStars[c.id] ?? null, locked: g.level < c.unlockLevel }))
+  return CAMPAIGN.map((c) => ({ contract: c, stars: g.bestStars[c.id] ?? null, locked: g.level < c.unlockLevel || !!regionLock(c.needsRegion), why: g.level < c.unlockLevel ? `Agency level ${c.unlockLevel}` : regionLock(c.needsRegion) }))
 }
 
 export function setDraft(patch: Partial<Draft>) {

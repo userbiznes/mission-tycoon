@@ -1,16 +1,9 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { palette } from '../art/palette'
-import {
-  BEACH_W,
-  PLATEAU_D,
-  WATER_Y,
-  coastUv,
-  fbm,
-  heightFromCoast,
-  uvToWorld,
-  vnoise,
-} from './world'
+import { patchRegionTint } from './regionTint'
+import { HILL, creekDepth, hillHeight, spineHeight, terrainHeightUv } from './relief'
+import { BEACH_W, PLATEAU_D, WATER_Y, coastUv, fbm, uvToWorld, vnoise } from './world'
 
 const U0 = -42
 const U1 = 42
@@ -36,6 +29,9 @@ function buildTerrain(): THREE.BufferGeometry {
   const sandLight = c(palette.sandLight)
   const sandWet = c(palette.sandWet)
   const seabed = c(palette.seabed)
+  const rock = c(palette.rock)
+  const rockDark = c(palette.rockDark)
+  const pebble = c(palette.sandWet).lerp(c(palette.rock), 0.35)
   const tmp = new THREE.Color()
 
   let i = 0
@@ -44,7 +40,7 @@ function buildTerrain(): THREE.BufferGeometry {
     for (let iu = 0; iu < nu; iu++) {
       const u = U0 + iu * STEP
       const d = coastUv(u, v)
-      let y = heightFromCoast(d)
+      let y = terrainHeightUv(u, v)
       // gentle lumps away from the flat building plateau
       if (d > PLATEAU_D && d < -0.2) y += (vnoise(u * 0.9, v * 0.9) - 0.5) * 0.1
       const [x, z] = uvToWorld(u, v)
@@ -78,6 +74,26 @@ function buildTerrain(): THREE.BufferGeometry {
         const tw = THREE.MathUtils.smoothstep(d, -0.95 + (n2 - 0.5) * 0.3, -0.25)
         tmp.lerp(sandWet, tw * 0.85)
         if (d > 0) tmp.lerp(seabed, THREE.MathUtils.smoothstep(d, 0, 2.5))
+      }
+      if (d < -0.3) {
+        // the ridge shows its rock; the hill's shoulders are deep green, its top worn bare round the old station
+        const sp = spineHeight(u, v)
+        if (sp > 0.05) tmp.lerp(n3 > 0.5 ? rock : rockDark, THREE.MathUtils.smoothstep(sp, 0.12, 0.42) * 0.8)
+        const hh = hillHeight(u, v)
+        if (hh > 0.02) {
+          // the shoulders are steep: deep green, with bare rock showing through
+          const slope = THREE.MathUtils.smoothstep(hh, 0.08, 0.7) * (1 - THREE.MathUtils.smoothstep(hh, HILL.h - 0.45, HILL.h - 0.02))
+          tmp.lerp(grassShade, slope * 0.6)
+          tmp.lerp(n3 > 0.5 ? rock : rockDark, slope * THREE.MathUtils.smoothstep(n2, 0.42, 0.7) * 0.75)
+          const worn = 1 - THREE.MathUtils.smoothstep(Math.hypot(u - HILL.u, v - HILL.v), 1.6, 3.2 + (n2 - 0.5))
+          tmp.lerp(dirt, worn * 0.55)
+        }
+        // the creek bed: a dirt lip, then wet pebbles under the water
+        const cd = creekDepth(u, v)
+        if (cd > 0.01) {
+          tmp.lerp(dirt, THREE.MathUtils.smoothstep(cd, 0.01, 0.12) * 0.85)
+          tmp.lerp(pebble, THREE.MathUtils.smoothstep(cd, 0.14, 0.36))
+        }
       }
       col[i * 3] = tmp.r
       col[i * 3 + 1] = tmp.g
@@ -154,6 +170,7 @@ function makeTerrainMaterial(): THREE.MeshStandardMaterial {
           diffuseColor.rgb += smoothstep(0.86, 0.94, n3) * mix(0.03, 0.02, isGrass);
         }`,
       )
+    patchRegionTint(shader)
   }
   return mat
 }

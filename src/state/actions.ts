@@ -1,11 +1,13 @@
 import { BUILDINGS } from '../data/buildings'
-import { FOCUS_WIDTH, ZONES, type BuildingId } from '../data/layout'
+import { FOCUS_WIDTH, type BuildingId } from '../data/layout'
+import { MATERIAL_BY_ID } from '../data/regions'
 import { OBSTACLE_INFO, allObstacles, buildingCenter } from '../scene/grid'
 import { rig, screenToIsland } from '../scene/cameraRig'
 import { juice } from '../scene/juice'
 import { CAMERA_TILT, worldToUv } from '../scene/world'
 import { sfx } from '../ui/sound'
 import { useGame } from './game'
+import { landOpen } from './regionGate'
 import { toMs } from './time'
 import { useUi } from './ui'
 
@@ -45,26 +47,12 @@ export function clearObstacle(obstacleId: string): string | null {
   const g = useGame.getState()
   const o = allObstacles().find((x) => x.id === obstacleId)
   if (!o || g.cleared.includes(obstacleId)) return null
-  if (o.zone >= g.zones) return 'That land is still fenced off'
+  if (!landOpen(o.region)) return 'That land is still wild. Reclaim it first'
   const info = OBSTACLE_INFO[o.kind]
   if (!g.spend(info.cost)) return 'Not enough coins'
   useGame.setState({ cleared: [...useGame.getState().cleared, obstacleId] })
   if (info.xp) useGame.getState().addXp(info.xp)
   sfx('build')
-  return null
-}
-
-/** Open the next zone of the island. Returns an error line or null. */
-export function unlockZone(): string | null {
-  const g = useGame.getState()
-  const def = ZONES[g.zones]
-  if (!def) return null
-  if (g.level < def.needsLevel) return `Reach agency level ${def.needsLevel} first`
-  if (!g.spend(def.cost)) return 'Not enough coins'
-  useGame.setState({ zones: g.zones + 1 })
-  useGame.getState().addXp(3)
-  sfx('success')
-  useUi.getState().toast(`${def.name} is open! Clear it and build.`, 'good')
   return null
 }
 
@@ -118,15 +106,20 @@ export function onTimer(hook: (e: TimerEvent) => void): () => void {
 import { STOCK_MARKUP } from '../data/economy'
 import { PART_BY_ID } from '../data/parts'
 
+/** Anything the market sells: satellite parts and building materials. */
+export function goodInfo(id: string): { name: string; cost: number; deliverySec: number } {
+  return PART_BY_ID[id] ?? MATERIAL_BY_ID[id]
+}
+
 export function stockPrice(partId: string): number {
-  return Math.round(PART_BY_ID[partId].cost * STOCK_MARKUP)
+  return Math.round(goodInfo(partId).cost * STOCK_MARKUP)
 }
 
 /** Market level speeds up deliveries. */
 function deliverySeconds(partId: string): number {
   const lvl = useGame.getState().buildings.partsMarket.level
   const speed = lvl >= 3 ? 0.5 : lvl === 2 ? 0.7 : 1
-  return PART_BY_ID[partId].deliverySec * speed
+  return goodInfo(partId).deliverySec * speed
 }
 
 /** Buy from stock: instant, 30% dearer. */
@@ -143,10 +136,10 @@ export function buyNow(partId: string): boolean {
   return true
 }
 
-/** Order: cheaper, but a truck has to bring it. */
+/** Order: cheaper, but the cargo boat has to bring it. */
 export function orderPart(partId: string, seconds?: number): boolean {
   const game = useGame.getState()
-  if (!game.spend(PART_BY_ID[partId].cost)) {
+  if (!game.spend(goodInfo(partId).cost)) {
     sfx('error')
     useUi.getState().toast('Not enough coins', 'bad')
     return false
@@ -176,7 +169,7 @@ onTimer((e) => {
   game.patch((s) => ({ deliveries: s.deliveries.filter((d) => e.now < d.end) }))
   for (const d of due) {
     useGame.getState().addParts(d.partId, d.qty)
-    useUi.getState().toast(`Delivered: ${PART_BY_ID[d.partId].name}`, 'good')
+    useUi.getState().toast(`Delivered: ${goodInfo(d.partId).name}`, 'good')
   }
   sfx('success')
   juice('partsMarket', 'wobble')

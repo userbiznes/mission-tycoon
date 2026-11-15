@@ -15,7 +15,7 @@ communications and time, and a debrief that always tells you **why** the mission
 ## How to play
 
 1. **Start**, name yourself and your agency, and design a logo (it goes on the HQ flag and every rocket).
-2. Follow **Chief Rocco's tour**: buy a camera, order a battery, watch the truck bring it.
+2. Follow **Chief Rocco's tour**: buy a camera, order a battery, watch the boat bring it.
 3. Take the **First Light** contract at Mission Control.
 4. In the **Integration Bay**, tap or drag parts onto the satellite. Watch the six bars. Tap any bar for **Why?**
 5. Press **Test run** (free) to see the predicted stars and the reasons, then fix the design.
@@ -96,7 +96,7 @@ Every push to `main` builds, tests and deploys to GitHub Pages (`.github/workflo
 
 ```
 src/art     palette, procedural modelling kit, model registry, every 3D model, the agency logo
-src/scene   world, water, sky, lighting, camera rig, launch cinematic, delivery truck
+src/scene   world, water, sky, lighting, camera rig, launch cinematic, the dock and its delivery boat
 src/data    typed tables: parts, orbits, rockets, stations, contracts, events, crew, lab, economy, tutorial
 src/sim     the rules engine (pure TypeScript) and its tests
 src/state   saved game, mission flow, economy loop, launch state, settings

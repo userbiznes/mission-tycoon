@@ -3,6 +3,8 @@
  * as typed tables; logic in `src/sim` only ever reads them.
  */
 
+import type { RegionId } from './regions'
+
 export type PartCategory = 'bus' | 'power' | 'comms' | 'instrument' | 'computer' | 'pointing' | 'propulsion'
 
 export type PartId = string
@@ -112,6 +114,8 @@ export interface RocketDef {
   /** orbits this rocket can reach */
   orbits: OrbitId[]
   unlockLevel: number
+  /** the lost region that must be restored before this is available */
+  needsRegion?: RegionId
   blurb: string
 }
 
@@ -158,6 +162,8 @@ export interface ContractDef {
   difficulty: 1 | 2 | 3
   allowedOrbits: OrbitId[]
   unlockLevel: number
+  /** the lost region that must be restored before this contract is offered */
+  needsRegion?: RegionId
   /** what this mission is designed to teach */
   lessons: string[]
   stretch?: boolean
@@ -287,6 +293,8 @@ export interface RecipeDef {
   seconds: number
   sellsFor: number
   unlockLevel: number
+  /** the lost region that must be restored before this recipe opens */
+  needsRegion?: RegionId
   blurb: string
 }
 

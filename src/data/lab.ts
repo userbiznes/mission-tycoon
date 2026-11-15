@@ -46,6 +46,7 @@ export const RECIPES: RecipeDef[] = [
     seconds: 60,
     sellsFor: 90,
     unlockLevel: 2,
+    needsRegion: 'annex',
     blurb: 'Hot spots laid over a photo map so crews know where to go.',
   },
   {
@@ -66,6 +67,7 @@ export const RECIPES: RecipeDef[] = [
     seconds: 60,
     sellsFor: 80,
     unlockLevel: 3,
+    needsRegion: 'annex',
     blurb: 'Sharp calibrated images mapped into a storm-tracking chart.',
   },
 ]

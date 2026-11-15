@@ -1,8 +1,8 @@
 import { BUILDINGS } from '../data/buildings'
-import { BUILDING_IDS, ZONES } from '../data/layout'
-import { zoneSignWorld } from '../scene/Island'
+import { BUILDING_IDS } from '../data/layout'
+import { REGIONS } from '../data/regions'
 import { BUILDING_ICON } from './BuildingSheet'
-import { clearObstacle, unlockZone } from '../state/actions'
+import { clearObstacle } from '../state/actions'
 import { useGame } from '../state/game'
 import { usePlacement } from '../state/placement'
 import { useUi } from '../state/ui'
@@ -94,52 +94,6 @@ export function ClearPopup() {
   )
 }
 
-/** Popup over the fence sign: open the next part of the island. */
-export function ZonePopup() {
-  const open = useUi((s) => s.zonePopup)
-  const setOpen = useUi((s) => s.setZonePopup)
-  const toast = useUi((s) => s.toast)
-  const zones = useGame((s) => s.zones)
-  const level = useGame((s) => s.level)
-  const coins = useGame((s) => s.coins)
-  const def = ZONES[zones]
-  if (!open || !def) return null
-  const [x, z] = zoneSignWorld(zones)
-  const locked = level < def.needsLevel
-  return (
-    <Pin at={[x, 3.6, z]}>
-      <div className="clear-pop panel">
-        <b>{def.name}</b>
-        <small>Wild land beyond the fence. Open it to clear and build there.</small>
-        <div>
-          {locked ? (
-            <span className="chip warn">
-              <Icon.lock /> Needs agency level {def.needsLevel}
-            </span>
-          ) : (
-            <Btn
-              tone="yellow"
-              size="sm"
-              sound={null}
-              disabled={coins < def.cost}
-              onClick={() => {
-                const err = unlockZone()
-                if (err) toast(err, 'bad')
-                setOpen(false)
-              }}
-            >
-              Open it up <Price amount={def.cost} />
-            </Btn>
-          )}
-          <Btn tone="cream" size="sm" round onClick={() => setOpen(false)} aria-label="Not now">
-            <Icon.close style={{ filter: 'invert(0.75)' }} />
-          </Btn>
-        </div>
-      </div>
-    </Pin>
-  )
-}
-
 /** The shop button, bottom-left, and the tray of blueprints it opens. */
 export function BuildButton() {
   const sheet = useUi((s) => s.sheet)
@@ -150,6 +104,7 @@ export function BuildButton() {
   const level = useGame((s) => s.level)
   const coins = useGame((s) => s.coins)
   const placed = useGame((s) => s.placed)
+  const regions = useGame((s) => s.regions)
   const toast = useUi((s) => s.toast)
   if (placing || tour >= 0) return null
   const isOpen = sheet?.kind === 'buildmenu'
@@ -167,7 +122,8 @@ export function BuildButton() {
           {todo.map((id) => {
             const def = BUILDINGS[id]
             const I = Icon[BUILDING_ICON[id]]
-            const locked = level < def.needsLevel
+            const gate = level < def.needsLevel ? `Level ${def.needsLevel}` : def.needsRegion && regions[def.needsRegion].state !== 'active' ? `Restore the ${REGIONS[def.needsRegion].name}` : null
+            const locked = !!gate
             return (
               <button
                 key={id}
@@ -176,7 +132,7 @@ export function BuildButton() {
                 onClick={() => {
                   if (locked) {
                     sfx('error')
-                    toast(`${def.name} unlocks at agency level ${def.needsLevel}`)
+                    toast(level < def.needsLevel ? `${def.name} unlocks at agency level ${def.needsLevel}` : `${gate} to build the ${def.name}`)
                   } else if (coins < def.buildCost) {
                     sfx('error')
                     toast('Not enough coins', 'bad')
@@ -190,7 +146,7 @@ export function BuildButton() {
                 <small>{def.role}</small>
                 {locked ? (
                   <span className="chip warn">
-                    <Icon.lock /> Level {def.needsLevel}
+                    <Icon.lock /> {gate}
                   </span>
                 ) : (
                   <Price amount={def.buildCost} />

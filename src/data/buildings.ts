@@ -1,4 +1,5 @@
 import type { BuildingId } from './layout'
+import type { RegionId } from './regions'
 
 /** Building catalogue: names, roles, build and upgrade costs. Pure data. */
 
@@ -26,6 +27,8 @@ export interface BuildingDef {
   buildCost: number
   buildSeconds: number
   needsLevel: number
+  /** the lost region that must be restored before this can be built */
+  needsRegion?: RegionId
   upgrades: UpgradeDef[]
 }
 
@@ -48,7 +51,7 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
     id: 'partsMarket',
     name: 'Parts Market',
     role: 'Buy now or order for less',
-    blurb: 'Stalls on the dock for power, comms, instruments, computers, pointing and propulsion. Orders come in by boat.',
+    blurb: 'A timber market hall on the dock, stocked with solar panels, antennas, cameras, batteries and more. Orders come in by boat and the crane swings them ashore.',
     action: 'Go shopping',
     buildCost: 0,
     buildSeconds: 0,
@@ -97,7 +100,7 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
     needsLevel: 1,
     upgrades: [
       { level: 2, cost: 2500, seconds: 50, needsLevel: 2, perk: 'Small rocket: 200 kg to any Earth orbit' },
-      { level: 3, cost: 8000, seconds: 90, needsLevel: 5, perk: 'Medium rocket: 2,000 kg, unlocks the Moon' },
+      { level: 3, cost: 8000, seconds: 90, needsLevel: 5, perk: 'A bigger fuel farm, ready for the Medium rocket' },
     ],
   },
   scienceLab: {
@@ -122,8 +125,9 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
     action: 'Open the workshop',
     buildCost: 2200,
     buildSeconds: 50,
-    needsLevel: 3,
-    upgrades: [{ level: 2, cost: 3500, seconds: 60, needsLevel: 5, perk: 'A second test stand' }],
+    needsLevel: 5,
+    needsRegion: 'annex',
+    upgrades: [{ level: 2, cost: 3500, seconds: 60, needsLevel: 6, perk: 'A second test stand' }],
   },
   crewQuarters: {
     id: 'crewQuarters',

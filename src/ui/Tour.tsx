@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { BuildingId } from '../data/layout'
 import { TOUR } from '../data/tutorial'
 import { buildingWorld, focusBuilding, rushDeliveries } from '../state/actions'
 import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { rig } from '../scene/cameraRig'
+import { HARBOUR_VIEW } from '../scene/grid'
 import { juice } from '../scene/juice'
 import { Pin } from '../scene/pins'
 import { RoccoHint, RoccoSays } from './Rocco'
@@ -62,6 +63,8 @@ export function Tour() {
     if (!def) return
     rig.locked = true
     if (!def.focus || def.focus === 'home') rig.home()
+    // the delivery stop takes in the whole harbour, so the boat and the crane are in the picture
+    else if (def.id === 'truck') rig.flyTo(HARBOUR_VIEW[0], HARBOUR_VIEW[1], 34)
     else focusBuilding(def.focus, 0, 30, 0.16)
     return () => {
       rig.locked = false
@@ -91,13 +94,32 @@ export function Tour() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [def, waiting, step])
 
-  // "Battery's here!" waits for the truck; hurry it along so nobody stands around
+  // "Battery's here!" waits for the boat; hurry it along so nobody stands around
   const waitingForTruck = def?.id === 'truck' && deliveries.length > 0
   useEffect(() => {
     if (def?.id === 'truck') rushDeliveries(7200)
   }, [def])
+  // once it lands, hold Rocco's line a moment so the crane can be seen swinging the crate ashore
+  const [unloading, setUnloading] = useState(false)
+  const sawDelivery = useRef(false)
+  useEffect(() => {
+    if (def?.id !== 'truck') {
+      sawDelivery.current = false
+      setUnloading(false)
+      return
+    }
+    if (deliveries.length > 0) {
+      sawDelivery.current = true
+      return
+    }
+    if (!sawDelivery.current) return
+    sawDelivery.current = false
+    setUnloading(true)
+    const timer = setTimeout(() => setUnloading(false), 3600)
+    return () => clearTimeout(timer)
+  }, [def, deliveries.length])
 
-  if (!def || sheet || screen || waitingForTruck) return null
+  if (!def || sheet || screen || waitingForTruck || unloading) return null
 
   const text = def.text.replace('{name}', player.name || 'Chief').replace('{agency}', player.agency || 'the agency')
   const focusId = def.focus && def.focus !== 'home' ? def.focus : null

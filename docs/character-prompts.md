@@ -7,7 +7,9 @@ one "AI-generated".
 - **Chief Rocco** appears large on the left of every dialogue, so generate him **from the waist up
   in a tall frame (about 3:4, e.g. 1024×1365)**, body turned slightly towards the right of the
   picture, one hand on his hip and the other hand open and raised as if presenting something to
-  his left (the speech bubble sits there). Keep his feet and legs out of frame.
+  his left (the speech bubble sits there). A whole standing figure works too (the one in the game
+  now is head to boots). A second picture, `rocco-face.png`, is his **close-up, head and
+  shoulders**: it fills the small round face on the hint bar.
 - **Crew members** are shown small on their cards: **square (1024×1024), head and shoulders**.
 
 The prompts describe the look directly instead of naming another game or studio. That keeps the

@@ -1,0 +1,185 @@
+/* ---------- the lost regions: badges over the signposts, the region card ---------- */
+.region-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.26em 0.72em 0.3em 0.4em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.3em;
+  background: linear-gradient(180deg, #fffaec, #ffe9bd);
+  box-shadow: 0 0.22em 0 rgba(60, 30, 10, 0.32);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.84em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: float 2.2s ease-in-out infinite;
+}
+.region-badge svg {
+  width: 1.5em;
+  height: 1.5em;
+  flex: none;
+}
+/* the level a locked region needs: a tooltip, out of sight until the pointer rests on the signpost or the landmark */
+.region-badge.locked {
+  background: linear-gradient(180deg, #f4efe4, #d9d0bd);
+  pointer-events: none;
+  cursor: default;
+  animation: none;
+  opacity: 0;
+  transform: translate(-50%, -88%) scale(0.86);
+  transition:
+    opacity 0.14s ease,
+    transform 0.18s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.region-badge.locked.shown {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+.region-badge.ready {
+  background: linear-gradient(180deg, #eafbd9, #b6e894);
+  animation: badge-bounce 0.9s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+}
+.region-badge.ready i {
+  display: grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border: 0.14em solid var(--ink);
+  border-radius: 50%;
+  background: var(--yellow);
+  font-style: normal;
+  font-weight: 700;
+}
+.region-badge.restore {
+  background: linear-gradient(180deg, #fff0b8, #fcc840);
+  animation: badge-bounce 1.3s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+}
+.region-badge.timer {
+  background: rgba(255, 250, 236, 0.97);
+  font-variant-numeric: tabular-nums;
+  animation: none;
+}
+@keyframes badge-bounce {
+  0%,
+  100% {
+    transform: translate(-50%, -100%) scale(1, 1);
+  }
+  30% {
+    transform: translate(-50%, -128%) scale(0.96, 1.06);
+  }
+  55% {
+    transform: translate(-50%, -100%) scale(1.08, 0.92);
+  }
+  75% {
+    transform: translate(-50%, -108%) scale(1, 1);
+  }
+}
+
+.region-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  padding-bottom: 0.3em;
+}
+.region-teaser {
+  position: relative;
+  height: 7.4em;
+  overflow: hidden;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1em;
+  background: linear-gradient(180deg, #bfe6ff 0%, #e8f7f2 62%, #cfe9b4 100%);
+}
+.region-teaser canvas {
+  display: block;
+}
+.region-teaser.veiled {
+  background: linear-gradient(180deg, #b9d4dc 0%, #dbe9e4 60%, #b7ccae 100%);
+}
+.region-teaser.veiled canvas {
+  filter: saturate(0.72) brightness(0.94);
+}
+.region-teaser .mist {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 34% at 18% 78%, rgba(236, 246, 244, 0.85), transparent 70%),
+    radial-gradient(54% 30% at 78% 86%, rgba(236, 246, 244, 0.8), transparent 70%),
+    radial-gradient(40% 22% at 60% 30%, rgba(236, 246, 244, 0.4), transparent 70%);
+  animation: mist-drift 9s ease-in-out infinite alternate;
+}
+@keyframes mist-drift {
+  from {
+    transform: translateX(-4%);
+  }
+  to {
+    transform: translateX(4%);
+  }
+}
+.region-reward {
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  padding: 0.55em 0.7em;
+}
+.region-reward .part-icon {
+  background: #ffe69a;
+}
+.region-reward .grow {
+  flex: 1;
+  min-width: 0;
+}
+.region-reward b {
+  display: block;
+  font-size: 1em;
+  line-height: 1.18;
+}
+.region-reward small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.82em;
+  line-height: 1.22;
+}
+.region-why {
+  padding: 0.5em 0.7em;
+}
+.region-why .why-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.region-why .why-toggle svg {
+  width: 1.4em;
+  height: 1.4em;
+  flex: none;
+}
+.region-why p {
+  margin: 0.4em 0 0;
+  font-size: 0.88em;
+  line-height: 1.3;
+}
+.region-why p.rule {
+  font-weight: 600;
+}
+.region-why small {
+  display: block;
+  margin-top: 0.35em;
+  color: var(--ink-soft);
+  font-size: 0.76em;
+}
+.region-card .muted {
+  color: var(--ink-soft);
+  font-size: 0.82em;
+}

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { palette } from './palette'
+import { patchRegionTint } from '../scene/regionTint'
 
 /**
  * Shared materials. Everything is vertex-coloured, so a handful of materials
@@ -30,8 +31,9 @@ function withRim<T extends THREE.MeshStandardMaterial>(mat: T, strength: number)
         }
         #include <opaque_fragment>`,
       )
+    patchRegionTint(shader)
   }
-  mat.customProgramCacheKey = () => `rim-${strength}`
+  mat.customProgramCacheKey = () => `rim-tint-${strength}`
   return mat
 }
 

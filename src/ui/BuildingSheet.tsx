@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { BUILDINGS } from '../data/buildings'
 import { BUILDING_IDS, type BuildingId } from '../data/layout'
+import { REGIONS } from '../data/regions'
 import { usePlacement } from '../state/placement'
 import { startConstruction } from '../state/actions'
 import { useGame } from '../state/game'
@@ -174,6 +175,7 @@ export function BuildMenu() {
   const level = useGame((s) => s.level)
   const coins = useGame((s) => s.coins)
   const placed = useGame((s) => s.placed)
+  const regions = useGame((s) => s.regions)
   useEffect(() => showTip('construction'), [showTip])
   const todo = BUILDING_IDS.filter((id) => !placed[id])
   return (
@@ -183,7 +185,8 @@ export function BuildMenu() {
         {todo.map((id) => {
           const def = BUILDINGS[id]
           const I = Icon[BUILDING_ICON[id]]
-          const locked = level < def.needsLevel
+          const gate = level < def.needsLevel ? `Level ${def.needsLevel}` : def.needsRegion && regions[def.needsRegion].state !== 'active' ? `Restore the ${REGIONS[def.needsRegion].name}` : null
+          const locked = !!gate
           return (
             <div key={id} className={`part-card card${locked ? ' locked' : ''}`}>
               <span className="part-icon" style={{ background: '#ffe69a' }}>
@@ -195,7 +198,7 @@ export function BuildMenu() {
                 <div className="buy-row">
                   {locked ? (
                     <span className="chip warn">
-                      <Icon.lock /> Needs agency level {def.needsLevel}
+                      <Icon.lock /> {gate}
                     </span>
                   ) : (
                     <Btn tone="yellow" size="sm" disabled={coins < def.buildCost} onClick={() => usePlacement.getState().begin(id, true)}>

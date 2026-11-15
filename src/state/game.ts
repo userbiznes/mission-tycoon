@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { DEFAULT_LOGO, setAgencyLogo, type LogoSpec } from '../art/logo'
 import { LEVELS, STARTING_BANK } from '../data/economy'
 import { BUILDING_IDS, START_FACING, STARTING_BUILDINGS, type BuildingId } from '../data/layout'
+import { REGION_IDS, type RegionId, type RegionState } from '../data/regions'
 import { startLayout, type CellPos } from '../scene/grid'
 import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/types'
 
@@ -11,7 +12,7 @@ import type { ItemId, OrbitId, RawDataType, RocketId, StationId } from '../data/
  */
 
 const SAVE_KEY = 'mission-tycoon:save'
-const SAVE_VERSION = 4
+const SAVE_VERSION = 5
 
 export type Phase = 'title' | 'onboarding' | 'arrival' | 'play'
 
@@ -23,6 +24,14 @@ export interface BuildingState {
   buildEnd?: number
   /** level it will have when the timer finishes */
   buildTo?: number
+}
+
+/** One of the lost regions beyond the creek, and how far the player has got with it. */
+export interface RegionRec {
+  state: RegionState
+  /** set while clearing or restoring is under way (epoch ms) */
+  start?: number
+  end?: number
 }
 
 export interface Delivery {
@@ -88,8 +97,8 @@ export interface SaveData {
   placed: Partial<Record<BuildingId, CellPos>>
   /** which way each building faces: 0 = door down-left, 1 = door down-right */
   facing: Partial<Record<BuildingId, number>>
-  /** how many zones of the island are open (1 = just the old spaceport) */
-  zones: number
+  /** the lost regions beyond the creek: locked → available → clearing → ruins → restoring → active */
+  regions: Record<RegionId, RegionRec>
   /** ids of overgrowth the player has cleared */
   cleared: string[]
   inventory: Record<string, number>
@@ -123,6 +132,10 @@ function freshBuildings(): Record<BuildingId, BuildingState> {
   return out
 }
 
+function freshRegions(): Record<RegionId, RegionRec> {
+  return Object.fromEntries(REGION_IDS.map((id) => [id, { state: 'locked' }])) as Record<RegionId, RegionRec>
+}
+
 export function freshSave(): SaveData {
   return {
     version: SAVE_VERSION,
@@ -134,7 +147,7 @@ export function freshSave(): SaveData {
     buildings: freshBuildings(),
     placed: startLayout(),
     facing: { ...START_FACING },
-    zones: 1,
+    regions: freshRegions(),
     cleared: [],
     inventory: {},
     deliveries: [],
@@ -161,7 +174,7 @@ function loadSave(): SaveData {
     const data = JSON.parse(raw) as SaveData
     if (!data || data.version !== SAVE_VERSION) return freshSave()
     // tolerate saves from earlier builds that lack newer fields
-    return { ...freshSave(), ...data, buildings: { ...freshBuildings(), ...data.buildings } }
+    return { ...freshSave(), ...data, buildings: { ...freshBuildings(), ...data.buildings }, regions: { ...freshRegions(), ...data.regions } }
   } catch {
     return freshSave()
   }
@@ -290,7 +303,7 @@ function snapshot(s: GameState): SaveData {
     buildings: s.buildings,
     placed: s.placed,
     facing: s.facing,
-    zones: s.zones,
+    regions: s.regions,
     cleared: s.cleared,
     inventory: s.inventory,
     deliveries: s.deliveries,

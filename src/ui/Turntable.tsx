@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createSatellite, createTurntable, type SatelliteDesign } from '../art/models/satellite'
 import { palette } from '../art/palette'
+import { regionTint } from '../scene/regionTint'
 
 function Stage({ design }: { design: SatelliteDesign }) {
   const spin = useRef<THREE.Group>(null)
   const prevCount = useRef(design.parts.length)
   const stand = useMemo(createTurntable, [])
+  // this little scene shares its materials with the island: keep the island's region tint out of it
+  const scene = useThree((s) => s.scene)
+  useEffect(() => {
+    scene.onBeforeRender = () => {
+      regionTint.uRegionOn.value = 0
+    }
+  }, [scene])
   const key = `${design.busId}|${design.parts.join(',')}`
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const sat = useMemo(() => createSatellite(design), [key])

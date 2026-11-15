@@ -141,6 +141,16 @@ describe('data pipeline bottlenecks', () => {
     expect(ev.pipeline.storageMb).toBe(1000)
     expect(ev.pipeline.bottleneck).toBe('storage')
   })
+  it('the restored tracking station doubles what the home dish brings down', () => {
+    const one = evaluateDesign(first(NAIVE))
+    const two = evaluateDesign(first(NAIVE, { secondDish: true }))
+    const home = (ev: typeof one) => ev.links.find((l) => l.station.id === 'home')!
+    expect(home(two).passesPerDay).toBe(home(one).passesPerDay * 2)
+    expect(home(two).dishMbPerPass).toBeGreaterThan(home(one).dishMbPerPass)
+    expect(two.pipeline.downlinkPerDay).toBeCloseTo(one.pipeline.downlinkPerDay * 2)
+    // mission 1's first design falls short on one dish and clears the bar with two
+    expect(two.pipeline.deliveredPerDay).toBeGreaterThan(one.pipeline.deliveredPerDay)
+  })
   it('no stations in view means nothing comes home', () => {
     const ev = evaluateDesign(first(NAIVE, { stationIds: [] }))
     expect(ev.pipeline.deliveredPerDay).toBe(0)

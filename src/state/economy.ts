@@ -6,6 +6,7 @@ import { canFillOrder, consumeInputs, dailyRawUnits, fillOrder, labSlots, orderV
 import { sfx } from '../ui/sound'
 import { onTimer } from './actions'
 import { useGame, type OrderRec } from './game'
+import { regionLock } from './regionGate'
 import { toMs } from './time'
 import { useUi } from './ui'
 
@@ -18,7 +19,7 @@ export function orderSlots(): number {
 
 function pickTemplate(skip: string[]): string {
   const level = useGame.getState().level
-  const pool = ORDER_TEMPLATES.filter((t) => t.unlockLevel <= level)
+  const pool = ORDER_TEMPLATES.filter((t) => t.unlockLevel <= level && t.wants.every((w) => !regionLock(RECIPE_BY_ID[w.item as ProductId]?.needsRegion)))
   const fresh = pool.filter((t) => !skip.includes(t.id))
   const from = fresh.length ? fresh : pool
   return from[Math.floor(Math.random() * from.length)].id
@@ -68,6 +69,8 @@ export function startRecipe(recipeId: ProductId): string | null {
   if (lab < 1) return 'Build the Science Lab first'
   if (g.labJobs.length >= labSlots(lab)) return 'Every lab slot is busy'
   const recipe = RECIPE_BY_ID[recipeId]
+  const gate = regionLock(recipe.needsRegion)
+  if (gate) return gate
   const items = consumeInputs(recipe, g.items)
   if (!items) return 'Not enough data yet'
   const now = Date.now()

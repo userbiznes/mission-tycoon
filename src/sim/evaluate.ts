@@ -1,3 +1,4 @@
+import { TRACKING_DISH } from '../data/economy'
 import { CONTRACT_BY_ID } from '../data/contracts'
 import { COMMS_LEVELS, STOCK_MARKUP } from '../data/economy'
 import { ORBIT_BY_ID } from '../data/orbits'
@@ -41,6 +42,8 @@ export interface EvalInput {
   crew?: CrewAssignment
   /** Comms Center level: sets the home dish's size (default 1) */
   commsLevel?: number
+  /** the Old Tracking Station is restored: a second, bigger dish at home doubles the passes */
+  secondDish?: boolean
   /** player level; when given, locked parts / rockets / orbits / stations block the launch */
   level?: number
 }
@@ -479,8 +482,9 @@ export function evaluateDesign(input: EvalInput): Evaluation {
   const radioMb = s.radio ? (s.radio.mbPerPass ?? 0) * mods.downlinkMult : 0
   const linkFor = (st: StationDef, mb: number): StationLink => {
     const home = st.id === 'home'
-    const passes = home ? Math.round((st.passes[orbit.id] ?? 0) * (1 + comms.passBonus)) : (st.passes[orbit.id] ?? 0)
-    const dish = home ? comms.dishMbPerPass : st.dishMbPerPass
+    const second = home && input.secondDish
+    const passes = home ? Math.round((st.passes[orbit.id] ?? 0) * (1 + comms.passBonus) * (second ? TRACKING_DISH.passMult : 1)) : (st.passes[orbit.id] ?? 0)
+    const dish = home ? Math.max(comms.dishMbPerPass, second ? TRACKING_DISH.mbPerPass : 0) : st.dishMbPerPass
     const perPass = Math.min(mb, dish)
     return {
       station: st,

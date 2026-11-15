@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { BuildingId } from '../data/layout'
+import type { RegionId } from '../data/regions'
 
 /** Transient interface state: what is open right now. Never saved. */
 
@@ -50,9 +51,19 @@ interface UiState {
   /** overgrowth the player tapped and may clear */
   clearTarget: string | null
   setClearTarget: (id: string | null) => void
-  /** the fenced-off zone whose sign was tapped */
-  zonePopup: boolean
-  setZonePopup: (open: boolean) => void
+  /** the lost region whose signpost was tapped */
+  regionCard: RegionId | null
+  openRegion: (id: RegionId | null) => void
+  /** the lost region the pointer is resting on, and which part of it: its signpost or its landmark */
+  hoverRegion: { id: RegionId; at: 'sign' | 'site' } | null
+  setHoverRegion: (hover: { id: RegionId; at: 'sign' | 'site' } | null) => void
+  /** lines Chief Rocco is waiting to say, oldest first */
+  lines: { id: number; text: string; mood?: 'happy' | 'worried' | 'proud'; region?: RegionId }[]
+  speak: (text: string, mood?: 'happy' | 'worried' | 'proud', region?: RegionId) => void
+  nextLine: () => void
+  /** the region that has just been restored: confetti flies there */
+  party: { id: RegionId; at: number } | null
+  celebrate: (id: RegionId) => void
   /** a Rocco tip waiting to be read */
   tip: string | null
   /** show a contextual tip once per save */
@@ -73,7 +84,7 @@ export const useUi = create<UiState>((set, get) => ({
   toasts: [],
   flyers: [],
   bump: { coins: 0, xp: 0 },
-  open: (sheet) => set({ sheet }),
+  open: (sheet) => set({ sheet, regionCard: null }),
   close: () => set({ sheet: null }),
   setScreen: (screen) => set({ screen, sheet: null }),
   toast: (text, tone) => {
@@ -92,8 +103,18 @@ export const useUi = create<UiState>((set, get) => ({
   bumpHud: (which) => set({ bump: { ...get().bump, [which]: get().bump[which] + 1 } }),
   clearTarget: null,
   setClearTarget: (clearTarget) => set({ clearTarget }),
-  zonePopup: false,
-  setZonePopup: (zonePopup) => set({ zonePopup }),
+  regionCard: null,
+  openRegion: (regionCard) => set({ regionCard, sheet: null, clearTarget: null }),
+  hoverRegion: null,
+  setHoverRegion: (hoverRegion) => {
+    const was = get().hoverRegion
+    if (was?.id !== hoverRegion?.id || was?.at !== hoverRegion?.at) set({ hoverRegion })
+  },
+  lines: [],
+  speak: (text, mood, region) => set({ lines: [...get().lines, { id: nextId++, text, mood, region }] }),
+  nextLine: () => set({ lines: get().lines.slice(1) }),
+  party: null,
+  celebrate: (id) => set({ party: { id, at: performance.now() } }),
   tip: null,
   showTip: (id) => {
     if (tipGate?.(id)) set({ tip: id })

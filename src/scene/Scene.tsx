@@ -6,7 +6,8 @@ import { Effects } from './Effects'
 import { Lights } from './Lights'
 import { Model } from './Model'
 import { GroundCover, Overgrowth, Props, useBlockedCells } from './Props'
-import { DeliveryBoat, Dock, LockedLand } from './Island'
+import { DeliveryBoat, Dock } from './Island'
+import { Regions } from './Regions'
 import { Clouds, SkyDome } from './Sky'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
@@ -105,7 +106,7 @@ export function Scene() {
         <Terrain />
         <Water />
         <Dock />
-        <LockedLand />
+        <Regions />
         <Props />
         <Meadow />
         <Overgrowth />

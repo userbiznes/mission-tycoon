@@ -22,18 +22,20 @@ export const LEVELS: LevelDef[] = [
   {
     level: 3,
     xp: 70,
-    unlocks: ['Storm Chaser contract', 'High-res camera', 'S-band radio', 'Reaction wheels', 'Hardened computer', 'Medium bus (6U)', 'Engineering Lab'],
+    unlocks: ['Expedition: Old Tracking Station', 'Storm Chaser contract', 'High-res camera', 'S-band radio', 'Reaction wheels', 'Hardened computer', 'Medium bus (6U)'],
   },
-  { level: 4, xp: 160, unlocks: ['Moon Ice Mapper contract', 'Medium rocket', 'Deep-space dish', 'Ion thruster'] },
-  { level: 5, xp: 280, unlocks: ['Mars Weather contract'] },
+  { level: 4, xp: 160, unlocks: ['Deep-space dish', 'Ion thruster'] },
+  { level: 5, xp: 280, unlocks: ['Expedition: Science Annex ruins'] },
   { level: 6, xp: 440, unlocks: ['Sandbox bragging rights'] },
+  { level: 7, xp: 640, unlocks: ['Expedition: Heavy Launch Complex'] },
+  { level: 8, xp: 900, unlocks: ['Mars Weather contract'] },
 ]
 
 /** Player level needed before each building can be built on its plot. */
 export const BUILDING_UNLOCK_LEVEL: Record<string, number> = {
   scienceLab: 1,
   crewQuarters: 2,
-  engineeringLab: 3,
+  engineeringLab: 5,
 }
 
 /**
@@ -51,3 +53,9 @@ export const COMMS_LEVELS: { level: number; dishMbPerPass: number; rawStorage: n
 export const ORBIT_DAY_SEC = 60
 /** In-game days a satellite keeps working per year of orbital lifetime. */
 export const LIFE_DAYS_PER_YEAR = 12
+
+/**
+ * The restored Old Tracking Station: a second, bigger dish on the hill. It
+ * catches the passes the home dish misses, and takes far more data on each.
+ */
+export const TRACKING_DISH = { passMult: 2, mbPerPass: 600 }

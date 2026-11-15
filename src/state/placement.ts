@@ -1,3 +1,4 @@
+import { landOpen } from './regionGate'
 import { create } from 'zustand'
 import { BUILDINGS } from '../data/buildings'
 import { FOOTPRINT, type BuildingId } from '../data/layout'
@@ -31,7 +32,7 @@ interface PlacementState {
 
 function check(id: BuildingId, at: CellPos): string | null {
   const g = useGame.getState()
-  return placementProblem(id, at, occupancy(g.placed, g.cleared, id), g.zones)
+  return placementProblem(id, at, occupancy(g.placed, g.cleared, id), landOpen)
 }
 
 export const usePlacement = create<PlacementState>((set, get) => ({
@@ -55,7 +56,7 @@ export const usePlacement = create<PlacementState>((set, get) => ({
     if (!at || isNew) {
       // start where the player is looking, on the nearest free ground
       const t = rig.targetWorld()
-      at = nearestFree(id, cellForCenter(t.x, t.z, FOOTPRINT[id]), occupancy(g.placed, g.cleared, id), g.zones)
+      at = nearestFree(id, cellForCenter(t.x, t.z, FOOTPRINT[id]), occupancy(g.placed, g.cleared, id), landOpen)
     }
     useUi.getState().close()
     sfx('pop')

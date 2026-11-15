@@ -8,8 +8,10 @@ import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { usePlacement } from '../state/placement'
 import { sfx } from '../ui/sound'
+import { landOpen } from '../state/regionGate'
 import { CELL, nearDock, allObstacles, cellKey, isLand, occupancy, worldToCell, type Obstacle, type ObstacleKind } from './grid'
-import { BEACH_W, PLATEAU_D, coastUv, groundHeightUv, uvToWorld, vnoise } from './world'
+import { creekDepth, terrainHeightUv } from './relief'
+import { BEACH_W, PLATEAU_D, coastUv, uvToWorld, vnoise } from './world'
 
 // ------------------------------------------------------------------ prop geometry
 function treeRound(): THREE.BufferGeometry {
@@ -208,7 +210,7 @@ function scatter(seed: number, count: number, accept: (u: number, v: number, d: 
     const [x, z] = uvToWorld(u, v)
     // nothing grows through the dock
     if (nearDock(x, z, 2.2)) continue
-    out.push({ x, z, y: groundHeightUv(u, v), s: scale[0] + rnd() * (scale[1] - scale[0]), rot: rnd() * Math.PI * 2 })
+    out.push({ x, z, y: terrainHeightUv(u, v), s: scale[0] + rnd() * (scale[1] - scale[0]), rot: rnd() * Math.PI * 2 })
   }
   return out
 }
@@ -274,7 +276,7 @@ export function GroundCover({ blocked }: { blocked: Set<number> }) {
   const geo = useMemo(() => ({ tuft: tuft(), flowers: [palette.flowerPink, palette.flowerWhite, palette.flowerOrange, palette.flowerBlue].map(flower) }), [])
   const all = useMemo(() => {
     const onMeadow = (d: number) => d < PLATEAU_D - 0.2
-    const tufts = scatter(5, 620, (u, v, d) => onMeadow(d) && vnoise(u * 0.3, v * 0.3) > 0.58, [0.6, 1.3], 60)
+    const tufts = scatter(5, 620, (u, v, d) => onMeadow(d) && creekDepth(u, v) < 0.02 && vnoise(u * 0.3, v * 0.3) > 0.58, [0.6, 1.3], 60)
     const rnd = seeded(6)
     const flowers: Spot[][] = [[], [], [], []]
     for (let p = 0; p < 110; p++) {
@@ -285,9 +287,9 @@ export function GroundCover({ blocked }: { blocked: Set<number> }) {
       for (let i = 0; i < n; i++) {
         const u = cu + (rnd() - 0.5) * 2
         const v = cv + (rnd() - 0.5) * 2
-        if (!onMeadow(coastUv(u, v))) continue
+        if (!onMeadow(coastUv(u, v)) || creekDepth(u, v) > 0.02) continue
         const [x, z] = uvToWorld(u, v)
-        flowers[kind].push({ x, z, y: 0, s: 0.8 + rnd() * 0.6, rot: rnd() * 6 })
+        flowers[kind].push({ x, z, y: terrainHeightUv(u, v), s: 0.8 + rnd() * 0.6, rot: rnd() * 6 })
       }
     }
     return { tufts, flowers }
@@ -352,7 +354,7 @@ function ObstacleKindMesh({ kind, list, cleared }: { kind: ObstacleKind; list: O
     const ob = list[e.instanceId]
     if (!ob || cleared.has(ob.id)) return
     const g = useGame.getState()
-    if (usePlacement.getState().id || g.phase !== 'play' || g.tourStep >= 0 || ob.zone >= g.zones) return
+    if (usePlacement.getState().id || g.phase !== 'play' || g.tourStep >= 0 || !landOpen(ob.region)) return
     e.stopPropagation()
     sfx('pop')
     useUi.getState().setClearTarget(ob.id)
@@ -385,5 +387,5 @@ export function useBlockedCells(): Set<number> {
   return useMemo(() => occupancy(placed, cleared), [placed, cleared])
 }
 
-export { isLand, treeRound, treePine, scatter, Instances }
+export { isLand, treeRound, treePine, deadTree, scatter, Instances }
 export type { Spot }

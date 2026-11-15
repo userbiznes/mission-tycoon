@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { OrdersList } from './EconomySheets'
 import { Btn, Sheet, Tabs } from './kit'
 
-function ContractCard({ c, stars, locked }: { c: ContractDef; stars: number | null; locked: boolean }) {
+function ContractCard({ c, stars, locked, why }: { c: ContractDef; stars: number | null; locked: boolean; why: string | null }) {
   const draft = useGame((s) => s.draft)
   const inProgress = draft?.contractId === c.id
   return (
@@ -46,7 +46,7 @@ function ContractCard({ c, stars, locked }: { c: ContractDef; stars: number | nu
         {stars !== null ? <Stars n={stars} /> : <span className="muted">Not flown yet</span>}
         {locked ? (
           <span className="chip warn">
-            <Icon.lock /> Agency level {c.unlockLevel}
+            <Icon.lock /> {why ?? `Agency level ${c.unlockLevel}`}
           </span>
         ) : (
           <Btn size="sm" sound={null} onClick={() => acceptContract(c.id)}>
@@ -85,8 +85,8 @@ export function ContractBoard() {
     >
       {tab === 'contracts' ? (
         <div className="contracts">
-          {boardContracts().map(({ contract, stars, locked }) => (
-            <ContractCard key={contract.id} c={contract} stars={stars} locked={locked} />
+          {boardContracts().map(({ contract, stars, locked, why }) => (
+            <ContractCard key={contract.id} c={contract} stars={stars} locked={locked} why={why} />
           ))}
         </div>
       ) : (

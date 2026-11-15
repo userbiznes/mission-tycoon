@@ -70,7 +70,7 @@ export function RoccoBust({ talking = false, mood = 'happy' }: { talking?: boole
 
 /**
  * Rocco from the waist up, hand on hip, the other hand presenting the speech
- * bubble: the big figure used in dialogues until a generated portrait is dropped in.
+ * bubble: the big figure used in dialogues when `public/characters/rocco.png` is missing.
  */
 export function RoccoFigure({ talking = false, mood = 'happy' }: { talking?: boolean; mood?: 'happy' | 'worried' | 'proud' }) {
   const brow = mood === 'worried' ? 3 : mood === 'proud' ? -2 : 0
@@ -136,12 +136,16 @@ export function RoccoFigure({ talking = false, mood = 'happy' }: { talking?: boo
 export function useTypewriter(text: string, cps = 46): { shown: string; done: boolean; finish: () => void } {
   const [n, setN] = useState(0)
   const last = useRef(0)
+  // set when the reader taps to finish the line: the typing loop must stop, or it would un-finish it on the next frame
+  const skipped = useRef(false)
   useEffect(() => {
     setN(0)
     last.current = 0
+    skipped.current = false
     let raf = 0
     const t0 = performance.now()
     const step = (now: number) => {
+      if (skipped.current) return
       const count = Math.min(text.length, Math.floor(((now - t0) / 1000) * cps))
       if (count !== last.current) {
         // a soft blip every few letters
@@ -154,7 +158,14 @@ export function useTypewriter(text: string, cps = 46): { shown: string; done: bo
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
   }, [text, cps])
-  return { shown: text.slice(0, n), done: n >= text.length, finish: () => setN(text.length) }
+  return {
+    shown: text.slice(0, n),
+    done: n >= text.length,
+    finish: () => {
+      skipped.current = true
+      setN(text.length)
+    },
+  }
 }
 
 /**
@@ -206,7 +217,7 @@ export function RoccoHint({ text, onSkip }: { text: string; onSkip?: () => void 
   return (
     <div className="hint-bar" onClick={onSkip}>
       <span className="face">
-        <Portrait id="rocco" fallback={<RoccoBust />} />
+        <Portrait id="rocco-face" fallback={<RoccoBust />} />
       </span>
       <b>{text}</b>
     </div>

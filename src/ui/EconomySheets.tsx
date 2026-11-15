@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CREW, SEATS, TRAITS } from '../data/crew'
+import { REGIONS } from '../data/regions'
 import { ITEM_NAMES, ORDER_TEMPLATES, RAW_TYPES, RAW_UNIT_MB, RECIPES, RECIPE_BY_ID } from '../data/lab'
 import { TIPS } from '../data/tutorial'
 import type { ItemId, ProductId, SeatId } from '../data/types'
@@ -38,6 +39,7 @@ export function LabSheet() {
   const items = useGame((s) => s.items)
   const jobs = useGame((s) => s.labJobs)
   const level = useGame((s) => s.level)
+  const regions = useGame((s) => s.regions)
   const lab = useGame((s) => s.buildings.scienceLab.level)
   const [why, setWhy] = useState(false)
   useEffect(() => showTip('lab'), [showTip])
@@ -71,7 +73,8 @@ export function LabSheet() {
       <p className="eyebrow">Recipes</p>
       <div className="part-list">
         {RECIPES.map((r) => {
-          const locked = level < r.unlockLevel
+          const gate = level < r.unlockLevel ? `Agency level ${r.unlockLevel}` : r.needsRegion && regions[r.needsRegion].state !== 'active' ? `Restore the ${REGIONS[r.needsRegion].name}` : null
+          const locked = !!gate
           const missing = missingInputs(r, items)
           return (
             <div key={r.id} className={`part-card card${locked ? ' locked' : ''}`}>
@@ -88,7 +91,7 @@ export function LabSheet() {
                 </div>
                 {locked ? (
                   <span className="chip warn">
-                    <Icon.lock /> Agency level {r.unlockLevel}
+                    <Icon.lock /> {gate}
                   </span>
                 ) : (
                   <div className="buy-row">

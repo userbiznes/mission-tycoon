@@ -26,7 +26,8 @@ export const ROCKETS: RocketDef[] = [
     capacityKg: 2000,
     price: 7500,
     orbits: ['leo', 'mid', 'polar', 'moon', 'mars'],
-    unlockLevel: 4,
+    unlockLevel: 7,
+    needsRegion: 'heavy',
     blurb: '2,000 kg to low orbit, with enough push left over to reach the Moon.',
   },
 ]

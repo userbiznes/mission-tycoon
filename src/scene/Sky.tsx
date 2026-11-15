@@ -127,8 +127,9 @@ export function Clouds() {
     for (let i = 0; i < 7; i++) {
       list.push({
         u: -80 + rnd() * 160,
-        // rows are kept clear of the base so clouds never hide buildings
-        v: i < 5 ? 4 + i * 4.5 + rnd() * 3 : -36 - (i - 5) * 8,
+        // rows are kept clear of the base so clouds never hide buildings; the two seaward
+        // rows sit far enough out that, seen from the camera, they pass in front of the dock, not over it
+        v: i < 5 ? 4 + i * 4.5 + rnd() * 3 : -54 - (i - 5) * 9,
         y: 13 + rnd() * 5,
         scale: 0.85 + rnd() * 0.7,
         speed: 0.35 + rnd() * 0.3,
