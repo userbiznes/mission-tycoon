@@ -21,6 +21,10 @@ type Sfx =
   | 'build'
   | 'tick'
   | 'rumble'
+  | 'clunk'
+  | 'chime'
+  | 'stamp'
+  | 'beep'
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -146,6 +150,24 @@ export function sfx(name: Sfx): void {
     case 'rumble':
       noise(1.6, { gain: 0.35, from: 90, to: 60, q: 0.5 })
       break
+    case 'clunk':
+      // metal letting go: a low thud with a short rattle on top
+      tone(120, 0.22, { type: 'sine', to: 55, gain: 0.4 })
+      noise(0.09, { gain: 0.22, from: 1500, to: 400, q: 2 })
+      tone(240, 0.07, { type: 'square', to: 150, gain: 0.08, delay: 0.05 })
+      break
+    case 'chime':
+      // bright and open: we made orbit
+      ;[784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.7, { type: 'sine', gain: 0.16, delay: i * 0.07 }))
+      tone(2349, 0.9, { type: 'sine', gain: 0.07, delay: 0.3 })
+      break
+    case 'stamp':
+      noise(0.06, { gain: 0.2, from: 500, to: 150, q: 1 })
+      tone(150, 0.12, { type: 'sine', to: 80, gain: 0.3 })
+      break
+    case 'beep':
+      tone(660, 0.12, { type: 'sine', gain: 0.16 })
+      break
   }
 }
 
@@ -175,7 +197,9 @@ export function startRoar(): () => void {
   filter.connect(g)
   g.connect(master)
   src.start()
+  roar = { ac, g, filter }
   return () => {
+    roar = null
     try {
       g.gain.cancelScheduledValues(ac.currentTime)
       g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), ac.currentTime)
@@ -184,5 +208,55 @@ export function startRoar(): () => void {
     } catch {
       /* already stopped */
     }
+  }
+}
+
+let roar: { ac: AudioContext; g: GainNode; filter: BiquadFilterNode } | null = null
+/** How hard the engine is working, 0–1: the roar swells and opens up with it. */
+export function roarLevel(level: number): void {
+  if (!roar) return
+  const v = Math.min(1, Math.max(0, level))
+  roar.g.gain.setTargetAtTime(0.08 + v * 0.62, roar.ac.currentTime, 0.12)
+  roar.filter.frequency.setTargetAtTime(180 + v * 520, roar.ac.currentTime, 0.12)
+}
+
+let wind: { ac: AudioContext; g: GainNode; src: AudioBufferSourceNode } | null = null
+/** Air rushing past the rocket: set its level every frame; it starts itself and stops at zero. */
+export function windLevel(level: number): void {
+  const v = Math.min(1, Math.max(0, level))
+  if (!wind) {
+    if (v < 0.02) return
+    const ac = audio()
+    if (!ac || !master) return
+    const len = ac.sampleRate * 2
+    const buf = ac.createBuffer(1, len, ac.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1
+    const src = ac.createBufferSource()
+    src.buffer = buf
+    src.loop = true
+    const filter = ac.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.value = 900
+    filter.Q.value = 0.6
+    const g = ac.createGain()
+    g.gain.value = 0.0001
+    src.connect(filter)
+    filter.connect(g)
+    g.connect(master)
+    src.start()
+    wind = { ac, g, src }
+  }
+  wind.g.gain.setTargetAtTime(v * 0.22, wind.ac.currentTime, 0.15)
+}
+export function stopWind(): void {
+  if (!wind) return
+  const w = wind
+  wind = null
+  try {
+    w.g.gain.setTargetAtTime(0.0001, w.ac.currentTime, 0.1)
+    w.src.stop(w.ac.currentTime + 0.6)
+  } catch {
+    /* already stopped */
   }
 }

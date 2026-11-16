@@ -20,9 +20,9 @@ import { sfx } from './sound'
  *    round frame, his words in a bubble beside it. The interface is resized
  *    to sit above the strip, so he never covers anything;
  *  - the stage: full-size Rocco over a dimmed screen (welcome and graduation);
- *  - the spotlight: everything dimmed except the target, a gold ring, a
- *    pointing hand, a name label over 3D buildings, and only the target
- *    accepting clicks;
+ *  - the spotlight: everything dimmed except the target, a pointing hand,
+ *    a name label over 3D buildings, and only the target accepting clicks.
+ *    Nothing is drawn around the target itself;
  *  - the First Flight checklist and, afterwards, the Next Goal tracker;
  *  - Rocco's tips, which speak from the same dock and never block the game.
  */
@@ -382,7 +382,6 @@ function placeHand(r: Rect, lit: Rect[], host: DOMRect, size: number, inset: num
   return best
 }
 
-const RINGS = 5
 const HOLES = 6
 
 function Spotlight() {
@@ -395,7 +394,6 @@ function Spotlight() {
   const hand = useRef<HTMLDivElement>(null)
   const label = useRef<HTMLDivElement>(null)
   const handSpot = useRef<{ key: string; at: number; frame: number; spot: HandSpot | null }>({ key: '', at: 0, frame: 0, spot: null })
-  const rings = useRef<(HTMLDivElement | null)[]>([])
   const worldHoles = useRef<Rect[]>([])
   const seen = useRef({ step: '', nudge: 0, scrolled: '', shade: '' })
 
@@ -417,7 +415,7 @@ function Spotlight() {
       const look: { a: string; r: Rect }[] = []
       let via = false
       const pad = (a: string, r: Rect, go = false): Rect => {
-        // a thing to click is hugged by its glow; a thing to look at gets a little air
+        // the light sits close around a thing to click; a thing to look at gets a little air
         const p = isWorldAnchor(a) ? em * 0.2 : go ? em * 0.14 : em * 0.36
         // the resource tiles carry their "Why?" tag above the top edge
         const top = a.startsWith('builder.bar') ? em * 0.85 : p
@@ -482,30 +480,10 @@ function Spotlight() {
       block.current.style.display = free ? 'none' : 'block'
       if (!free) block.current.style.clipPath = `path(evenodd, "${frame}${click.map((c) => roundRect(c.r.x, c.r.y, c.r.w, c.r.h, c.r.r)).join('')}")`
 
-      // --- the gold glow: only around what takes a click. A thing to look at is lit, never outlined.
-      const all = [...click.map((c) => ({ ...c, go: true })), ...look.map((c) => ({ ...c, go: false }))]
-      const ringed = step?.ring === false ? [] : all.filter((x) => x.go)
+      // nothing is drawn around a target: the light and the hand are the whole signal
+      const all = [...click, ...look]
+      // a click that missed, or an idle prod: the hand jabs again
       const flash = t.nudge !== seen.current.nudge
-      for (let i = 0; i < RINGS; i++) {
-        const ring = rings.current[i]
-        if (!ring) continue
-        const item = ringed[i]
-        if (!item) {
-          ring.style.display = 'none'
-          continue
-        }
-        ring.style.display = 'block'
-        ring.style.transform = `translate3d(${item.r.x.toFixed(1)}px, ${item.r.y.toFixed(1)}px, 0)`
-        ring.style.width = `${item.r.w.toFixed(1)}px`
-        ring.style.height = `${item.r.h.toFixed(1)}px`
-        ring.style.borderRadius = `${item.r.r.toFixed(1)}px`
-        ring.className = `tut-ring${isWorldAnchor(item.a) ? ' world' : ''}`
-        if (flash) {
-          ring.classList.remove('flash')
-          void ring.offsetWidth
-          ring.classList.add('flash')
-        }
-      }
       seen.current.nudge = t.nudge
 
       // --- the pointing hand: it clicks on a do step, and only points on a talk step
@@ -565,7 +543,7 @@ function Spotlight() {
       label.current.style.display = name ? 'block' : 'none'
       if (named && name) {
         if (label.current.textContent !== name) label.current.textContent = name
-        // above the ring when there is room under the HUD, otherwise just under it
+        // above the building when there is room under the HUD, otherwise just under it
         const above = named.r.y > em * 6.4
         label.current.style.transform = `translate3d(${(named.r.x + named.r.w / 2).toFixed(1)}px, ${(above ? named.r.y - em * 2.5 : named.r.y + named.r.h + em * 0.5).toFixed(1)}px, 0)`
       }
@@ -646,15 +624,6 @@ function Spotlight() {
         }}
         onWheel={(e) => e.stopPropagation()}
       />
-      {Array.from({ length: RINGS }, (_, i) => (
-        <div
-          key={i}
-          className="tut-ring"
-          ref={(el) => {
-            rings.current[i] = el
-          }}
-        />
-      ))}
       <div className="tut-label" ref={label} />
       <div className="tut-hand" ref={hand}>
         <svg viewBox="0 0 64 64">

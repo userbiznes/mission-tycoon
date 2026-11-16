@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CONTRACT_BY_ID } from '../data/contracts'
 import { PART_BY_ID, PART_CATEGORIES, partsInCategory } from '../data/parts'
 import { TIPS } from '../data/tutorial'
@@ -40,10 +40,17 @@ const BAR_TINT: Record<ResourceKey, string> = {
 /** One of the six resource bars: icon, name, the bar itself, the numbers, and a "Why?" button. Red when the design breaks it. */
 function BarTile({ bar, onWhy }: { bar: ResourceBar; onWhy: () => void }) {
   const key = bar.key as ResourceKey
+  // pointed out after "Fix it" on the launch board or the report
+  const focus = useUi((s) => s.builderFocus) === key
+  useEffect(() => {
+    if (!focus) return
+    const t = setTimeout(() => useUi.getState().setBuilderFocus(null), 6000)
+    return () => clearTimeout(t)
+  }, [focus])
   const I = Icon[BAR_ICON[key]]
   const subs = bar.sub?.length ? bar.sub : [bar]
   return (
-    <button type="button" className={`rbar ${bar.status}`} data-ui={`builder.bar.${key}`} onClick={onWhy} aria-label={`${bar.label}: ${bar.detail}. Why?`}>
+    <button type="button" className={`rbar ${bar.status}${focus ? ' focus' : ''}`} data-ui={`builder.bar.${key}`} onClick={onWhy} aria-label={`${bar.label}: ${bar.detail}. Why?`}>
       <span className="rbar-top">
         <span className="rbar-ico" style={{ background: BAR_TINT[key] }}>
           <I />
@@ -95,18 +102,27 @@ export function Stars({ n, big, stamp }: { n: number; big?: boolean; stamp?: boo
   )
 }
 
-export function ReasonList({ result, ui }: { result: MissionResult; ui?: string }) {
+export function ReasonList({ result, ui, onFix, replay }: { result: MissionResult; ui?: string; /** offer "Fix this" on a reason; return false for ones with nothing to fix */ onFix?: (id: string) => (() => void) | null; replay?: ReactNode }) {
   return (
     <div className="reasons">
-      {result.reasons.map((r, i) => (
-        <div key={r.id + i} className={`reason ${r.tone}`} data-ui={ui ? `${ui}.${i}` : undefined}>
-          <span className="n">{i + 1}</span>
-          <div>
-            <p className="t-body">{r.text}</p>
-            {r.fix && <small className="t-small">{r.fix}</small>}
+      {result.reasons.map((r, i) => {
+        const fix = r.tone !== 'good' && onFix ? onFix(r.id) : null
+        return (
+          <div key={r.id + i} className={`reason ${r.tone}`} data-ui={ui ? `${ui}.${i}` : undefined}>
+            <span className="n">{i + 1}</span>
+            <div className="grow">
+              <p className="t-body">{r.text}</p>
+              {r.fix && <small className="t-small">{r.fix}</small>}
+              {fix && (
+                <button type="button" className="fix-this" data-ui={ui ? `${ui}.${i}.fix` : undefined} onClick={fix}>
+                  <Icon.wrench /> Fix this
+                </button>
+              )}
+            </div>
+            {i === 0 && replay}
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -162,6 +178,15 @@ export function Builder() {
   const setScreen = useUi((s) => s.setScreen)
   const toast = useUi((s) => s.toast)
   const [cat, setCat] = useState<PartCategory>('power')
+  // after "Fix this": open the shelf at the part that would fix it, and point it out
+  const pointAt = useUi((s) => s.builderPart)
+  useEffect(() => {
+    const part = pointAt ? PART_BY_ID[pointAt] : null
+    if (!part) return
+    setCat(part.category)
+    const t = setTimeout(() => useUi.getState().setBuilderPart(null), 7000)
+    return () => clearTimeout(t)
+  }, [pointAt])
   const [why, setWhy] = useState<ResourceKey | null>(null)
   const [test, setTest] = useState<MissionResult | null>(null)
   const [tip, setTip] = useState<string | null>(null)
@@ -333,7 +358,7 @@ export function Builder() {
                 key={p.id}
                 role="button"
                 tabIndex={0}
-                className={`card tray-card${lock ? ' locked' : ''}${isBus ? ' on' : ''}`}
+                className={`card tray-card${lock ? ' locked' : ''}${isBus ? ' on' : ''}${pointAt === p.id ? ' focus' : ''}`}
                 data-ui={`builder.part.${p.id}`}
                 onPointerDown={(e) => onCardDown(e, p)}
                 onPointerMove={onCardMove}

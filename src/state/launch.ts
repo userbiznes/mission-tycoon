@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { RocketKind } from '../art/models/rocket'
+import { RULES } from '../data/rules'
 
 /**
  * Launch sequence state.
@@ -50,6 +51,33 @@ export const flight = {
   /** taps and releases queued by the UI, consumed by the scene */
   tapQueued: false,
   releaseQueued: false,
+  /** 0–1: how white the screen is while the camera passes through the cloud layer */
+  veil: 0,
+  /** true once the world below is the planet (above the clouds) */
+  inSpace: false,
+  /** where the rocket and the top of the arc are on screen, 0–1 from the top left */
+  sx: 0.5,
+  sy: 0.5,
+  ax: 0.5,
+  ay: 0.5,
+  /** the player pressed Continue on the flight card */
+  skip: false,
+}
+
+/** How long the flight card stays up in orbit before operations begin, seconds. */
+export const ORBIT_HOLD = 6.5
+
+/** Share of the orbital lifetime a flight of this quality keeps (the same sum the mission rules use). */
+export function lifeKept(quality: number): number {
+  return RULES.sloppyLaunchLifeFloor + (1 - RULES.sloppyLaunchLifeFloor) * Math.min(1, Math.max(0, quality))
+}
+
+/** One word for the whole flight, from its quality. */
+export function flightWord(quality: number): string {
+  if (quality >= 0.99) return 'Perfect flight'
+  if (quality >= 0.7) return 'Good flight'
+  if (quality >= 0.4) return 'Rough flight'
+  return 'Sloppy flight'
 }
 
 /** Score a timing input: 1 inside the green band, falling to 0.15 well outside. */
@@ -126,6 +154,9 @@ export const useLaunch = create<LaunchStore>((set, get) => ({
       orbitKm,
       tapQueued: false,
       releaseQueued: false,
+      veil: 0,
+      inSpace: false,
+      skip: false,
     })
     set({ active: true, phase: 'countdown', kind, count: 3, verdicts: [null, null, null], quality: null, onDone })
   },
@@ -158,6 +189,8 @@ export const useLaunch = create<LaunchStore>((set, get) => ({
     flight.engine = 0
     flight.space = 0
     flight.staged = false
+    flight.veil = 0
+    flight.inSpace = false
     set({ active: false, phase: 'idle', quality: null, onDone: null, rocketSerial: get().rocketSerial + 1 })
   },
   setKind: (kind) => set({ kind, rocketSerial: get().rocketSerial + 1 }),

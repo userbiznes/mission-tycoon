@@ -1,3 +1,4 @@
+import { AUTOPILOT_QUALITY, lifeKept } from '../state/launch'
 import { BUILDINGS } from '../data/buildings'
 import { CONTRACT_BY_ID } from '../data/contracts'
 import { STARTING_BANK } from '../data/economy'
@@ -69,7 +70,7 @@ export interface Step {
   viaHint?: Line
   camera?: CameraTarget
   /** what must be open for this step; restored if the player wanders off or reloads */
-  scene?: { screen?: Exclude<Screen, null> | null; sheet?: 'contracts' | 'market' | null; marketTab?: string }
+  scene?: { screen?: Exclude<Screen, null> | null; sheet?: 'contracts' | 'market' | null; marketTab?: string; /** which step of the launch board is open */ prepStep?: number }
   /** bus events that complete the step */
   done?: string[]
   /** …or a condition, checked a few times a second */
@@ -80,8 +81,6 @@ export interface Step {
   allow?: 'target' | 'none' | 'camera' | 'all'
   /** dim the screen around the target (default: yes for do steps and for talk steps with a target) */
   dim?: boolean
-  /** the gold glow around what takes the click (default: yes). Off where a dialog's own buttons are the whole choice. */
-  ring?: boolean
   /** a 3D target was clicked: what the click does during the tutorial */
   onClick?: (c: Ctx) => void
   /** side effects when the step starts, also after a reload */
@@ -174,7 +173,7 @@ export const STEPS: Step[] = [
     target: 'building:missionControl',
     line: `Clients post jobs at ${BUILDINGS.missionControl.name}.`,
     instruction: `Click ${BUILDINGS.missionControl.name}`,
-    idleHint: `${BUILDINGS.missionControl.name} is the building in the gold ring. Click anywhere on it.`,
+    idleHint: `${BUILDINGS.missionControl.name} is the lit building under the hand. Click anywhere on it.`,
     done: ['sheet.opened:contracts'],
     doneWhen: (c) => c.sheet === 'contracts',
   },
@@ -217,7 +216,7 @@ export const STEPS: Step[] = [
     scene: { screen: null, sheet: 'contracts' },
     target: `contracts.accept.${FL.id}`,
     line: "Let's take it.",
-    instruction: (c) => `Click the glowing [[${c.game.bestStars[FL.id] !== undefined ? 'Fly again' : 'Take the job'}|green]] button`,
+    instruction: (c) => `Click the [[${c.game.bestStars[FL.id] !== undefined ? 'Fly again' : 'Take the job'}|green]] button`,
     idleHint: `The green button is at the bottom of the ${FL.title} note.`,
     done: ['contract.accepted'],
     doneWhen: (c) => c.game.draft?.contractId === FL.id,
@@ -241,7 +240,7 @@ export const STEPS: Step[] = [
     target: 'building:partsMarket',
     line: `We need a camera. To the ${BUILDINGS.partsMarket.name} on the dock!`,
     instruction: `Click the ${BUILDINGS.partsMarket.name}`,
-    idleHint: `The ${BUILDINGS.partsMarket.name} is the red-roofed hall on the dock, in the gold ring.`,
+    idleHint: `The ${BUILDINGS.partsMarket.name} is the red-roofed hall on the dock, under the hand.`,
     done: ['sheet.opened:market'],
     doneWhen: (c) => c.sheet === 'market',
   },
@@ -254,7 +253,7 @@ export const STEPS: Step[] = [
     via: 'market.tab.instrument',
     viaHint: 'Open the [[Instruments|tab]] tab',
     line: '[[Buy now|yellow]] gets it today but costs more.',
-    instruction: 'Click the glowing [[Buy now|yellow]] button',
+    instruction: 'Click the [[Buy now|yellow]] button',
     idleHint: `Find the ${CAM.name} on the shelf, then click its yellow [[Buy now|yellow]] button.`,
     done: [`part.bought:${CAM.id}`],
     doneWhen: (c) => owned(c, CAM.id),
@@ -278,7 +277,7 @@ export const STEPS: Step[] = [
     via: 'market.tab.power',
     viaHint: 'Open the [[Power|tab]] tab',
     line: 'Ordering is cheaper. We just wait for the boat.',
-    instruction: 'Click the glowing [[Order|blue]] button',
+    instruction: 'Click the [[Order|blue]] button',
     idleHint: `The blue [[Order|blue]] button is on the ${PANELS.name} card, next to Buy now.`,
     done: [`part.ordered:${PANELS.id}`],
     doneWhen: (c) => onItsWay(c, PANELS.id) || owned(c, PANELS.id),
@@ -316,7 +315,7 @@ export const STEPS: Step[] = [
     target: 'building:integrationBay',
     line: `Delivery's here! Off to the ${BUILDINGS.integrationBay.name}.`,
     instruction: `Click the ${BUILDINGS.integrationBay.name}`,
-    idleHint: `The ${BUILDINGS.integrationBay.name} is the long hall in the gold ring.`,
+    idleHint: `The ${BUILDINGS.integrationBay.name} is the long hall under the hand.`,
     done: ['screen:builder'],
     doneWhen: (c) => c.screen === 'builder',
   },
@@ -404,7 +403,7 @@ export const STEPS: Step[] = [
     scene: { screen: 'builder' },
     target: 'builder.test',
     line: '[[Test run|blue]] flies the whole mission in fast-forward, for free.',
-    instruction: 'Click the glowing [[Test run|blue]] button',
+    instruction: 'Click the [[Test run|blue]] button',
     idleHint: '[[Test run|blue]] is the blue button under the part tray.',
     done: ['testrun.done'],
     doneWhen: (c) => c.has('testrun'),
@@ -437,7 +436,7 @@ export const STEPS: Step[] = [
     scene: { screen: 'builder' },
     target: 'builder.pad',
     line: 'She is ready to fly.',
-    instruction: 'Click the glowing [[To the pad|yellow]] button',
+    instruction: 'Click the [[To the pad|yellow]] button',
     idleHint: '[[To the pad|yellow]] is the yellow button at the bottom right.',
     done: ['screen:launchPrep'],
     doneWhen: (c) => c.screen === 'launchPrep',
@@ -448,44 +447,44 @@ export const STEPS: Step[] = [
     id: 'c4.orbit',
     chapter: 4,
     type: 'do',
-    scene: { screen: 'launchPrep' },
+    scene: { screen: 'launchPrep', prepStep: 0 },
     target: `prep.orbit.${LEO.id}`,
     line: `${LEO.name} is closest and cheapest, and it takes the sharpest photos.`,
     instruction: `Pick ${LEO.name}`,
-    idleHint: `Click the ${LEO.name} card in the Orbit column.`,
+    idleHint: `Click the ${LEO.name} card.`,
     done: [`orbit.selected:${LEO.id}`],
   },
   {
     id: 'c4.rocket',
     chapter: 4,
     type: 'do',
-    scene: { screen: 'launchPrep' },
+    scene: { screen: 'launchPrep', prepStep: 1 },
     target: `prep.rocket.${RIDESHARE.id}`,
     line: `A ${lower(RIDESHARE.name)} puts our satellite on someone else's rocket. It's cheap, and it lifts ${Math.round(RIDESHARE.capacityKg * LEO.capacityFactor)} kg, plenty for ours.`,
     instruction: 'Pick it',
-    idleHint: `Click the ${RIDESHARE.name} card in the Rocket column.`,
+    idleHint: `Click the ${RIDESHARE.name} card.`,
     done: [`rocket.selected:${RIDESHARE.id}`],
   },
-  { id: 'c4.capacity', chapter: 4, type: 'talk', scene: { screen: 'launchPrep' }, target: 'prep.capacity', line: 'This bar shows how much of that lift our satellite uses.' },
+  { id: 'c4.capacity', chapter: 4, type: 'talk', scene: { screen: 'launchPrep', prepStep: 1 }, target: 'prep.capacity', line: 'The satellite sits on this scale. Above the line, the rocket can lift it.' },
   {
     id: 'c4.stations',
     chapter: 4,
     type: 'talk',
-    scene: { screen: 'launchPrep' },
+    scene: { screen: 'launchPrep', prepStep: 2 },
     target: `prep.station.${HOME.id}`,
     line: `Our ${lower(HOME.name)} hears the satellite ${HOME.passes[LEO.id]} times a day.`,
   },
-  { id: 'c4.poll', chapter: 4, type: 'talk', scene: { screen: 'launchPrep' }, target: 'prep.col.poll', line: 'Each crew seat checks the plan.' },
+  { id: 'c4.poll', chapter: 4, type: 'talk', scene: { screen: 'launchPrep', prepStep: 2 }, target: 'prep.col.poll', line: 'Each crew seat checks the plan.' },
   {
     id: 'c4.ground',
     chapter: 4,
     type: 'do',
-    scene: { screen: 'launchPrep' },
+    scene: { screen: 'launchPrep', prepStep: 2 },
     target: [`prep.station.${EQUATOR.id}`, 'prep.launch'],
     highlight: ['prep.call.ground'],
     line: `Ground says the radio can't bring everything home. Your call: add the ${EQUATOR.name} for more passes, or launch anyway and learn.`,
     instruction: `Add the ${EQUATOR.name}, or launch`,
-    idleHint: `Either is fine. The ${EQUATOR.name} is in the Stations column; the launch button is at the bottom right.`,
+    idleHint: `Either is fine. The ${EQUATOR.name} is in the list on the right; the launch button is at the bottom right.`,
     done: [`station.toggled:${EQUATOR.id}`, 'launch.pressed', 'launch.started'],
     doneWhen: (c) => c.screen === 'launch',
   },
@@ -497,7 +496,7 @@ export const STEPS: Step[] = [
     target: 'prep.launch',
     line: 'Everyone has had their say.',
     instruction: 'Click the big launch button',
-    idleHint: 'The launch button is the big one at the bottom right. If it counts the NO-GOs, click it twice.',
+    idleHint: 'The launch button is the big one at the bottom right. If it counts the NO-GOs, click it, then [[Launch anyway|red]].',
     done: ['launch.started'],
     doneWhen: (c) => c.screen === 'launch',
   },
@@ -521,10 +520,10 @@ export const STEPS: Step[] = [
     chapter: 5,
     type: 'talk',
     resume: 'c4.launch',
-    target: 'launch.autopilot',
+    target: 'launch.card',
     dim: false,
     holdOps: true,
-    line: "We're up! Next time you can fly it yourself: just switch [[Autopilot|cream]] off.",
+    line: `We're up! Autopilot kept ${Math.round(lifeKept(AUTOPILOT_QUALITY) * 100)}% of the orbit life. Fly it yourself next time for up to 100%.`,
   },
 
   // (the launch screen hands over to operations by itself: nothing to say while it does)
@@ -569,14 +568,13 @@ export const STEPS: Step[] = [
     scene: { screen: 'ops' },
     resume: 'c4.launch',
     target: ['event.choose.a', 'event.choose.b'],
-    // the decision card already has the screen to itself: no dimming, no glow, nothing drawn over it
+    // the decision card already has the screen to itself: no dimming, nothing drawn over it
     dim: false,
-    ring: false,
     // (a flight with nothing to decide goes straight on)
     skipIf: (c) => c.has('ops.debrief'),
     line: 'Things go wrong in space too. Each choice shows what it costs.',
     instruction: 'Pick one',
-    idleHint: 'Click [[Choose this|blue]] under either choice. Both are fine.',
+    idleHint: 'Click either button. Both are fine.',
     done: ['event.resolved'],
     doneWhen: (c) => !c.has('event') && c.elapsed > 500,
   },
@@ -589,7 +587,7 @@ export const STEPS: Step[] = [
     target: 'ops.skip',
     holdOps: true,
     skipIf: (c) => !c.has('ops.skip'),
-    line: '[[Skip ahead|cream]] jumps to the end whenever you like.',
+    line: '[[Skip to end|cream]] jumps ahead whenever you like.',
   },
   {
     id: 'c6.fly',
@@ -611,7 +609,7 @@ export const STEPS: Step[] = [
     resume: 'c4.launch',
     target: 'ops.debrief',
     line: 'Mission complete!',
-    instruction: 'Click the glowing [[Mission complete: debrief|green]] button',
+    instruction: 'Click the [[Mission complete: debrief|green]] button',
     idleHint: 'The green button is at the bottom of the gauges, on the right.',
     done: ['screen:debrief'],
     doneWhen: (c) => c.screen === 'debrief',

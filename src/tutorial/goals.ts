@@ -7,7 +7,7 @@ import type { CameraTarget } from './steps'
 /**
  * The Next Goal tracker's goals, in order. The first one that is not done is
  * the current goal. "Show me" glides the camera to the right place, opens the
- * right menu and rings the right button.
+ * right menu and points the hand at the right button.
  */
 export interface Goal {
   id: string

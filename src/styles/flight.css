@@ -1,0 +1,680 @@
+/* ---------- the launch: flight instruments over one continuous shot ---------- */
+.fl {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  touch-action: none;
+  pointer-events: none;
+  animation: fade-in 0.4s ease both;
+  --glass: rgba(19, 35, 58, 0.8);
+  --glass-edge: rgba(255, 241, 214, 0.55);
+  --glass-ink: #fff1d6;
+}
+/* through the cloud layer */
+.fl-veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 55%, #ffffff 0%, #f6fbff 55%, #dcecfb 100%);
+  opacity: 0;
+}
+
+/* one line at a time from the Flight Director */
+.fl-ticker {
+  position: absolute;
+  top: 0.6em;
+  left: 50%;
+  translate: -50% 0;
+  max-width: min(46em, 62%);
+  margin: 0;
+  padding: 0.3em 1em 0.38em 0.42em;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  border: 0.12em solid var(--glass-edge);
+  border-radius: 1.3em;
+  background: var(--glass);
+  color: var(--glass-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  box-shadow: var(--shadow-soft);
+  animation: fl-ticker 4.4s ease both;
+}
+.fl-ticker.stay {
+  animation: fl-ticker-in 0.3s ease both;
+}
+.fl-ticker b {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.1em 0.6em 0.16em 0.5em;
+  border-radius: 1em;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.fl-ticker b::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--red);
+  animation: fl-blink 1s steps(2, jump-none) infinite;
+}
+@keyframes fl-ticker {
+  0% {
+    opacity: 0;
+    translate: -50% -0.5em;
+  }
+  6% {
+    opacity: 1;
+    translate: -50% 0;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fl-ticker-in {
+  from {
+    opacity: 0;
+    translate: -50% -0.5em;
+  }
+}
+@keyframes fl-blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+
+/* left: the altitude ladder */
+.fl-ladder {
+  position: absolute;
+  left: calc(1em + var(--safe-left));
+  top: 3.3em;
+  bottom: calc(8.6em + var(--safe-bottom));
+  width: 10.6em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+  padding: 0.6em 0.8em 1em;
+  border: 0.12em solid var(--glass-edge);
+  border-radius: 1.1em;
+  background: var(--glass);
+  color: var(--glass-ink);
+}
+.fl-alt {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.fl-alt small {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  opacity: 0.85;
+}
+.fl-alt b {
+  font-size: var(--fs-xl);
+  font-variant-numeric: tabular-nums;
+}
+.fl-rungs {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0.6em 0 0.2em;
+}
+.fl-rungs .rail {
+  position: absolute;
+  left: 0.85em;
+  top: 0;
+  bottom: 0;
+  width: 0.6em;
+  border-radius: 1em;
+  background: rgba(255, 241, 214, 0.22);
+  overflow: hidden;
+}
+.fl-rungs .rail i {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0;
+  border-radius: 1em;
+  background: linear-gradient(0deg, #4ba4e3, #9fe0ff);
+}
+.fl-rungs .mark {
+  position: absolute;
+  left: 3.5em;
+  translate: 0 50%;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.72;
+  transition: color 0.3s, opacity 0.3s;
+}
+.fl-rungs .mark::before {
+  content: '';
+  position: absolute;
+  left: -2.15em;
+  top: 50%;
+  width: 0.6em;
+  height: 0.16em;
+  margin-top: -0.08em;
+  border-radius: 1em;
+  background: currentColor;
+}
+.fl-rungs .mark small {
+  font-size: inherit;
+  font-weight: 500;
+  opacity: 0.8;
+}
+.fl-rungs .mark.on {
+  color: var(--yellow);
+  opacity: 1;
+  animation: fl-reached 0.5s var(--spring) both;
+}
+@keyframes fl-reached {
+  40% {
+    scale: 1.18;
+  }
+}
+.fl-rungs .me {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2.3em;
+  height: 2.3em;
+  translate: 0 50%;
+  display: grid;
+  place-items: center;
+  border: var(--outline) solid var(--ink);
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 0.2em 0.4em rgba(0, 0, 0, 0.35);
+}
+.fl-rungs .me svg,
+.fl-rungs .me img {
+  width: 1.3em;
+  height: 1.3em;
+  rotate: -45deg;
+}
+
+/* right: the speedometer */
+.fl-speedo {
+  position: absolute;
+  right: calc(1em + var(--safe-right));
+  top: 3.3em;
+  width: 11em;
+  padding: 0.5em 0.7em 0.65em;
+  border: 0.12em solid var(--glass-edge);
+  border-radius: 1.1em;
+  background: var(--glass);
+  color: var(--glass-ink);
+  text-align: center;
+}
+.fl-speedo svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.fl-speedo path {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+.fl-speedo .track {
+  stroke: rgba(255, 241, 214, 0.22);
+}
+.fl-speedo .fill {
+  stroke: #5db7f2;
+  transition: stroke 0.3s;
+}
+.fl-speedo .notch {
+  stroke: var(--glass-ink);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+.fl-speedo p {
+  margin: 0;
+}
+.fl-speedo .num {
+  margin-top: -1.55em;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.fl-speedo .num small {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  opacity: 0.85;
+}
+.fl-speedo .need {
+  margin-top: 0.45em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.fl-speedo.reached .fill {
+  stroke: var(--green);
+}
+.fl-speedo.reached .need {
+  color: #a9ec8f;
+}
+
+/* the countdown and the words in the sky */
+.fl-mid {
+  position: absolute;
+  left: 66%;
+  top: 34%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.fl-mid.top {
+  left: 50%;
+  top: 50%;
+}
+
+/* a grade for each timing, stamped on */
+.fl-stamp {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  translate: -50% -50%;
+  rotate: -7deg;
+  padding: 0.02em 0.6em 0.1em;
+  border: 0.14em solid currentColor;
+  border-radius: 0.3em;
+  outline: 0.07em solid currentColor;
+  outline-offset: 0.1em;
+  background: rgba(255, 250, 236, 0.94);
+  color: var(--green-dark);
+  font-size: calc(var(--u) * 2.5);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: fl-stamp 1.5s ease both;
+}
+.fl-stamp.perfect {
+  background: #fff3c4;
+  color: #b3720e;
+}
+.fl-stamp.off {
+  color: var(--orange-dark);
+}
+.fl-stamp.bad {
+  color: var(--red-dark);
+}
+@keyframes fl-stamp {
+  0% {
+    opacity: 0;
+    scale: 2.6;
+  }
+  12% {
+    opacity: 1;
+    scale: 0.94;
+  }
+  20% {
+    scale: 1.05;
+  }
+  28% {
+    scale: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* staging: the first stage's fuel, pinned beside the rocket */
+.fl-fuel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.fl-fuel > div {
+  position: absolute;
+  right: 3.6em;
+  top: -4.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+}
+.fl-fuel .tank {
+  position: relative;
+  display: block;
+  width: 2.2em;
+  height: 7.6em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 0.7em;
+  background: var(--cream);
+  overflow: hidden;
+  transition: box-shadow 0.12s;
+}
+.fl-fuel .zone {
+  position: absolute;
+  inset: auto 0 0;
+  background: repeating-linear-gradient(-45deg, #63bf4f 0 0.3em, #7ad466 0.3em 0.6em);
+}
+.fl-fuel .level {
+  position: absolute;
+  inset: auto 0.42em 0;
+  border-radius: 0.3em 0.3em 0 0;
+  background: linear-gradient(0deg, #f6963a, #ffd166);
+  box-shadow: 0 0 0 0.09em var(--ink);
+}
+.fl-fuel small {
+  padding: 0.05em 0.6em 0.14em;
+  border-radius: 1em;
+  background: var(--glass);
+  color: var(--glass-ink);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fl-fuel.go .tank {
+  box-shadow:
+    0 0 0 0.2em #7ad466,
+    0 0 1.1em 0.4em rgba(122, 212, 102, 0.85);
+}
+.fl-fuel.late .tank {
+  box-shadow: 0 0 0 0.2em var(--red);
+}
+
+/* the final burn: a name for the ring at the top of the arc */
+.fl-apex {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.fl-apex span {
+  position: absolute;
+  left: 0;
+  bottom: 2.1em;
+  translate: -50% 0;
+  padding: 0.05em 0.7em 0.16em;
+  border: 0.12em solid var(--ink);
+  border-radius: 1em;
+  background: var(--green);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 0.08em 0 rgba(20, 70, 20, 0.6);
+}
+
+/* bottom left: who flies */
+.fl-auto {
+  position: absolute;
+  left: calc(1em + var(--safe-left));
+  bottom: calc(1em + var(--safe-bottom));
+  display: flex;
+  gap: 0.3em;
+  padding: 0.3em;
+  border: 0.12em solid var(--glass-edge);
+  border-radius: 1.25em;
+  background: var(--glass);
+  pointer-events: auto;
+}
+.fl-auto button {
+  min-height: var(--tap);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.25em 0.95em 0.35em;
+  border: 0.12em solid transparent;
+  border-radius: 0.95em;
+  background: transparent;
+  color: var(--glass-ink);
+  font: inherit;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+}
+.fl-auto button b {
+  font-size: var(--fs-sm);
+}
+.fl-auto button small {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  opacity: 0.88;
+}
+.fl-auto button.on {
+  border-color: var(--ink);
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 0.18em 0 rgba(0, 0, 0, 0.35);
+}
+.fl-auto button:disabled {
+  cursor: default;
+}
+.fl-auto button:disabled:not(.on) {
+  opacity: 0.5;
+}
+.fl-auto button:focus-visible {
+  outline: 0.16em solid var(--yellow);
+  outline-offset: 0.1em;
+}
+
+/* bottom right: the big button, with the ignition ring round it */
+.fl-fire {
+  position: absolute;
+  right: calc(1.1em + var(--safe-right));
+  bottom: calc(1.3em + var(--safe-bottom));
+  width: 9.6em;
+  height: 9.6em;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+}
+.fl-fire svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  rotate: -90deg;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.fl-fire.ring svg {
+  opacity: 1;
+}
+.fl-fire circle {
+  fill: none;
+}
+.fl-fire .track {
+  stroke: rgba(19, 35, 58, 0.82);
+  stroke-width: 12;
+}
+.fl-fire .band {
+  stroke: #63bf4f;
+  stroke-width: 12;
+}
+.fl-fire .thrust {
+  stroke: #ffd166;
+  stroke-width: 6.5;
+  stroke-linecap: round;
+}
+.fl-fire .fire {
+  position: relative;
+}
+
+/* in orbit: what the flight was worth */
+.fl-card {
+  position: absolute;
+  right: calc(1em + var(--safe-right));
+  bottom: calc(1.2em + var(--safe-bottom));
+  width: 16em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.8em 0.9em 0.9em;
+  border: var(--outline) solid var(--ink);
+  border-radius: var(--r);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-drop);
+  pointer-events: auto;
+  animation: pop-in 0.45s var(--spring) 0.9s both;
+}
+.fl-card-title {
+  font-size: var(--fs-lg);
+  line-height: 1.1;
+}
+.fl-card p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.25;
+}
+.fl-card .fl-life {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  line-height: 1.1;
+}
+.fl-card .fl-life b {
+  font-size: var(--fs-xl);
+  line-height: 1;
+  color: var(--green-dark);
+}
+.fl-card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+.fl-card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.15em 0.6em 0.22em;
+  border-radius: 0.6em;
+  background: var(--paper-2);
+  font-size: var(--fs-sm);
+}
+.fl-card li.perfect b {
+  color: #b3720e;
+}
+.fl-card li.good b {
+  color: var(--green-dark);
+}
+.fl-card li.off b {
+  color: var(--orange-dark);
+}
+.fl-card li.bad b {
+  color: var(--red-dark);
+}
+
+/* ---------- where we are in the mission: a slim strip along the top of every mission screen ---------- */
+.ms {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 40;
+  height: calc(var(--u) * 2 + var(--safe-top));
+  margin: 0;
+  padding: var(--safe-top) 1em 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+  border-bottom: 0.1em solid rgba(255, 241, 214, 0.22);
+  background: rgba(12, 22, 38, 0.9);
+  color: #fff1d6;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  pointer-events: none;
+  animation: fade-in 0.3s ease both;
+}
+.ms li {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.04em 0.8em 0.1em 0.4em;
+  border-radius: 1em;
+  opacity: 0.55;
+  white-space: nowrap;
+  transition: background 0.3s, color 0.3s, opacity 0.3s;
+}
+.ms li + li {
+  margin-left: 1.3em;
+}
+.ms li + li::before {
+  content: '';
+  position: absolute;
+  width: 1em;
+  height: 0.12em;
+  margin-left: -1.75em;
+  background: #fff1d6;
+  opacity: 0.4;
+}
+.ms li i {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+  display: grid;
+  place-items: center;
+  border: 0.12em solid currentColor;
+  border-radius: 50%;
+}
+.ms li svg,
+.ms li img {
+  width: 0.7em;
+  height: 0.7em;
+}
+.ms li.done {
+  opacity: 0.95;
+}
+.ms li.done i {
+  border-color: var(--green);
+  background: var(--green);
+}
+.ms li.now {
+  opacity: 1;
+  background: var(--yellow);
+  color: var(--ink);
+}
+.ms li.now i {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+/* every mission screen starts below it */
+.ms ~ .flow,
+.ms ~ .fl {
+  top: calc(var(--u) * 2 + var(--safe-top));
+}
+
+/* Reduce motion: nothing fades away before it can be read; each line or stamp simply stays until the next */
+.ui.reduce-motion .fl-ticker,
+.ui.reduce-motion .fl-stamp,
+.ui.reduce-motion .op-party b,
+.ui.reduce-motion .count {
+  animation: none !important;
+  opacity: 1;
+}

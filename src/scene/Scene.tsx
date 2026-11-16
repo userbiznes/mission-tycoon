@@ -1,5 +1,5 @@
-import { Suspense, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Suspense, useMemo, useRef, type ReactNode } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CameraControls } from './CameraControls'
 import { Effects } from './Effects'
@@ -8,7 +8,7 @@ import { Model } from './Model'
 import { GroundCover, Overgrowth, Props, useBlockedCells } from './Props'
 import { DeliveryBoat, Dock } from './Island'
 import { Regions } from './Regions'
-import { Clouds, SkyDome } from './Sky'
+import { Clouds, SkyDome, skyState } from './Sky'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
 import { CAMERA_FOV, uvToWorld } from './world'
@@ -82,6 +82,15 @@ function Meadow() {
   return <GroundCover blocked={blocked} />
 }
 
+/** The island and everything on it. Hidden once a launch is above the clouds, where the planet takes over. */
+function World({ children }: { children: ReactNode }) {
+  const ref = useRef<THREE.Group>(null)
+  useFrame(() => {
+    if (ref.current) ref.current.visible = !skyState.planet
+  })
+  return <group ref={ref}>{children}</group>
+}
+
 export function Scene() {
   const low = useSettings((s) => s.lowQuality)
   // full-screen flows cover the world: stop drawing it to save the phone's GPU
@@ -104,24 +113,26 @@ export function Scene() {
       <SkyDome />
       <Lights shadowSize={low ? 1024 : 2048} />
       <Suspense fallback={null}>
-        <Terrain />
-        <Water />
-        <Dock />
-        <Regions />
-        <Props />
-        <Meadow />
-        <Overgrowth />
-        <Placement />
-        <Clouds />
-        {PREVIEW_MODEL ? (
-          <PreviewBench />
-        ) : (
-          <>
-            <GameBase />
-            <PadRocket />
-            <DeliveryBoat />
-          </>
-        )}
+        <World>
+          <Terrain />
+          <Water />
+          <Dock />
+          <Regions />
+          <Props />
+          <Meadow />
+          <Overgrowth />
+          <Placement />
+          <Clouds />
+          {PREVIEW_MODEL ? (
+            <PreviewBench />
+          ) : (
+            <>
+              <GameBase />
+              <DeliveryBoat />
+            </>
+          )}
+        </World>
+        {!PREVIEW_MODEL && <PadRocket />}
       </Suspense>
       <CameraControls />
       <PinProjector />

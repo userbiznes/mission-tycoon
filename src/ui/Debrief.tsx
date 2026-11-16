@@ -1,16 +1,93 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RAW_UNIT_MB } from '../data/lab'
 import { RAW_DATA_WORDS } from '../data/rules'
-import type { RawDataType } from '../data/types'
+import type { RawDataType, ResourceKey } from '../data/types'
 import { currentResult, endMission, settleMission } from '../state/mission'
 import { useUi } from '../state/ui'
 import { yearsWords } from '../sim'
 import { ReasonList, Stars } from './Builder'
 import { Icon } from './icons'
-import { Btn, Ticker } from './kit'
+import { Btn, reducedMotion } from './kit'
 import { sfx } from './sound'
 
 const HEADLINE = ['Tough flight', 'Mission complete', 'Good mission!', 'Perfect mission!']
+
+/** For each reason that can be fixed in the bay: the bar it is about, and the part most likely to fix it. */
+const FIX: Record<string, { bar: ResourceKey; part?: string }> = {
+  noInstrument: { bar: 'data', part: 'camWide' },
+  instrumentPointing: { bar: 'data', part: 'reactionWheels' },
+  noSolar: { bar: 'power', part: 'deployPanels' },
+  powerShort: { bar: 'power', part: 'deployPanels' },
+  noBattery: { bar: 'power', part: 'batterySmall' },
+  batterySmall: { bar: 'power', part: 'batteryLarge' },
+  batteryWear: { bar: 'power', part: 'batteryLarge' },
+  noComputer: { bar: 'data', part: 'cpuBasic' },
+  storageFull: { bar: 'data', part: 'cpuHardened' },
+  noRadio: { bar: 'comms', part: 'radioUhf' },
+  radioPointing: { bar: 'comms', part: 'reactionWheels' },
+  noPasses: { bar: 'comms' },
+  downlinkShort: { bar: 'comms', part: 'radioSband' },
+  dishSlow: { bar: 'comms' },
+  late: { bar: 'time' },
+  loss: { bar: 'budget' },
+  thinReserve: { bar: 'budget' },
+  thinMargin: { bar: 'mass' },
+  overbuilt: { bar: 'budget' },
+  scienceMissed: { bar: 'data' },
+}
+
+/** Which three-second replay tells the story of the first reason. */
+const REPLAY: Record<string, 'spill' | 'dark' | 'event'> = {
+  storageFull: 'spill',
+  downlinkShort: 'spill',
+  dishSlow: 'spill',
+  noPasses: 'spill',
+  noRadio: 'spill',
+  radioPointing: 'spill',
+  noComputer: 'spill',
+  noSolar: 'dark',
+  powerShort: 'dark',
+  noBattery: 'dark',
+  batterySmall: 'dark',
+  batteryWear: 'dark',
+  eventLoss: 'event',
+  eventBonus: 'event',
+}
+
+/** A number that counts up from zero once its turn comes. */
+function CountUp({ value, delay }: { value: number; delay: number }) {
+  const [shown, setShown] = useState(reducedMotion() ? value : 0)
+  useEffect(() => {
+    if (reducedMotion()) return
+    let raf = 0
+    const dur = Math.min(900, 300 + value * 0.3)
+    const start = performance.now() + delay
+    const step = (now: number) => {
+      const k = Math.min(1, Math.max(0, (now - start) / dur))
+      setShown(Math.round(value * (1 - Math.pow(1 - k, 3))))
+      if (k < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [value, delay])
+  return <>{shown.toLocaleString('en-US')}</>
+}
+
+/** The mission's key moment again, in three seconds: photos going home, spilling over, or the satellite going dark. */
+function Replay({ kind }: { kind: 'flow' | 'spill' | 'dark' | 'event' }) {
+  return (
+    <span className={`rp ${kind}`} data-ui="debrief.replay" aria-label="Replay of the key moment">
+      <i className="rp-earth" />
+      <i className="rp-dish" />
+      <i className="rp-beam" />
+      <i className="rp-sat" />
+      <i className="rp-tile a" />
+      <i className="rp-tile b" />
+      <i className="rp-tile c" />
+      <em>Replay</em>
+    </span>
+  )
+}
 
 /**
  * The debrief: a mission report in a folder. The stars are stamped in one by
@@ -69,7 +146,21 @@ export function Debrief() {
             </div>
             <div className="reveal r2">
               <p className="eyebrow">Why it went this way</p>
-              <ReasonList result={result} ui="debrief.reason" />
+              <ReasonList
+                result={result}
+                ui="debrief.reason"
+                replay={<Replay kind={REPLAY[result.reasons[0]?.id] ?? 'flow'} />}
+                onFix={(id) => {
+                  const fix = FIX[id]
+                  if (!fix) return null
+                  return () => {
+                    // back to the bay with the bar and the part pointed out
+                    useUi.getState().setBuilderFocus(fix.bar)
+                    useUi.getState().setBuilderPart(fix.part ?? null)
+                    endMission(true)
+                  }
+                }}
+              />
             </div>
           </section>
 
@@ -77,12 +168,12 @@ export function Debrief() {
             <div className="reveal r3">
               <p className="eyebrow">The money</p>
               <div className="payout">
-                {rows.map(([label, v]) => (
+                {rows.map(([label, v], i) => (
                   <div key={label} className="row">
                     <span>{label}</span>
                     <b className={v < 0 ? 'neg' : ''}>
                       {v < 0 ? '−' : '+'}
-                      {Math.abs(v).toLocaleString('en-US')}
+                      <CountUp value={Math.abs(v)} delay={2200 + i * 110} />
                     </b>
                   </div>
                 ))}
@@ -90,12 +181,14 @@ export function Debrief() {
                   <span>Profit</span>
                   <b className={p.profit < 0 ? 'neg' : 'pos'}>
                     {p.profit < 0 ? '−' : '+'}
-                    <Ticker value={Math.abs(p.profit)} />
+                    <CountUp value={Math.abs(p.profit)} delay={2200 + rows.length * 110 + 200} />
                   </b>
                 </div>
                 <div className="row">
                   <span>Agency XP</span>
-                  <b className="xp">+{result.xp}</b>
+                  <b className="xp">
+                    +<CountUp value={result.xp} delay={2200 + rows.length * 110 + 500} />
+                  </b>
                 </div>
                 <span className={`stamp verdict in ${failed ? '' : 'go'}`}>{failed ? 'Mission failed' : 'Mission complete'}</span>
               </div>

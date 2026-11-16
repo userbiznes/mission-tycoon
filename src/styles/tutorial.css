@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------
    The tutorial: the compact coach, full-size Rocco on his stage, the
-   spotlight with its gold ring and pointing hand, the First Flight
+   spotlight with its shade and pointing hand, the First Flight
    checklist and the Next Goal tracker. Built from the same kit as every
    menu: paper, ink outlines, the type scale.
    ------------------------------------------------------------------ */
@@ -468,45 +468,6 @@
 }
 .tut-block {
   pointer-events: auto;
-}
-/* what takes the click glows gold. Things to look at are only lit, never outlined. */
-.tut-ring {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: none;
-  box-shadow:
-    0 0 0 0.14em #ffcf4a,
-    0 0 0.9em 0.26em rgba(255, 201, 60, 0.7);
-  animation: ring-pulse 1.6s ease-in-out infinite;
-}
-@keyframes ring-pulse {
-  50% {
-    box-shadow:
-      0 0 0 0.14em #ffdc7a,
-      0 0 1.5em 0.5em rgba(255, 201, 60, 0.95);
-  }
-}
-/* a building: a gold frame around its place on the island */
-.tut-ring.world {
-  box-shadow:
-    0 0 0 0.2em #ffc93c,
-    0 0 0 0.3em rgba(75, 47, 28, 0.55),
-    0 0 1.2em 0.3em rgba(255, 201, 60, 0.75);
-  animation: none;
-}
-/* a click that missed: the ring flashes */
-.tut-ring.flash {
-  animation: ring-flash 0.5s ease 1, ring-pulse 1.6s ease-in-out 0.5s infinite;
-}
-@keyframes ring-flash {
-  0%,
-  100% {
-    outline: 0 solid rgba(255, 255, 255, 0);
-  }
-  35% {
-    outline: 0.45em solid rgba(255, 233, 150, 0.85);
-  }
 }
 /* the name over a building */
 .tut-label {

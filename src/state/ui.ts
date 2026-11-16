@@ -43,6 +43,15 @@ interface UiState {
   open: (sheet: Sheet) => void
   close: () => void
   setScreen: (screen: Screen) => void
+  /** which step of the launch board is open: 0 orbit, 1 rocket, 2 ground stations */
+  prepStep: number
+  setPrepStep: (step: number) => void
+  /** the resource bar the builder should point out (after "Fix it") */
+  builderFocus: string | null
+  setBuilderFocus: (key: string | null) => void
+  /** the part the builder should point out as the likely fix */
+  builderPart: string | null
+  setBuilderPart: (id: string | null) => void
   toast: (text: string, tone?: 'good' | 'bad') => void
   /** spray reward icons from a point towards the HUD */
   fly: (kind: Flyer['kind'], count: number, x: number, y: number) => void
@@ -91,6 +100,12 @@ export const useUi = create<UiState>((set, get) => ({
   open: (sheet) => set({ sheet, regionCard: null }),
   close: () => set({ sheet: null }),
   setScreen: (screen) => set({ screen, sheet: null }),
+  prepStep: 0,
+  setPrepStep: (prepStep) => set({ prepStep }),
+  builderFocus: null,
+  setBuilderFocus: (builderFocus) => set({ builderFocus }),
+  builderPart: null,
+  setBuilderPart: (builderPart) => set({ builderPart }),
   toast: (text, tone) => {
     const id = nextId++
     set({ toasts: [...get().toasts.slice(-2), { id, text, tone }] })

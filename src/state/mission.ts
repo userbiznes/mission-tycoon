@@ -124,6 +124,7 @@ export function acceptContract(contractId: string) {
     stationIds: ['home'] as StationId[],
   }
   useGame.setState({ draft })
+  useUi.getState().setPrepStep(0)
   useLaunch.getState().setKind(draft.rocketId as RocketKind)
   sfx('success')
   focusBuilding('integrationBay', 0, 22)
@@ -231,6 +232,7 @@ export function endMission(keepDesign: boolean) {
   rig.stopCinematic(0)
   rig.locked = false
   useMission.getState().set({ plan: null, input: null, result: null, choices: {} })
+  ui.setPrepStep(0)
   if (keepDesign && useGame.getState().draft) {
     focusBuilding('integrationBay', 0, 22)
     ui.setScreen('builder')

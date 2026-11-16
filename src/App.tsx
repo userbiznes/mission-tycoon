@@ -1,3 +1,4 @@
+import { MissionStrip } from './ui/MissionStrip'
 import { useEffect } from 'react'
 import { Scene } from './scene/Scene'
 import { arriveAtBase, startTitleShot } from './scene/cinematics'
@@ -181,6 +182,7 @@ export function App() {
           {phase === 'play' && !screen && <WorldBubbles />}
           {phase === 'play' && !screen && !placing && <RegionCard />}
           {phase === 'play' && !screen && !placing && <RoccoLines />}
+          <MissionStrip />
           {screen === 'builder' && <Builder />}
           {screen === 'launchPrep' && <LaunchPrep />}
           {screen === 'launch' && launching && <LaunchScreen />}

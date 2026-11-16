@@ -9,8 +9,12 @@ import { FWD, RIGHT } from './world'
  * buildings are lit, right faces sit in soft shade and shadows fall up-right. */
 export const SUN_DIR = new THREE.Vector3(-0.26, 1.1, 0.96).normalize()
 
-/** Shared sky state: `space` (0–1) fades the day sky into the dark of orbit during a launch. */
-export const skyState = { space: 0 }
+/**
+ * Shared sky state during a launch. `space` (0–1) fades the day sky into the dark of orbit,
+ * `stars` brings the stars out, `dip` is how far the planet's edge sits below level (its sine),
+ * and `planet` is true once the island has given way to the planet below the clouds.
+ */
+export const skyState = { space: 0, stars: 0, dip: 0, planet: false }
 
 const skyVert = /* glsl */ `
   varying vec3 vDir;
@@ -29,6 +33,7 @@ const skyFrag = /* glsl */ `
   uniform vec3 uSpaceTop;
   uniform vec3 uSpaceHorizon;
   uniform float uSpace;
+  uniform float uDip;
   varying vec3 vDir;
   void main() {
     vec3 dir = normalize(vDir);
@@ -39,7 +44,9 @@ const skyFrag = /* glsl */ `
     float s = max(dot(dir, normalize(uSunDir)), 0.0);
     col += uSunGlow * (pow(s, 24.0) * 0.35 + pow(s, 400.0) * 1.2);
     // above the atmosphere: near-black overhead, a thin blue glow at the horizon
-    vec3 space = mix(uSpaceHorizon, uSpaceTop, smoothstep(-0.05, 0.42, h));
+    // the glow hugs the planet's edge and thins out as the edge drops away below
+    float band = mix(0.42, 0.1, clamp(uDip * 5.0, 0.0, 1.0));
+    vec3 space = mix(uSpaceHorizon, uSpaceTop, smoothstep(-0.05, band, h + uDip));
     col = mix(col, space, uSpace);
     gl_FragColor = vec4(col, 1.0);
     #include <tonemapping_fragment>
@@ -58,13 +65,16 @@ export function SkyDome() {
       uSpaceTop: { value: new THREE.Color(palette.spaceTop) },
       uSpaceHorizon: { value: new THREE.Color(palette.spaceHorizon) },
       uSpace: { value: 0 },
+      uDip: { value: 0 },
     }),
     [],
   )
   // the renderer copies `uniforms` into the material, so the live value has to be set on the material itself
   const mat = useRef<THREE.ShaderMaterial>(null)
   useFrame(() => {
-    if (mat.current) mat.current.uniforms.uSpace.value = skyState.space
+    if (!mat.current) return
+    mat.current.uniforms.uSpace.value = skyState.space
+    mat.current.uniforms.uDip.value = skyState.dip
   })
   return (
     <mesh renderOrder={-10} frustumCulled={false} name="sky">

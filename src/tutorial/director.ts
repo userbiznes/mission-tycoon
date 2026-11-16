@@ -47,7 +47,7 @@ interface TutState {
   stepId: string | null
   /** Esc: the tutorial waits, with Resume and Skip */
   paused: boolean
-  /** counts wrong clicks and idle prods: the ring flashes and the hand clicks again when it changes */
+  /** counts wrong clicks and idle prods: the hand jabs again when it changes */
   nudge: number
   /** one passing line from Rocco ("Over here, Maya!"), shown instead of the step's line for a moment */
   note: string | null
@@ -60,7 +60,7 @@ interface TutState {
   collapsed: boolean
   /** when the tutorial was finished in this session: the checklist shows its stamp for a while */
   completedAt: number | null
-  /** "Show me" from the goal tracker: ring this for a few seconds */
+  /** "Show me" from the goal tracker: the hand points at this for a few seconds */
   pointer: { anchor: string; until: number } | null
 }
 
@@ -162,6 +162,7 @@ function sceneOk(step: Step): boolean {
   const ui = useUi.getState()
   if ('screen' in s && ui.screen !== s.screen) return false
   if ('sheet' in s && (ui.sheet?.kind ?? null) !== s.sheet) return false
+  if (s.prepStep !== undefined && ui.prepStep !== s.prepStep) return false
   return true
 }
 
@@ -187,6 +188,8 @@ function ensureScene(step: Step): boolean {
     } else if (s.sheet === 'contracts') useUi.getState().open({ kind: 'contracts' })
     else useUi.getState().close()
   }
+  // the launch board opens on the page this step talks about
+  if (s.prepStep !== undefined) useUi.getState().setPrepStep(s.prepStep)
   return true
 }
 
@@ -363,7 +366,7 @@ export function replayTutorial() {
   run(FIRST_STEP)
 }
 
-/** "Show me" from the goal tracker: go there and ring the thing for a few seconds. */
+/** "Show me" from the goal tracker: go there and point the hand at the thing for a few seconds. */
 export function showMe(target: { camera?: CameraTarget; open?: 'contracts' | 'market' | 'lab' | 'crew'; marketTab?: string; anchor: string }) {
   const ui = useUi.getState()
   if (ui.regionCard) ui.openRegion(null)

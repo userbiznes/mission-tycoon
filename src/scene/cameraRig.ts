@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { CAMERA_BOUNDS, CAMERA_HOME } from '../data/layout'
+import { useSettings } from '../state/settings'
 import { CAMERA_FOV, CAMERA_TILT, CAMERA_YAW, FWD, RIGHT, uvToWorld, worldToUv } from './world'
 
 /**
@@ -199,7 +200,8 @@ class CameraRig {
 
   private applyShake(camera: THREE.PerspectiveCamera, dt: number) {
     if (this.shake > 0.001) {
-      const s = this.shake
+      // Reduce motion: no shaking, the shot stays steady
+      const s = useSettings.getState().reduceMotion ? 0 : this.shake
       camera.position.x += (Math.random() - 0.5) * s
       camera.position.y += (Math.random() - 0.5) * s
       camera.position.z += (Math.random() - 0.5) * s
