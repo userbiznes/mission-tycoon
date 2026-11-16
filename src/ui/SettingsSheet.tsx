@@ -37,10 +37,13 @@ export function SettingsSheet() {
         <Row icon={<Icon.sound />} tint="#ffe6a3" title="Sound" note="Blips, pops and rocket rumble.">
           <Toggle on={settings.sound} onChange={(v) => settings.set({ sound: v })} label="Sound" ui="settings.sound" />
         </Row>
+        <Row icon={<Icon.music />} tint="#ffd9ec" title="Music" note="A quiet tune in the background.">
+          <Toggle on={settings.music} onChange={(v) => settings.set({ music: v })} label="Music" ui="settings.music" />
+        </Row>
         <Row icon={<Icon.wind />} tint="#d9f4c6" title="Reduce motion" note="No bouncing or sliding: menus just appear.">
           <Toggle on={settings.reduceMotion} onChange={(v) => settings.set({ reduceMotion: v })} label="Reduce motion" ui="settings.motion" />
         </Row>
-        <Row icon={<Icon.bolt />} tint="#ffd9cf" title="Low quality" note="Turns off soft shading and glow for slower phones.">
+        <Row icon={<Icon.bolt />} tint="#ffd9cf" title="Low quality" note="Turns off soft shading and glow.">
           <Toggle on={settings.lowQuality} onChange={(v) => settings.set({ lowQuality: v })} label="Low quality" ui="settings.low" />
         </Row>
         <Row icon={<Icon.crew />} tint="#e6dcff" title="Tutorial" note={touring ? "Chief Rocco's first flight is under way." : "Chief Rocco's first flight, from the top."}>
@@ -96,7 +99,7 @@ export function SettingsSheet() {
           )}
         </Row>
       </div>
-      <p className="t-small center" style={{ paddingTop: '0.5em' }}>
+      <p className="t-small center" style={{ paddingTop: '0.1em' }}>
         Mission Tycoon · built with Claude Code for Space Apps 2026
       </p>
     </Win>

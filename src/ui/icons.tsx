@@ -285,6 +285,13 @@ export const Icon = {
       <path d="M15.500 9a4.500 4.500 0 010 6M18 6.500a8 8 0 010 11" />
     </Svg>
   ),
+  music: (p: P) => (
+    <Svg {...p}>
+      <path d="M9 17.500V6l10-2v11.500" />
+      <ellipse cx="6.500" cy="17.500" rx="2.700" ry="2.200" fill="#fffaf0" />
+      <ellipse cx="16.500" cy="15.500" rx="2.700" ry="2.200" fill="#fffaf0" />
+    </Svg>
+  ),
   play: (p: P) => (
     <Svg {...p}>
       <path d="M7.500 4.500v15l12-7.500z" fill="#fff" />

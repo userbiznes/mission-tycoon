@@ -23,8 +23,9 @@ import { busLog } from './tutorial/bus'
 import * as tutorial from './tutorial/director'
 import { STEPS } from './tutorial/steps'
 import { anchorRect } from './tutorial/anchors'
+import { soundDebug } from './ui/sound'
 
 createRoot(document.getElementById('root')!).render(<App />)
 
 // handy for screenshots and debugging
-;Object.assign(window, { __rig: rig, __game: useGame, __ui: useUi, __launch: useLaunch, __flight: flight, __m: mission, __place: usePlacement, __tut: { ...tutorial, busLog, STEPS, anchorRect } })
+;Object.assign(window, { __rig: rig, __game: useGame, __ui: useUi, __launch: useLaunch, __flight: flight, __m: mission, __place: usePlacement, __tut: { ...tutorial, busLog, STEPS, anchorRect }, __sound: soundDebug })
