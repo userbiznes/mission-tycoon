@@ -120,6 +120,8 @@ export function App() {
   const still = useSettings((s) => s.reduceMotion)
   // while Rocco teaches the camera, the buttons round the edge wait
   const lookOnly = useTutorial((s) => s.active && currentStep()?.allow === 'camera')
+  // a menu brings its own coin counter and close badge: the HUD's step aside while one is open
+  const menuOpen = useUi((s) => !!s.sheet)
 
   // title and onboarding play over a slow beauty shot of the spaceport
   useEffect(() => {
@@ -156,7 +158,7 @@ export function App() {
         <div className="world">
           <Scene />
         </div>
-        <div className={`ui${still ? ' reduce-motion' : ''}`} data-tut-lock={lookOnly || undefined}>
+        <div className={`ui${still ? ' reduce-motion' : ''}`} data-tut-lock={lookOnly || undefined} data-menu={menuOpen || undefined}>
           <UiBoundary>
           {phase === 'title' && <Title />}
           {phase === 'onboarding' && (

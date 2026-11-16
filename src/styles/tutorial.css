@@ -756,15 +756,6 @@
     transform: scale(1);
   }
 }
-.checklist.complete {
-  width: auto;
-  padding: 0.7em 1em 0.8em;
-}
-/* a long stamp: a gentle tilt, so its ends stay on the paper */
-.checklist.complete .stamp {
-  --tilt: -2.5deg;
-  font-size: var(--fs-sm);
-}
 .goal {
   display: flex;
   align-items: center;

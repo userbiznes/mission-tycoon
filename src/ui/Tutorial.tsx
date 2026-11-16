@@ -695,23 +695,9 @@ export function Checklist() {
   const active = useTutorial((s) => s.active)
   const stepId = useTutorial((s) => s.stepId)
   const collapsed = useTutorial((s) => s.collapsed)
-  const completedAt = useTutorial((s) => s.completedAt)
-  const [, tick] = useState(0)
-  // the "complete" stamp stays up for a little while, then makes way for the goal tracker
-  useEffect(() => {
-    if (!completedAt) return
-    const id = setTimeout(() => tick((n) => n + 1), Math.max(0, completedAt + 7000 - Date.now()) + 50)
-    return () => clearTimeout(id)
-  }, [completedAt])
   const step = active && stepId ? currentStep() : null
-  if (!step) {
-    if (!completedAt || Date.now() > completedAt + 7000) return null
-    return (
-      <div className="checklist complete" data-ui="checklist">
-        <span className="stamp go in">First Flight complete</span>
-      </div>
-    )
-  }
+  // once the first flight is done the checklist simply leaves; the goal tracker takes its place
+  if (!step) return null
   const chapter = step.chapter
   const total = CHECKLIST.length
   const head = chapter <= 0 ? 'Getting started' : chapter > total ? 'All done' : `Step ${chapter} of ${total}`
