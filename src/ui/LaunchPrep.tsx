@@ -149,7 +149,8 @@ export function LaunchPrep() {
     return () => cancelAnimationFrame(raf)
   }, [labels])
 
-  const summary = [`${orbit.name}, ${orbit.altitudeKm} km`, `${rocket.name}, lifts ${lifts(rocket.capacityKg)} kg`, `${draft.stationIds.length} ${draft.stationIds.length === 1 ? 'dish' : 'dishes'}, ${totalPasses} passes a day`]
+  // one short line each: a folded step is half the column wide
+  const summary = [`${orbit.name}, ${orbit.altitudeKm} km`, `Lifts ${lifts(rocket.capacityKg)} kg`, `${totalPasses} passes a day`]
   const caption = [
     `The ring is the orbit. The dots are where it passes over the ground in a day. The glow is the ${contract.region.toLowerCase()}.`,
     over ? 'Too heavy: this rocket cannot lift the satellite to this orbit.' : 'The satellite sits on the scale. It must weigh less than the rocket lifts to this orbit.',
@@ -208,9 +209,17 @@ export function LaunchPrep() {
           {STEPS.map((name, i) =>
             i === step ? (
               <div key={name} className="bd-step open" data-ui={`prep.col.${['orbit', 'rocket', 'stations'][i]}`}>
-                <h3>
-                  <i>{i + 1}</i> {name}
-                </h3>
+                {/* the way on sits beside the title, so the choices get the height; a folded step is the way back */}
+                <div className="bd-head">
+                  <h3>
+                    <i>{i + 1}</i> {name}
+                  </h3>
+                  {i < 2 && (
+                    <Btn tone="blue" ui="prep.next" onClick={() => setStep(i + 1)}>
+                      Next: {STEPS[i + 1]}
+                    </Btn>
+                  )}
+                </div>
                 <div className="bd-cards stagger">
                   {i === 0 &&
                     contract.allowedOrbits.map((id) => {
@@ -327,20 +336,6 @@ export function LaunchPrep() {
                         />
                       )
                     })}
-                </div>
-                <div className="bd-nav">
-                  {i > 0 && (
-                    <Btn tone="cream" ui="prep.prev" onClick={() => setStep(i - 1)}>
-                      Back
-                    </Btn>
-                  )}
-                  {i < 2 ? (
-                    <Btn tone="blue" ui="prep.next" onClick={() => setStep(i + 1)}>
-                      Next: {STEPS[i + 1]}
-                    </Btn>
-                  ) : (
-                    <span className="bd-nav-note">All set? The crew has the last word.</span>
-                  )}
                 </div>
               </div>
             ) : (

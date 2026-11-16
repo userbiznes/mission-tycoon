@@ -179,17 +179,22 @@
 .bd-steps {
   min-width: 0;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.45em;
 }
+/* the two folded steps share one line above the open one, so the choices keep the height */
 .bd-step.fold {
-  flex: none;
-  display: flex;
+  grid-row: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
   align-items: center;
-  gap: 0.6em;
+  column-gap: 0.45em;
   min-height: var(--tap);
-  padding: 0.25em 0.85em 0.3em 0.5em;
+  padding: 0.3em 0.5em 0.35em 0.45em;
   border: 0.12em solid rgba(255, 241, 214, 0.4);
   border-radius: 1em;
   background: rgba(19, 35, 58, 0.55);
@@ -197,6 +202,9 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+.bd-step.fold > i {
+  grid-row: 1 / span 2;
 }
 .bd-step.fold > i,
 .bd-step.open h3 > i {
@@ -219,27 +227,32 @@
   background: var(--green);
 }
 .bd-step.fold b {
+  grid-column: 2;
   font-size: var(--fs-md);
+  line-height: 1.15;
   white-space: nowrap;
 }
 .bd-step.fold span {
-  margin-left: auto;
+  grid-column: 2;
   font-size: var(--fs-xs);
   font-weight: 500;
   line-height: 1.2;
-  text-align: right;
 }
 .bd-step.fold:focus-visible {
   outline: 0.16em solid var(--yellow);
   outline-offset: 0.1em;
 }
 .bd-step.open {
-  flex: 1 1 0;
+  grid-row: 2;
+  grid-column: 1 / -1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
-  padding: 0.65em 0.8em 0.8em;
+  gap: 0.4em;
+  padding: 0.55em 0.7em 0.65em;
+  /* a very short window: the step scrolls as a whole rather than cutting a choice in half */
+  overflow: hidden auto;
+  scrollbar-width: thin;
   border: var(--outline) solid var(--ink);
   border-radius: var(--r);
   background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
@@ -262,11 +275,13 @@
 }
 .bd-cards {
   flex: 1 1 0;
-  min-height: 0;
+  /* never shorter than one whole choice */
+  min-height: 5em;
   display: flex;
   flex-direction: column;
   gap: 0.45em;
-  padding: 0.1em 0.15em 0.3em;
+  /* room for the chosen card's gold edge on every side */
+  padding: 0.2em 0.22em 0.42em;
   overflow: hidden auto;
   scrollbar-width: thin;
 }
@@ -277,8 +292,8 @@
   align-items: center;
   gap: 0.7em;
   width: 100%;
-  min-height: 3.7em;
-  padding: 0.4em 0.6em 0.45em;
+  min-height: 3.4em;
+  padding: 0.34em 0.6em 0.4em;
   border: var(--outline) solid var(--ink);
   border-radius: 1em;
   background: var(--cream);
@@ -313,8 +328,8 @@
 .bd-card-icon {
   position: relative;
   flex: none;
-  width: 2.9em;
-  height: 2.9em;
+  width: 2.6em;
+  height: 2.6em;
   display: grid;
   place-items: center;
   border: 0.1em solid var(--ink);
@@ -323,8 +338,8 @@
 }
 .bd-card-icon > svg,
 .bd-card-icon > img {
-  width: 2.1em;
-  height: 2.1em;
+  width: 1.9em;
+  height: 1.9em;
 }
 .bd-card-icon .thumb {
   width: 100%;
@@ -387,19 +402,12 @@
   width: 0.9em;
   height: 0.9em;
 }
-.bd-nav {
+.bd-head {
   flex: none;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5em;
-}
-.bd-nav > :last-child {
-  margin-left: auto;
-}
-.bd-nav-note {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--ink-soft);
 }
 
 /* ---------- readiness: the four seats, the bill and the launch button ---------- */
