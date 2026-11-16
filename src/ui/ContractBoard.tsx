@@ -11,6 +11,7 @@ import { OrdersList } from './EconomySheets'
 import { Icon } from './icons'
 import { Bar, Btn, Empty, LockBadge, Tabs, Win, useNow } from './kit'
 import { CONTRACT_BY_ID } from '../data/contracts'
+import { tourHooks } from '../tutorial/hooks'
 
 const DIFFICULTY = [
   { word: 'Easy', ink: 'go' },
@@ -40,25 +41,27 @@ function ContractNote({ c, stars, locked, why }: { c: ContractDef; stars: number
   return (
     <article className={`note contract${locked ? ' locked' : ''}`} data-ui={`contracts.note.${c.id}`}>
       <Seal client={c.client} ink={d.ink} />
-      <b className="t-label">{c.title}</b>
-      <small className="t-small">
-        {c.client} · {c.region}
-      </small>
-      <p className="t-body">{c.brief}</p>
+      <div className="job" data-ui={`contracts.note.${c.id}.job`}>
+        <b className="t-label">{c.title}</b>
+        <small className="t-small">
+          {c.client} · {c.region}
+        </small>
+        <p className="t-body">{c.brief}</p>
+      </div>
       <div className="chips">
         <span className={`chip ${c.difficulty === 1 ? 'good' : c.difficulty === 2 ? 'warn' : 'bad'}`}>{d.word}</span>
-        <span className="chip blue">
+        <span className="chip blue" data-ui={`contracts.note.${c.id}.science`}>
           <Icon.target /> {c.scienceTarget.toLocaleString('en-US')} science
         </span>
         <span className="chip">
           <Icon.camera /> {RAW_DATA_WORDS[c.acceptedData[0]].plural}
         </span>
-        <span className="chip">
+        <span className="chip" data-ui={`contracts.note.${c.id}.deadline`}>
           <Icon.time /> {c.deadlineMonths} months
         </span>
       </div>
       <div className="chips rewards">
-        <span className="chip gold">
+        <span className="chip gold" data-ui={`contracts.note.${c.id}.pay`}>
           <Icon.coin /> {c.baseFee.toLocaleString('en-US')} + {c.payPerScience} per science
         </span>
         <span className="chip good">
@@ -74,7 +77,7 @@ function ContractNote({ c, stars, locked, why }: { c: ContractDef; stars: number
             <LockBadge level={c.unlockLevel} />
           )
         ) : (
-          <Btn sound={null} ui={`contracts.accept.${c.id}`} onClick={() => acceptContract(c.id)}>
+          <Btn sound={null} ui={`contracts.accept.${c.id}`} onClick={() => tourHooks.onTakeJob?.(c.id) || acceptContract(c.id)}>
             {inProgress ? 'Keep building' : stars !== null ? 'Fly again' : 'Take the job'}
           </Btn>
         )}

@@ -1,77 +1,7 @@
-import type { BuildingId } from './layout'
-
 /**
- * Chief Rocco's script. `{name}` and `{agency}` are filled in at runtime.
- * Each stop flies the camera to a building; `do` is the one real action the
- * player performs there.
+ * Chief Rocco's contextual tips, each shown once. (His first-flight tutorial
+ * lives in src/tutorial/steps.ts.)
  */
-
-export type TourAction = 'tapBuilding' | 'shop' | 'firstContract'
-
-export interface TourStep {
-  id: string
-  text: string
-  /** where the camera goes; 'home' is the whole-base view */
-  focus?: BuildingId | 'home'
-  do?: TourAction
-  /** short prompt shown once the line has finished */
-  hint?: string
-  mood?: 'happy' | 'worried' | 'proud'
-}
-
-export const TOUR: TourStep[] = [
-  {
-    id: 'welcome',
-    focus: 'home',
-    text: "Hey {name}! Welcome to {agency}. How do you like the place? I know, I know, it's pretty old. But everybody starts somewhere.",
-  },
-  { id: 'look', focus: 'home', text: "Let's take a look around." },
-  {
-    id: 'missionControl',
-    focus: 'missionControl',
-    text: 'This is Mission Control. Clients pin jobs on this board, and we run every mission from here.',
-    do: 'tapBuilding',
-    hint: 'Tap Mission Control',
-  },
-  {
-    id: 'market',
-    focus: 'partsMarket',
-    text: "Parts come from the market. Some are in stock, some we have to order. Ordering's cheaper, but you wait. Grab a camera now, and order a battery.",
-    do: 'shop',
-    hint: 'Tap the market on the dock',
-  },
-  {
-    id: 'bay',
-    focus: 'integrationBay',
-    text: 'The Integration Bay. This is where we put satellites together, part by part.',
-    do: 'tapBuilding',
-    hint: 'Tap the bay',
-  },
-  {
-    id: 'comms',
-    focus: 'commsCenter',
-    text: 'That old dish is how our satellites talk to us. No dish time, no data, no paycheck.',
-    do: 'tapBuilding',
-    hint: 'Tap the dish',
-  },
-  {
-    id: 'pad',
-    focus: 'launchPad',
-    text: "And the pad. She's rusty, but she'll fly.",
-    do: 'tapBuilding',
-    hint: 'Tap the pad',
-    mood: 'proud',
-  },
-  {
-    id: 'truck',
-    focus: 'partsMarket',
-    text: "Battery's here! Let's build your first satellite.",
-    do: 'firstContract',
-    mood: 'proud',
-  },
-]
-
-/** Contextual tips, each shown once. */
 export const TIPS: Record<string, { text: string; mood?: 'happy' | 'worried' | 'proud' }> = {
   shadow: { text: "We're in Earth's shadow about 35 minutes every orbit. No battery, no satellite.", mood: 'worried' },
   bottleneck: {

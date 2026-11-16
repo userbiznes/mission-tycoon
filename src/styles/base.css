@@ -42,6 +42,7 @@ button {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  overflow: clip;
   background: var(--sky);
   container-type: size;
 }

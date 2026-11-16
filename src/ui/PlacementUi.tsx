@@ -31,7 +31,7 @@ export function PlacementBar() {
       <div className="grow">
         <b className="t-label">{isNew ? `Place the ${def.name}` : `Move the ${def.name}`}</b>
         <small className={`t-small${problem ? ' bad' : ''}`} style={{ display: 'block' }}>
-          {problem ?? 'Drag it, or tap the ground.'}
+          {problem ?? 'Drag it, or click the ground.'}
         </small>
       </div>
       <Btn tone="blue" round sound={null} ui="place.turn" onClick={rotate} aria-label="Turn it round">
@@ -125,7 +125,6 @@ export function BuildButton() {
   const open = useUi((s) => s.open)
   const close = useUi((s) => s.close)
   const placing = usePlacement((s) => s.id)
-  const tour = useGame((s) => s.tourStep)
   const level = useGame((s) => s.level)
   const coins = useGame((s) => s.coins)
   const placed = useGame((s) => s.placed)
@@ -133,7 +132,7 @@ export function BuildButton() {
   const toast = useUi((s) => s.toast)
   const isOpen = sheet?.kind === 'buildmenu'
   useEsc(isOpen ? close : null)
-  if (placing || tour >= 0) return null
+  if (placing) return null
   const todo = BUILDING_IDS.filter((id) => !placed[id])
   return (
     <>

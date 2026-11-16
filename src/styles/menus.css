@@ -464,7 +464,12 @@
 .notes > .note:nth-child(3n) {
   rotate: -0.25deg;
 }
-.note.contract > .t-label {
+.note.contract .job {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+.note.contract .job > .t-label {
   padding-right: 3em;
   font-size: var(--fs-lg);
 }

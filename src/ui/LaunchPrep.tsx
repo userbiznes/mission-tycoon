@@ -13,6 +13,7 @@ import { useUi } from '../state/ui'
 import { evaluateDesign, goNoGo } from '../sim'
 import { Icon } from './icons'
 import { Bar, Btn, LockBadge, Tag, useEsc } from './kit'
+import { emit } from '../tutorial/bus'
 import { sfx } from './sound'
 import { Thumb } from './thumbs'
 
@@ -63,6 +64,7 @@ export function LaunchPrep() {
     const rocket = ok ? draft.rocketId : (ROCKETS.find((r) => r.orbits.includes(id) && level >= r.unlockLevel) ?? ROCKETS.find((r) => r.orbits.includes(id)))!.id
     setDraft({ orbitId: id, rocketId: rocket })
     useLaunch.getState().setKind(rocket as RocketKind)
+    emit(`orbit.selected:${id}`)
   }
 
   const launch = () => {
@@ -90,7 +92,7 @@ export function LaunchPrep() {
       </header>
 
       <div className="board3">
-        <section>
+        <section data-ui="prep.col.orbit">
           <h3>
             <Flip text="ORBIT" />
           </h3>
@@ -114,7 +116,7 @@ export function LaunchPrep() {
 
         </section>
 
-        <section>
+        <section data-ui="prep.col.rocket">
           <h3>
             <Flip text="ROCKET" />
           </h3>
@@ -137,6 +139,7 @@ export function LaunchPrep() {
                     sfx('tap')
                     setDraft({ rocketId: r.id })
                     useLaunch.getState().setKind(r.id as RocketKind)
+                    emit(`rocket.selected:${r.id}`)
                   }}
                 >
                   <Thumb model={`rocket:${r.id}`} icon="rocket" tint="#bfe3ff" />
@@ -173,7 +176,7 @@ export function LaunchPrep() {
           </div>
         </section>
 
-        <section>
+        <section data-ui="prep.col.stations">
           <h3>
             <Flip text="STATIONS" />
           </h3>
@@ -192,6 +195,7 @@ export function LaunchPrep() {
                   onClick={() => {
                     sfx('tap')
                     setDraft({ stationIds: on ? draft.stationIds.filter((x) => x !== s.id) : [...draft.stationIds, s.id] })
+                    emit(`station.toggled:${s.id}`)
                   }}
                 >
                   <span className={`tick${on ? ' on' : ''}`}>{on && <Icon.check />}</span>
@@ -212,7 +216,7 @@ export function LaunchPrep() {
           </div>
         </section>
 
-        <section>
+        <section data-ui="prep.col.poll">
           <h3>
             <Flip text="GO / NO-GO" />
           </h3>
@@ -245,7 +249,15 @@ export function LaunchPrep() {
             {ev.blockers[0] ?? 'Not ready'}
           </Btn>
         ) : noGo.length && !confirm ? (
-          <Btn tone="yellow" size="lg" ui="prep.launch" onClick={() => setConfirm(true)}>
+          <Btn
+            tone="yellow"
+            size="lg"
+            ui="prep.launch"
+            onClick={() => {
+              setConfirm(true)
+              emit('launch.pressed')
+            }}
+          >
             <Icon.alert /> {noGo.length} NO-GO…
           </Btn>
         ) : (

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useGame } from '../state/game'
 import { useSettings } from '../state/settings'
 import { useUi } from '../state/ui'
+import { replayTutorial, skipTutorial } from '../tutorial/director'
 import { Icon } from './icons'
 import { Btn, Toggle, Win } from './kit'
 
@@ -26,6 +27,7 @@ export function SettingsSheet() {
   const settings = useSettings()
   const reset = useGame((s) => s.reset)
   const [confirm, setConfirm] = useState(false)
+  const touring = useGame((s) => s.tourStep >= 0)
   return (
     <Win id="settings" title="Settings" icon={<Icon.gear />} onClose={close} variant="mid" theme="notebook">
       <div className="notebook stagger">
@@ -40,6 +42,34 @@ export function SettingsSheet() {
         </Row>
         <Row icon={<Icon.bolt />} tint="#ffd9cf" title="Low quality" note="Turns off soft shading and glow for slower phones.">
           <Toggle on={settings.lowQuality} onChange={(v) => settings.set({ lowQuality: v })} label="Low quality" ui="settings.low" />
+        </Row>
+        <Row icon={<Icon.crew />} tint="#e6dcff" title="Tutorial" note={touring ? "Chief Rocco's first flight is under way." : "Chief Rocco's first flight, from the top."}>
+          <span className="set-actions">
+            {touring && (
+              <Btn
+                tone="cream"
+                size="sm"
+                ui="settings.tutorial.skip"
+                onClick={() => {
+                  skipTutorial()
+                  close()
+                }}
+              >
+                Skip
+              </Btn>
+            )}
+            <Btn
+              tone="blue"
+              size="sm"
+              ui="settings.tutorial.replay"
+              onClick={() => {
+                close()
+                replayTutorial()
+              }}
+            >
+              Replay
+            </Btn>
+          </span>
         </Row>
         <Row icon={<Icon.alert />} tint="#ffd5cb" title="Reset game" note={confirm ? 'This wipes your agency. Sure?' : 'Start over from the title screen.'}>
           {confirm ? (

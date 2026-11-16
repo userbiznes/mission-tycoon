@@ -14,8 +14,9 @@ import { Icon } from './icons'
 import { Bar, Btn, Empty, LockBadge, Ring, Timer, Tip, Win, formatTime, tapPoint, useNow } from './kit'
 import { ITEM_ICON } from './parts'
 import { Portrait } from './Portrait'
-import { RoccoSays } from './Rocco'
+import { tourHooks } from '../tutorial/hooks'
 import { sfx } from './sound'
+import { CoachTip } from './Tutorial'
 
 /** A lab item as a little tile: its picture, how many, and (for a recipe) whether there are enough. */
 function ItemTile({ item, qty, have, big }: { item: ItemId; qty?: number; have?: number; big?: boolean }) {
@@ -461,13 +462,10 @@ export function CrewSheet() {
   )
 }
 
-/** Rocco pops up with a contextual tip (each shown once). */
+/** Rocco pops up with a contextual tip (each shown once): the compact coach in the corner, which never blocks the game. */
 export function TipHost() {
   const tip = useUi((s) => s.tip)
   const closeTip = useUi((s) => s.closeTip)
-  useEffect(() => {
-    if (tip) sfx('pop')
-  }, [tip])
-  if (!tip || !TIPS[tip]) return null
-  return <RoccoSays key={tip} text={TIPS[tip].text} mood={TIPS[tip].mood} onNext={closeTip} />
+  if (!tip || !TIPS[tip] || tourHooks.tipsMuted?.()) return null
+  return <CoachTip key={tip} text={TIPS[tip].text} onDone={closeTip} />
 }

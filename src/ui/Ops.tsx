@@ -10,6 +10,8 @@ import { Globe, type GlobeClock } from './Globe'
 import { Icon } from './icons'
 import { Bar, Btn, Win } from './kit'
 import { Flip } from './LaunchPrep'
+import { emit } from '../tutorial/bus'
+import { tourHooks } from '../tutorial/hooks'
 import { sfx } from './sound'
 
 const STAGE_ICON: Record<StageId, keyof typeof Icon> = { instruments: 'camera', storage: 'data', radio: 'comms', ground: 'dish' }
@@ -83,7 +85,8 @@ export function Ops() {
     const tick = (now: number) => {
       const dt = now - last
       last = now
-      if (clock.running && !done) {
+      // while Rocco is explaining the screen, the days wait for him
+      if (clock.running && !done && !tourHooks.opsPaused?.()) {
         clock.days = Math.min(nDays, clock.days + dt / dayMs)
         const whole = Math.floor(clock.days + 1e-6)
         // a decision card comes up at the start of its day
@@ -94,6 +97,7 @@ export function Ops() {
           setDay(due.day - 1)
           setCard(due)
           sfx('pop')
+          emit('event.shown')
         } else {
           setDay((d) => {
             if (whole !== d) sfx('tick')
@@ -102,6 +106,7 @@ export function Ops() {
           if (clock.days >= nDays) {
             setDone(true)
             sfx('success')
+            emit('mission.done')
           }
         }
       }
@@ -132,7 +137,7 @@ export function Ops() {
   return (
     <div className="flow ops" data-ui="ops">
       {/* the globe, on a mission-control monitor */}
-      <div className="monitor">
+      <div className="monitor" data-ui="ops.globe">
         <div className="screen">
           <Globe orbitId={draft?.orbitId ?? 'leo'} stationIds={draft?.stationIds ?? ['home']} clock={clock} />
           <span className="scan" aria-hidden />

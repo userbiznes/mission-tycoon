@@ -15,8 +15,8 @@ import { Icon, type IconName } from './icons'
 import { Btn, LockBadge, PayBtn, Ring, TimerRow, Win, formatTime, useNow } from './kit'
 import { marketStart } from './MarketSheet'
 import { Thumb } from './thumbs'
-import { RoccoSays } from './Rocco'
 import { sfx } from './sound'
+import { CoachTip } from './Tutorial'
 
 /**
  * Everything the player sees and taps for the lost regions: the floating
@@ -310,11 +310,9 @@ export function RoccoLines() {
   const next = useUi((s) => s.nextLine)
   const lineId = line?.id
   useEffect(() => {
-    if (!line) return
-    sfx('pop')
-    if (line.region) focusRegion(line.region, 0.12)
+    if (line?.region) focusRegion(line.region, 0.12)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineId])
   if (!line) return null
-  return <RoccoSays key={line.id} text={line.text} mood={line.mood} onNext={next} />
+  return <CoachTip key={line.id} text={line.text} onDone={next} />
 }

@@ -12,9 +12,11 @@ import { addPart, evaluateDesign, partLock, removePart, testRun, type MissionRes
 import { Icon, type IconName } from './icons'
 import { Bar, Btn, LockBadge, Modal, Tabs, Tip, useEsc } from './kit'
 import { CATEGORY_ICON, PartIcon, partStats } from './parts'
-import { RoccoSays } from './Rocco'
+import { emit } from '../tutorial/bus'
+import { tourHooks } from '../tutorial/hooks'
 import { sfx } from './sound'
 import { Turntable } from './Turntable'
+import { CoachTip } from './Tutorial'
 
 export const BAR_ICON: Record<ResourceKey, IconName> = {
   mass: 'mass',
@@ -93,11 +95,11 @@ export function Stars({ n, big, stamp }: { n: number; big?: boolean; stamp?: boo
   )
 }
 
-export function ReasonList({ result }: { result: MissionResult }) {
+export function ReasonList({ result, ui }: { result: MissionResult; ui?: string }) {
   return (
     <div className="reasons">
       {result.reasons.map((r, i) => (
-        <div key={r.id + i} className={`reason ${r.tone}`}>
+        <div key={r.id + i} className={`reason ${r.tone}`} data-ui={ui ? `${ui}.${i}` : undefined}>
           <span className="n">{i + 1}</span>
           <div>
             <p className="t-body">{r.text}</p>
@@ -174,7 +176,17 @@ export function Builder() {
   const worst = ev.issues[0]
 
   const showTip = (id: string) => {
+    // tips wait until the tutorial is over, so Rocco never talks over himself
+    if (tourHooks.tipsMuted?.()) return
     if (TIPS[id] && markTip(id)) setTip(id)
+  }
+  const openWhy = (key: ResourceKey | null) => {
+    setWhy(key)
+    emit(key ? 'why.opened' : 'why.closed')
+  }
+  const openTest = (result: MissionResult | null) => {
+    setTest(result)
+    emit(result ? 'testrun.done' : 'testrun.closed')
   }
 
   const lockOf = (p: PartDef): string | null => {
@@ -261,9 +273,9 @@ export function Builder() {
   return (
     <div className="builder" ref={rootRef} data-ui="builder">
       <div className="bench-top">
-        <div className="rbars">
+        <div className="rbars" data-ui="builder.bars">
           {ev.barList.map((b) => (
-            <BarTile key={b.key} bar={b} onWhy={() => setWhy(b.key as ResourceKey)} />
+            <BarTile key={b.key} bar={b} onWhy={() => openWhy(b.key as ResourceKey)} />
           ))}
         </div>
       </div>
@@ -291,7 +303,7 @@ export function Builder() {
               if (!id) return <span key={n} className="slot empty" />
               const part = PART_BY_ID[id]
               return (
-                <Tip key={n} text={`${part.name}: tap to take it off`}>
+                <Tip key={n} text={`${part.name}: click to take it off`}>
                   <button type="button" className={`slot${n >= ev.slots.total ? ' over' : ''}`} data-ui={`builder.slot.${n}`} onClick={() => remove(id)} aria-label={`Remove ${part.name}`}>
                     <PartIcon part={part} size="sm" />
                     <i className="x">×</i>
@@ -348,7 +360,7 @@ export function Builder() {
           })}
         </div>
         <div className="bench-foot">
-          <Btn tone="blue" ui="builder.test" onClick={() => { setTest(testRun(evalInputFor(draft))); if (markTip('testrun')) setTip('testrun') }}>
+          <Btn tone="blue" ui="builder.test" onClick={() => { openTest(testRun(evalInputFor(draft))); showTip('testrun') }}>
             <Icon.play /> Test run
           </Btn>
           <Btn tone="yellow" ui="builder.pad" onClick={() => setScreen('launchPrep')}>
@@ -362,9 +374,9 @@ export function Builder() {
           <PartIcon part={ghost.part} />
         </div>
       )}
-      {why && <WhyModal bar={ev.bars[why]} onClose={() => setWhy(null)} />}
-      {test && !tip && <TestRunModal result={test} onClose={() => setTest(null)} onPad={() => { setTest(null); setScreen('launchPrep') }} />}
-      {tip && <RoccoSays key={tip} text={TIPS[tip].text} mood={TIPS[tip].mood} onNext={() => setTip(null)} />}
+      {why && <WhyModal bar={ev.bars[why]} onClose={() => openWhy(null)} />}
+      {test && <TestRunModal result={test} onClose={() => openTest(null)} onPad={() => { openTest(null); setScreen('launchPrep') }} />}
+      {tip && <CoachTip key={tip} text={TIPS[tip].text} onDone={() => setTip(null)} />}
     </div>
   )
 }

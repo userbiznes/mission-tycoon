@@ -4,8 +4,9 @@ const missing = new Set<string>()
 
 /**
  * A character portrait from `public/characters/<id>.png`. If the file isn't
- * there yet, the built-in drawing is shown instead. Generated artwork is
- * labelled "AI-generated", as the Space Apps rules require.
+ * there yet, the built-in drawing is shown instead. (The label that used to
+ * sit under each portrait was removed at the user's request; the Crew sheet's
+ * footnote still says the portraits are AI-generated.)
  */
 export function Portrait({ id, fallback, className = '' }: { id: string; fallback: ReactNode; className?: string }) {
   const [failed, setFailed] = useState(missing.has(id))
@@ -21,7 +22,6 @@ export function Portrait({ id, fallback, className = '' }: { id: string; fallbac
           setFailed(true)
         }}
       />
-      <i className="ai-tag">AI-generated</i>
     </span>
   )
 }

@@ -16,8 +16,6 @@ import { LaunchPrep } from './ui/LaunchPrep'
 import { Ops } from './ui/Ops'
 import { CommsStatus, CrewSheet, LabSheet, TipHost } from './ui/EconomySheets'
 import './state/economy'
-import { tourHooks } from './ui/Tour'
-import { acceptContract } from './state/mission'
 import type { BuildingId } from './data/layout'
 import { LaunchScreen } from './ui/LaunchScreen'
 import { useLaunch } from './state/launch'
@@ -25,12 +23,13 @@ import { Onboarding } from './ui/Onboarding'
 import { Flyers, Toasts } from './ui/Overlays'
 import { SettingsSheet } from './ui/SettingsSheet'
 import { Title } from './ui/Title'
-import { Tour } from './ui/Tour'
 import { RegionCard, RegionPins, RoccoLines } from './ui/RegionUi'
 import { LevelUp } from './ui/LevelUp'
 import { WorldBubbles } from './ui/WorldBubbles'
 import { UiBoundary } from './ui/UiBoundary'
 import { useSettings } from './state/settings'
+import { currentStep, holdLevelUp, initTutorial, useTutorial } from './tutorial/director'
+import { Checklist, GoalTracker, TutorialLayer } from './ui/Tutorial'
 
 /** The big button in each building's sheet. */
 function buildingAction(id: BuildingId) {
@@ -73,12 +72,13 @@ function buildingAction(id: BuildingId) {
 
 // level up: the ribbon banner. After a mission it waits for the debrief's stars, reasons and payout to play out.
 onLevelUp((level, unlocks) => {
+  if (holdLevelUp(level, unlocks)) return
   const wait = useUi.getState().screen === 'debrief' ? 4600 : 900
   setTimeout(() => useUi.getState().showLevelUp(level, unlocks), wait)
 })
 
-tourHooks.openShop = () => useUi.getState().open({ kind: 'market' })
-tourHooks.startFirstContract = () => acceptContract('firstLight')
+// Chief Rocco's first-flight tutorial: its director listens to the game from here on
+initTutorial()
 
 function Sheets() {
   const sheet = useUi((s) => s.sheet)
@@ -117,6 +117,8 @@ export function App() {
   const screen = useUi((s) => s.screen)
   const placing = usePlacement((s) => s.id)
   const still = useSettings((s) => s.reduceMotion)
+  // while Rocco teaches the camera, the buttons round the edge wait
+  const lookOnly = useTutorial((s) => s.active && currentStep()?.allow === 'camera')
 
   // title and onboarding play over a slow beauty shot of the spaceport
   useEffect(() => {
@@ -153,7 +155,7 @@ export function App() {
         <div className="world">
           <Scene />
         </div>
-        <div className={`ui${still ? ' reduce-motion' : ''}`}>
+        <div className={`ui${still ? ' reduce-motion' : ''}`} data-tut-lock={lookOnly || undefined}>
           <UiBoundary>
           {phase === 'title' && <Title />}
           {phase === 'onboarding' && (
@@ -165,7 +167,12 @@ export function App() {
             />
           )}
           {(phase === 'arrival' || phase === 'play') && !screen && <Hud />}
-          {phase === 'play' && !screen && !placing && <Tour />}
+          {phase === 'play' && !screen && (
+            <div className="hud-side">
+              <Checklist />
+              <GoalTracker />
+            </div>
+          )}
           {phase === 'play' && !screen && !placing && <Sheets />}
           {phase === 'play' && !screen && <BuildButton />}
           {phase === 'play' && !screen && <PlacementBar />}
@@ -181,6 +188,7 @@ export function App() {
           {screen === 'debrief' && <Debrief />}
           <TipHost />
           {phase === 'play' && <LevelUp />}
+          {phase === 'play' && <TutorialLayer />}
           </UiBoundary>
           <Toasts />
           <Flyers />

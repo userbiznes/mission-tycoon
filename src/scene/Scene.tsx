@@ -21,7 +21,8 @@ import { useSettings } from '../state/settings'
 import { useGame } from '../state/game'
 import { useUi } from '../state/ui'
 import { tapBuilding } from '../state/actions'
-import { tourHooks } from '../ui/Tour'
+import { tourHooks } from '../tutorial/hooks'
+import { TutorialProbe } from './TutorialProbe'
 import { PinProjector } from './pins'
 import { PadRocket } from './Launch'
 
@@ -124,6 +125,7 @@ export function Scene() {
       </Suspense>
       <CameraControls />
       <PinProjector />
+      <TutorialProbe />
       {!low && <Effects />}
     </Canvas>
   )

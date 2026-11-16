@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { rig } from './cameraRig'
@@ -9,9 +9,14 @@ export function CameraControls() {
   const size = useThree((s) => s.size)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
 
+  const last = useRef({ w: 0, h: 0 })
   useEffect(() => {
+    const was = last.current
+    last.current = { w: size.width, h: size.height }
     rig.aspect = size.width / size.height
     rig.viewportH = size.height
+    // same width, a different height: a strip came or went along the bottom
+    if (was.h && was.w === size.width && was.h !== size.height) rig.holdPicture((was.h - size.height) / 2)
   }, [size])
 
   useEffect(() => {

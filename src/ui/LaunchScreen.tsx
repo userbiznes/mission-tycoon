@@ -15,8 +15,8 @@ const FACTS: Partial<Record<string, string>> = {
 
 const PROMPT: Partial<Record<string, { title: string; button: string }>> = {
   hold: { title: 'Hold to fire. Let go in the green!', button: 'HOLD' },
-  staging: { title: 'Tap to drop the stage in the green', button: 'DROP' },
-  coast: { title: 'Tap at the top of the arc', button: 'BURN' },
+  staging: { title: 'Click to drop the stage in the green', button: 'DROP' },
+  coast: { title: 'Click at the top of the arc', button: 'BURN' },
 }
 
 // arc for the "tap at the top" gauge (quadratic Bézier in a 200×90 box)
@@ -85,7 +85,7 @@ export function LaunchScreen() {
   return (
     <div className="launch" data-ui="launch" onPointerUp={release} onPointerCancel={release}>
       <div className="launch-top">
-        <div className="readout panel">
+        <div className="readout panel" data-ui="launch.readout">
           <div>
             <small>Altitude</small>
             <b>

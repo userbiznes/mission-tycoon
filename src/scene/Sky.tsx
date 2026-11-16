@@ -61,13 +61,16 @@ export function SkyDome() {
     }),
     [],
   )
+  // the renderer copies `uniforms` into the material, so the live value has to be set on the material itself
+  const mat = useRef<THREE.ShaderMaterial>(null)
   useFrame(() => {
-    uniforms.uSpace.value = skyState.space
+    if (mat.current) mat.current.uniforms.uSpace.value = skyState.space
   })
   return (
     <mesh renderOrder={-10} frustumCulled={false} name="sky">
       <sphereGeometry args={[1, 24, 16]} />
       <shaderMaterial
+        ref={mat}
         uniforms={uniforms}
         vertexShader={skyVert}
         fragmentShader={skyFrag}

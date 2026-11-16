@@ -85,6 +85,19 @@ class CameraRig {
     this.clampGoal()
   }
 
+  /**
+   * The view just changed height (Rocco's dock came or went): move the camera,
+   * not its goal, so the picture stays put and then glides to the new centre.
+   */
+  holdPicture(dy: number) {
+    if (this.cinematic || !dy) return
+    const upp = this.unitsPerPixel()
+    const [du, dv] = screenToIsland(0, (dy * upp) / Math.sin(CAMERA_TILT))
+    this.u += du
+    this.v += dv
+    this.stiffness = Math.min(this.stiffness, 7)
+  }
+
   /** Called when the finger lifts: keep a little momentum. */
   release() {
     this.coasting = true

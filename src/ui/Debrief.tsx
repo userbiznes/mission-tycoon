@@ -57,7 +57,9 @@ export function Debrief() {
         <div className="folder-pages">
           <section className="sheet-page" data-ui="debrief.result">
             <h1 className="headline">{HEADLINE[result.stars]}</h1>
-            <Stars n={result.stars} big stamp />
+            <div data-ui="debrief.stars">
+              <Stars n={result.stars} big stamp />
+            </div>
             <div className="chips star-notes reveal r1">
               {result.starList.map((s) => (
                 <span key={s.id} className={`chip ${s.earned ? 'good' : 'bad'}`} title={s.note}>
@@ -67,7 +69,7 @@ export function Debrief() {
             </div>
             <div className="reveal r2">
               <p className="eyebrow">Why it went this way</p>
-              <ReasonList result={result} />
+              <ReasonList result={result} ui="debrief.reason" />
             </div>
           </section>
 
@@ -84,7 +86,7 @@ export function Debrief() {
                     </b>
                   </div>
                 ))}
-                <div className="row total">
+                <div className="row total" data-ui="debrief.profit">
                   <span>Profit</span>
                   <b className={p.profit < 0 ? 'neg' : 'pos'}>
                     {p.profit < 0 ? '−' : '+'}
@@ -101,7 +103,7 @@ export function Debrief() {
 
             <div className="reveal r4">
               <p className="eyebrow">Closest real NASA mission</p>
-              <div className="card lrow match">
+              <div className="card lrow match" data-ui="debrief.match">
                 <Icon.satellite className="ic" />
                 <div className="grow">
                   <b className="t-label">

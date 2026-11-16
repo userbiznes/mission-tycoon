@@ -1,0 +1,876 @@
+/* ------------------------------------------------------------------
+   The tutorial: the compact coach, full-size Rocco on his stage, the
+   spotlight with its gold ring and pointing hand, the First Flight
+   checklist and the Next Goal tracker. Built from the same kit as every
+   menu: paper, ink outlines, the type scale.
+   ------------------------------------------------------------------ */
+
+/* ================================================================== Rocco's words */
+.hid {
+  visibility: hidden;
+}
+/* "Click [Buy now]": a tiny copy of the real button */
+.btn-chip {
+  display: inline-block;
+  margin: 0 0.06em;
+  padding: 0 0.5em 0.06em;
+  border: 0.1em solid var(--ink);
+  border-radius: 0.6em;
+  background: linear-gradient(180deg, #fffdf3, #f6e3b8);
+  box-shadow: 0 0.12em 0 #cdaa72;
+  color: var(--ink);
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  vertical-align: 0.04em;
+}
+.btn-chip.yellow {
+  background: linear-gradient(180deg, #ffe36e, #f9b92f);
+  box-shadow: 0 0.12em 0 #c5831b;
+  color: #fff;
+  text-shadow: 0 0.07em 0 rgba(60, 30, 10, 0.5);
+}
+.btn-chip.green {
+  background: linear-gradient(180deg, #9be76c, #55bb3d);
+  box-shadow: 0 0.12em 0 #2f8a2a;
+  color: #fff;
+  text-shadow: 0 0.07em 0 rgba(60, 30, 10, 0.5);
+}
+.btn-chip.blue {
+  background: linear-gradient(180deg, #86d4ff, #3e9fe8);
+  box-shadow: 0 0.12em 0 #2573b8;
+  color: #fff;
+  text-shadow: 0 0.07em 0 rgba(30, 60, 100, 0.6);
+}
+.btn-chip.red {
+  background: linear-gradient(180deg, #ff9c82, #e9523b);
+  box-shadow: 0 0.12em 0 #ad3524;
+  color: #fff;
+  text-shadow: 0 0.07em 0 rgba(120, 30, 20, 0.6);
+}
+/* a folder tab */
+.btn-chip.tab {
+  border-bottom: none;
+  border-radius: 0.55em 0.55em 0 0;
+  background: #fffdf5;
+  box-shadow: none;
+}
+/* the "Why?" tag on a resource tile */
+.btn-chip.why {
+  border-radius: 1em;
+  background: linear-gradient(180deg, #d5edff, #a9d6f7);
+  box-shadow: 0 0.1em 0 rgba(60, 30, 10, 0.3);
+}
+
+/* ================================================================== Rocco's dock
+   A strip along the bottom of the screen that is Rocco's alone. While it is
+   up, the whole interface layer ends where the strip begins, so every menu,
+   button and target stays in full view above it. */
+.phone {
+  /* 4.3 units of the interface (written out: the 3D view has no --u of its own), and never
+     less than three lines of the smallest text need */
+  --dock-h: calc(max(4.3 * clamp(12px, min(1.78cqw, 3.85cqh), 32px), 80px) + var(--safe-bottom));
+}
+.phone[data-docked] > .world,
+.phone[data-docked] > .ui {
+  bottom: var(--dock-h);
+}
+.dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: var(--dock-h);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 0.85em;
+  padding: 0.3em calc(0.9em + var(--safe-right)) calc(0.3em + var(--safe-bottom)) calc(0.8em + var(--safe-left));
+  border-top: var(--outline) solid var(--ink);
+  background:
+    repeating-linear-gradient(178deg, rgba(90, 45, 10, 0) 0 0.9em, rgba(90, 45, 10, 0.2) 0.9em 1em),
+    linear-gradient(180deg, var(--wood-2) 0%, var(--wood-3) 68%, var(--wood-4) 100%);
+  box-shadow: inset 0 0.22em 0 rgba(255, 232, 196, 0.5);
+  color: var(--ink);
+  pointer-events: auto;
+}
+.dock > * {
+  animation: dock-in 0.32s var(--ease-out) both;
+}
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.7em);
+  }
+}
+.dock.leaving > * {
+  animation: dock-out 0.26s ease both;
+}
+@keyframes dock-out {
+  to {
+    opacity: 0;
+    transform: translateY(0.7em);
+  }
+}
+/* Rocco's head and shoulders, in a round frame */
+.dock-face {
+  position: relative;
+  flex: none;
+  height: 100%;
+  aspect-ratio: 1;
+  border: var(--outline) solid var(--ink);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, #e6f5ff 0%, #a9d6f7 80%);
+  box-shadow:
+    inset 0 0.2em 0 rgba(255, 255, 255, 0.6),
+    0 0.22em 0 rgba(40, 20, 5, 0.4);
+}
+.dock-face .portrait {
+  position: static;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.dock-face .portrait img {
+  width: 100%;
+  height: 112%;
+  object-fit: cover;
+  object-position: 50% 0;
+  filter: none;
+}
+.dock-face .rocco-bust {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+/* what he says: a bubble as big as its words, with the one thing to do beside them */
+.dock-bubble {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85em;
+  min-height: min(100%, 2.9em);
+  padding: 0.2em 0.6em 0.22em 1em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.1em;
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  box-shadow:
+    inset 0 0.18em 0 rgba(255, 255, 255, 0.9),
+    0 0.24em 0 rgba(40, 20, 5, 0.4);
+}
+/* the tail, pointing at Rocco */
+.dock-bubble::after {
+  content: '';
+  position: absolute;
+  left: -0.55em;
+  top: 50%;
+  width: 0.9em;
+  height: 0.9em;
+  margin-top: -0.45em;
+  border: var(--outline) solid var(--ink);
+  border-top: none;
+  border-right: none;
+  background: #fff5dd;
+  transform: rotate(45deg);
+}
+.dock-bubble .rocco-name {
+  display: none;
+}
+.dock-bubble .coach-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 44em;
+}
+/* the instruction: a short one never wraps; a long one shares the squeeze with the sentence beside it */
+.dock-bubble .coach-do {
+  flex: 0 1 auto;
+  min-width: 10em;
+  max-width: 30em;
+  margin: 0;
+}
+.dock-bubble .coach-do.short {
+  flex-shrink: 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+.dock-bubble .btn {
+  flex: none;
+  min-width: 5.5em;
+  min-height: max(48px, calc(var(--u) * 2.1));
+}
+/* a rare long line: slightly smaller type rather than a clipped word (set by the coach when it measures an overflow) */
+.dock-bubble[data-fit='small'] .coach-text,
+.dock-bubble[data-fit='small'] .coach-do {
+  font-size: max(14px, calc(var(--u) * 0.68));
+  line-height: 1.2;
+}
+/* where we are: the step, its chapter, seven pips, and the way out */
+.dock-side {
+  flex: none;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.04em;
+  text-align: right;
+  line-height: 1.12;
+}
+.dock-side .coach-step {
+  color: #fff9ea;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-shadow: 0 0.09em 0 #6b3c18;
+  white-space: nowrap;
+}
+.coach-chapter {
+  color: #ffe9bd;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dock-pips {
+  display: flex;
+  gap: 0.16em;
+  margin: 0.12em 0 0.02em;
+}
+.dock-pips i {
+  width: 0.95em;
+  height: 0.36em;
+  border: 0.09em solid var(--ink);
+  border-radius: 0.2em;
+  background: var(--wood-4);
+}
+.dock-pips i.done {
+  background: #8be05f;
+}
+.dock-pips i.now {
+  background: var(--yellow);
+}
+.dock-side .coach-skip {
+  color: #ffe9bd;
+}
+.dock-side .coach-skip:hover {
+  color: #fff;
+}
+.dock-side .coach-skip.yes {
+  color: #ffc3b4;
+}
+.dock-side .coach-confirm {
+  justify-content: flex-end;
+  color: #fff9ea;
+}
+.coach-text {
+  font-size: max(14px, calc(var(--u) * 0.8));
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+/* the one thing to do */
+.coach-do {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4em;
+  margin-top: 0.4em;
+  padding: 0.3em 0.6em 0.36em 0.45em;
+  border: 0.12em solid #e6b93f;
+  border-radius: 0.8em;
+  background: linear-gradient(180deg, #fff6c9, #ffe58a);
+  font-size: max(14px, calc(var(--u) * 0.8));
+  font-weight: 700;
+  line-height: 1.3;
+}
+.coach-do svg {
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  margin-top: 0.06em;
+}
+.coach-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7em;
+  margin-top: 0.45em;
+  min-height: 1.4em;
+}
+.coach-foot .btn {
+  min-width: 5em;
+}
+.coach-skip {
+  position: relative;
+  padding: 0.1em 0.1em;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+}
+.coach-skip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 48px);
+  height: max(100%, 48px);
+  transform: translate(-50%, -50%);
+}
+.coach-skip:hover {
+  color: var(--ink);
+}
+.coach-skip.yes {
+  color: var(--bad-ink);
+}
+.coach-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2em 0.9em;
+  font-size: var(--fs-xs);
+}
+/* three dots: something is playing out */
+.coach-dots {
+  flex: none;
+  width: 2.2em;
+  height: 0.6em;
+  background: radial-gradient(circle, var(--ink-soft) 0 0.24em, transparent 0.27em) 0 50% / 0.8em 100% repeat-x;
+  animation: dots 1.1s steps(3, end) infinite;
+}
+@keyframes dots {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* ================================================================== the stage: full-size Rocco, the welcome and the graduation */
+.rocco-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  padding: calc(1em + var(--safe-top)) calc(2em + var(--safe-right)) 0 calc(2em + var(--safe-left));
+  background: radial-gradient(90% 80% at 40% 60%, rgba(20, 30, 50, 0.45), rgba(15, 22, 40, 0.68));
+  animation: fade-in 0.3s ease both;
+}
+.stage-char {
+  flex: none;
+  align-self: flex-end;
+  height: 88%;
+  animation: char-in 0.5s var(--spring) both;
+}
+.stage-char .portrait,
+.stage-char .rocco-figure {
+  display: block;
+  height: 100%;
+  width: auto;
+  filter: drop-shadow(0 0.4em 0.6em rgba(0, 0, 0, 0.35));
+}
+.stage-char .portrait img {
+  height: 100%;
+  width: auto;
+  max-width: none;
+  filter: none;
+}
+/* the bubble is as big as what he says, and no bigger */
+.stage-bubble {
+  position: relative;
+  width: fit-content;
+  max-width: 24em;
+  margin-bottom: 6em;
+  padding: 1em 1.2em 0.8em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.4em;
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  box-shadow:
+    inset 0 0.2em 0 rgba(255, 255, 255, 0.9),
+    0 var(--edge) 0 var(--paper-edge),
+    0 var(--edge) 0 var(--outline) var(--ink),
+    var(--shadow-drop);
+  color: var(--ink);
+  animation: pop-in 0.42s var(--spring) 0.1s both;
+}
+.stage-bubble::after {
+  content: '';
+  position: absolute;
+  left: -0.75em;
+  top: 50%;
+  width: 1.3em;
+  height: 1.3em;
+  margin-top: -0.65em;
+  border: var(--outline) solid var(--ink);
+  border-top: none;
+  border-right: none;
+  background: #fff5dd;
+  transform: rotate(45deg);
+}
+.stage-bubble .rocco-name {
+  position: absolute;
+  left: 1.2em;
+  top: -0.95em;
+  padding: 0.05em 0.8em 0.12em;
+  border: 0.13em solid var(--ink);
+  border-radius: 1em;
+  background: linear-gradient(180deg, #86d4ff, #3e9fe8);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-shadow: 0 0.07em 0 rgba(30, 60, 100, 0.6);
+}
+.stage-text {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  line-height: 1.32;
+  text-wrap: pretty;
+}
+.stage-bubble .coach-foot {
+  margin-top: 0.7em;
+}
+@keyframes char-in {
+  from {
+    transform: translateX(-30%) scale(0.92);
+    opacity: 0;
+  }
+}
+
+/* ================================================================== the spotlight */
+.tut-spot {
+  position: absolute;
+  inset: 0;
+  z-index: 62;
+  pointer-events: none;
+}
+.tut-shade,
+.tut-block {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+/* about 55% dark; the light around a target fades out softly (drawn in the SVG's mask) */
+.tut-shade {
+  width: 100%;
+  height: 100%;
+  animation: fade-in 0.25s ease both;
+}
+.tut-block {
+  pointer-events: auto;
+}
+/* what takes the click glows gold. Things to look at are only lit, never outlined. */
+.tut-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  box-shadow:
+    0 0 0 0.14em #ffcf4a,
+    0 0 0.9em 0.26em rgba(255, 201, 60, 0.7);
+  animation: ring-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ring-pulse {
+  50% {
+    box-shadow:
+      0 0 0 0.14em #ffdc7a,
+      0 0 1.5em 0.5em rgba(255, 201, 60, 0.95);
+  }
+}
+/* a building: a gold frame around its place on the island */
+.tut-ring.world {
+  box-shadow:
+    0 0 0 0.2em #ffc93c,
+    0 0 0 0.3em rgba(75, 47, 28, 0.55),
+    0 0 1.2em 0.3em rgba(255, 201, 60, 0.75);
+  animation: none;
+}
+/* a click that missed: the ring flashes */
+.tut-ring.flash {
+  animation: ring-flash 0.5s ease 1, ring-pulse 1.6s ease-in-out 0.5s infinite;
+}
+@keyframes ring-flash {
+  0%,
+  100% {
+    outline: 0 solid rgba(255, 255, 255, 0);
+  }
+  35% {
+    outline: 0.45em solid rgba(255, 233, 150, 0.85);
+  }
+}
+/* the name over a building */
+.tut-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  width: max-content;
+  translate: -50% 0;
+  padding: 0.15em 0.9em 0.24em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 0.8em;
+  background:
+    repeating-linear-gradient(177deg, rgba(110, 60, 20, 0) 0 0.42em, rgba(110, 60, 20, 0.16) 0.42em 0.5em, rgba(110, 60, 20, 0) 0.5em 1.1em),
+    linear-gradient(180deg, var(--wood-1), var(--wood-3));
+  box-shadow: 0 0.22em 0 var(--wood-4);
+  color: #fff9ea;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  text-shadow: 0 0.09em 0 #6b3c18;
+  white-space: nowrap;
+}
+/* the chunky pointing hand: its fingertip is the top-left corner */
+.tut-hand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  display: none;
+  width: 4.2em;
+  height: 4.2em;
+  transform-origin: 0 0;
+  transition: transform 0.6s cubic-bezier(0.3, 1.1, 0.4, 1);
+  filter: drop-shadow(0 0.3em 0.3em rgba(40, 20, 5, 0.4));
+}
+.tut-hand svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  animation: hand-point 1.2s ease-in-out infinite;
+}
+.tut-hand[data-mode='click'] svg {
+  animation: hand-click 2.4s ease-in-out infinite;
+}
+.tut-hand.prod svg {
+  animation: hand-prod 0.6s var(--spring) 1, hand-click 2.4s ease-in-out 0.6s infinite;
+}
+@keyframes hand-point {
+  50% {
+    transform: translate(0.3em, 0.3em);
+  }
+}
+@keyframes hand-click {
+  0%,
+  44%,
+  100% {
+    transform: translate(0.45em, 0.45em) scale(1);
+  }
+  58% {
+    transform: translate(0, 0) scale(0.86);
+  }
+  72% {
+    transform: translate(0.12em, 0.12em) scale(1);
+  }
+}
+@keyframes hand-prod {
+  0% {
+    transform: translate(1.4em, 1.4em) scale(1.2);
+  }
+  60% {
+    transform: translate(0, 0) scale(0.84);
+  }
+  100% {
+    transform: translate(0.45em, 0.45em) scale(1);
+  }
+}
+/* the little ripple where the finger lands */
+.tut-tap {
+  position: absolute;
+  left: -0.9em;
+  top: -0.9em;
+  width: 1.8em;
+  height: 1.8em;
+  border: 0.16em solid #fff;
+  border-radius: 50%;
+  opacity: 0;
+}
+.tut-hand[data-mode='click'] .tut-tap {
+  animation: tap-ripple 2.4s ease-out infinite;
+}
+@keyframes tap-ripple {
+  0%,
+  56% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    opacity: 0.95;
+  }
+  86%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* ================================================================== Esc: paused */
+.tut-pause {
+  position: absolute;
+  inset: 0;
+  z-index: 72;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 14, 8, 0.55);
+  animation: fade-in 0.2s ease both;
+}
+.tut-pause-card {
+  width: min(calc(100% - 3em), 24em);
+  padding: 1em 1.1em 1.1em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.4em;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  box-shadow:
+    inset 0 0.2em 0 rgba(255, 255, 255, 0.9),
+    0 var(--edge) 0 var(--paper-edge),
+    0 var(--edge) 0 var(--outline) var(--ink),
+    var(--shadow-drop);
+  text-align: center;
+  animation: pop-in 0.4s var(--spring) both;
+}
+.tut-pause-card h2 {
+  font-size: var(--fs-xl);
+}
+.tut-pause-card p {
+  margin: 0.2em 0 0.8em;
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+.tut-pause-actions {
+  display: flex;
+  gap: 0.6em;
+}
+.tut-pause-actions .btn {
+  flex: 1 1 0;
+}
+
+/* ================================================================== under the coins: the checklist and the goal tracker */
+.hud-side {
+  position: absolute;
+  top: calc(3.9em + var(--safe-top));
+  right: calc(0.6em + var(--safe-right));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45em;
+  pointer-events: none;
+}
+.hud-side > * {
+  pointer-events: auto;
+}
+.checklist {
+  width: 14.6em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.1em;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  box-shadow:
+    inset 0 0.16em 0 rgba(255, 255, 255, 0.9),
+    0 0.24em 0 rgba(60, 30, 10, 0.28);
+  animation: drop-in 0.5s var(--spring) both;
+}
+.checklist.collapsed {
+  width: auto;
+}
+.checklist-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0.2em 0.6em 0.25em 0.5em;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.checklist-head svg {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+}
+.checklist-head b {
+  white-space: nowrap;
+}
+.checklist-step {
+  margin-left: auto;
+  padding: 0 0.55em 0.06em;
+  border: 0.1em solid var(--ink);
+  border-radius: 1em;
+  background: linear-gradient(180deg, #ffe36e, #f9b92f);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.checklist-head .chev {
+  flex: none;
+  width: 0.55em;
+  height: 0.55em;
+  margin: 0 0.15em 0.2em 0.1em;
+  border: 0.15em solid var(--ink-soft);
+  border-left: none;
+  border-top: none;
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+.checklist.collapsed .chev {
+  margin-bottom: -0.1em;
+  transform: rotate(-135deg);
+}
+.checklist ol {
+  margin: 0;
+  padding: 0 0.5em 0.5em;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+}
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.1em 0.4em 0.14em 0.2em;
+  border-radius: 0.7em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.checklist li .tick {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border: 0.11em solid var(--ink-faint);
+  border-radius: 50%;
+  background: #fffdf5;
+  font-weight: 700;
+}
+.checklist li.now {
+  background: linear-gradient(180deg, #fff6c9, #ffe58a);
+  outline: 0.11em solid #e6b93f;
+  color: var(--ink);
+  font-weight: 700;
+}
+.checklist li.now .tick {
+  border-color: var(--ink);
+  background: var(--yellow);
+}
+.checklist li.done {
+  color: var(--good-ink);
+}
+/* a finished chapter is stamped */
+.checklist li.done .tick {
+  border-color: var(--ink);
+  background: linear-gradient(180deg, #9be76c, #55bb3d);
+  animation: stamp-tick 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.checklist li.done .tick svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+@keyframes stamp-tick {
+  0% {
+    transform: scale(2.4) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.88);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.checklist.complete {
+  width: auto;
+  padding: 0.7em 1em 0.8em;
+}
+/* a long stamp: a gentle tilt, so its ends stay on the paper */
+.checklist.complete .stamp {
+  --tilt: -2.5deg;
+  font-size: var(--fs-sm);
+}
+.goal {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  max-width: 19em;
+  padding: 0.3em 0.45em 0.35em 0.4em;
+  border: var(--outline) solid var(--ink);
+  border-radius: 1.1em;
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  box-shadow:
+    inset 0 0.16em 0 rgba(255, 255, 255, 0.9),
+    0 0.24em 0 rgba(60, 30, 10, 0.28);
+  animation: drop-in 0.5s var(--spring) both;
+}
+.goal-flag {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  border: 0.12em solid var(--ink);
+  border-radius: 0.7em;
+  background: linear-gradient(180deg, #ffe36e, #f9b92f);
+}
+.goal-flag svg {
+  width: 1.45em;
+  height: 1.45em;
+}
+.goal-words {
+  min-width: 0;
+  line-height: 1.15;
+}
+.goal-words small {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.goal-words b {
+  font-size: var(--fs-sm);
+}
+.goal-count {
+  display: inline-block;
+  margin-left: 0.4em;
+  padding: 0 0.45em 0.04em;
+  border: 0.1em solid var(--ink);
+  border-radius: 1em;
+  background: linear-gradient(180deg, #7fd0ff, #3e9fe8);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0.07em 0 rgba(30, 60, 100, 0.6);
+}
+.goal .btn {
+  flex: none;
+}
+
+/* ================================================================== settings: the tutorial row has two buttons */
+.set-actions {
+  display: flex;
+  gap: 0.4em;
+}
+
+/* while Rocco teaches the camera, the buttons round the edge wait (the island still takes the drag and the scroll) */
+.ui[data-tut-lock] > .hud > *,
+.ui[data-tut-lock] > .build-btn,
+.ui[data-tut-lock] > .hud-side > * {
+  pointer-events: none;
+}
